@@ -2252,6 +2252,8 @@ int TeamFortressViewport::MsgFunc_ServerName( const char *pszName, int iSize, vo
 
 	strncpy( m_szServerName, READ_STRING(), MAX_SERVERNAME_LENGTH );
 
+	m_szServerName[MAX_SERVERNAME_LENGTH - 1] = 0;
+
 	return 1;
 }
 
