@@ -1674,29 +1674,29 @@ public:
 	void paint()
 	{
 		// Get the paint color
-		int r,g,b,a;
-		// Has health changed? Flash the health #
-		if (gHUD.m_Health.m_fFade)
+		int r,g,b;
+		float a;
+
+		if (gHUD.m_pCvarDim->value == 0)
+			a = MIN_ALPHA + ALPHA_POINTS_MAX;
+		else if (gHUD.m_Health.m_fFade > 0)
 		{
+			// Fade the health number back to dim
 			gHUD.m_Health.m_fFade -= (gHUD.m_flTimeDelta * 20);
 			if (gHUD.m_Health.m_fFade <= 0)
-			{
-				a = MIN_ALPHA;
 				gHUD.m_Health.m_fFade = 0;
-			}
-
-			// Fade the health number back to dim
-			a = MIN_ALPHA +  (gHUD.m_Health.m_fFade/FADE_TIME) * 128;
+			a = MIN_ALPHA + (gHUD.m_Health.m_fFade/FADE_TIME) * ALPHA_POINTS_FLASH;
 		}
 		else
 			a = MIN_ALPHA;
 
-		gHUD.m_Health.GetPainColor( r, g, b );
-		ScaleColors(r, g, b, a );
-
 		// If health is getting low, make it bright red
 		if (gHUD.m_Health.m_iHealth <= 15)
 			a = 255;
+
+		a *= gHUD.GetHudTransparency();
+		gHUD.GetHudColor(1, gHUD.m_Health.m_iHealth, r, g, b);
+		ScaleColors(r, g, b, a );
 
 		int iXSize,iYSize, iXPos, iYPos;
 		m_pHealthTGA->getSize(iXSize,iYSize);
@@ -1708,7 +1708,15 @@ public:
 		// Draw the vertical line
 		int HealthWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;
 		x += HealthWidth / 2;
-		FillRGBA(x, iYPos + 5, HealthWidth / 10, gHUD.m_iFontHeight, 255, 160, 0, a);
+
+		if (gHUD.m_pCvarDim->value == 0)
+			a = MIN_ALPHA + ALPHA_POINTS_MAX;
+		else
+			a = MIN_ALPHA;
+		a *= gHUD.GetHudTransparency();
+		gHUD.GetHudColor(0, 0, r, g, b);
+
+		FillRGBA(x, iYPos + 5, HealthWidth / 10, gHUD.m_iFontHeight, r, g, b, a);
 	}
 };
 

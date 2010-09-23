@@ -170,7 +170,8 @@ void CHudHealth::GetPainColor( int &r, int &g, int &b )
 int CHudHealth::Draw(float flTime)
 {
 	int r, g, b;
-	int a = 0, x, y;
+	int x, y;
+	float a;
 	int HealthWidth;
 
 	if ( (gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) || gEngfuncs.IsSpectateOnly() )
@@ -178,21 +179,16 @@ int CHudHealth::Draw(float flTime)
 
 	if ( !m_hSprite )
 		m_hSprite = LoadSprite(PAIN_NAME);
-	
-	// Has health changed? Flash the health #
-	if (m_fFade)
+
+	if (gHUD.m_pCvarDim->value == 0)
+		a = MIN_ALPHA + ALPHA_POINTS_MAX;
+	else if (m_fFade > 0)
 	{
+		// Fade the health number back to dim
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
 		if (m_fFade <= 0)
-		{
-			a = MIN_ALPHA;
 			m_fFade = 0;
-		}
-
-		// Fade the health number back to dim
-
-		a = MIN_ALPHA +  (m_fFade/FADE_TIME) * 128;
-
+		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_POINTS_FLASH;
 	}
 	else
 		a = MIN_ALPHA;
@@ -200,8 +196,9 @@ int CHudHealth::Draw(float flTime)
 	// If health is getting low, make it bright red
 	if (m_iHealth <= 15)
 		a = 255;
-		
-	GetPainColor( r, g, b );
+
+	a *= gHUD.GetHudTransparency();
+	gHUD.GetHudColor(1, m_iHealth, r, g, b);
 	ScaleColors(r, g, b, a );
 
 	// Only draw health if we have the suit.
@@ -224,7 +221,15 @@ int CHudHealth::Draw(float flTime)
 
 		int iHeight = gHUD.m_iFontHeight;
 		int iWidth = HealthWidth/10;
-		FillRGBA(x, y, iWidth, iHeight, 255, 160, 0, a);
+
+		if (gHUD.m_pCvarDim->value == 0)
+			a = MIN_ALPHA + ALPHA_POINTS_MAX;
+		else
+			a = MIN_ALPHA;
+		a *= gHUD.GetHudTransparency();
+		gHUD.GetHudColor(0, 0, r, g, b);
+
+		FillRGBA(x, y, iWidth, iHeight, r, g, b, a);
 	}
 
 	DrawDamage(flTime);
@@ -300,6 +305,7 @@ int CHudHealth::DrawPain(float flTime)
 
 	// TODO:  get the shift value of the health
 	a = 255;	// max brightness until then
+	a *= gHUD.GetHudTransparency();
 
 	float fFade = gHUD.m_flTimeDelta * 2;
 	
