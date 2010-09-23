@@ -818,10 +818,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\parsemsg.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\pm_shared\pm_debug.c"
 				>
 				<FileConfiguration
@@ -2093,6 +2089,10 @@
 			</File>
 			<File
 				RelativePath="..\overview.h"
+				>
+			</File>
+			<File
+				RelativePath="..\parsemsg.h"
 				>
 			</File>
 			<File
