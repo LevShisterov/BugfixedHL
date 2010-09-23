@@ -113,7 +113,13 @@ int CHud :: MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf )
 	BEGIN_READ( pbuf, iSize );
 	m_iConcussionEffect = READ_BYTE();
 	if (m_iConcussionEffect)
-		this->m_StatusIcons.EnableIcon("dmg_concuss",255,160,0);
+	{
+		int r, g, b;
+		float a = 255 * gHUD.GetHudTransparency();
+		gHUD.GetHudColor(0, 0, r, g, b);
+		ScaleColors(r, g, b, a);
+		this->m_StatusIcons.EnableIcon("dmg_concuss", r, g, b);
+	}
 	else
 		this->m_StatusIcons.DisableIcon("dmg_concuss");
 	return 1;

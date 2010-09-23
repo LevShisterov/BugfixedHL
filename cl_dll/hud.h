@@ -32,7 +32,11 @@
 #define DHN_DRAWZERO 1
 #define DHN_2DIGITS  2
 #define DHN_3DIGITS  4
-#define MIN_ALPHA	 100	
+#define MIN_ALPHA	 100
+#define ALPHA_AMMO_FLASH	 100
+#define ALPHA_AMMO_MAX		 128
+#define ALPHA_POINTS_FLASH	 128
+#define ALPHA_POINTS_MAX	 155
 
 #define		HUDELEM_ACTIVE	1
 
@@ -557,6 +561,11 @@ private:
 	float						m_flMouseSensitivity;
 	int							m_iConcussionEffect; 
 
+	cvar_t	*m_pCvarColor;
+	cvar_t	*m_pCvarColor1;
+	cvar_t	*m_pCvarColor2;
+	cvar_t	*m_pCvarColor3;
+
 public:
 
 	HLHSPRITE						m_hsprCursor;
@@ -572,6 +581,7 @@ public:
 	int		m_iRes;
 	cvar_t  *m_pCvarStealMouse;
 	cvar_t	*m_pCvarDraw;
+	cvar_t	*m_pCvarDim;
 
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );
@@ -579,6 +589,8 @@ public:
 	int DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b );
 	int DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b );
 	int GetNumWidth(int iNumber, int iFlags);
+	void GetHudColor( int hudPart, int value, int &r, int &g, int &b );
+	float GetHudTransparency();
 
 private:
 	// the memory for these arrays are allocated in the first call to CHud::VidInit(), when the hud.txt and associated sprites are loaded.

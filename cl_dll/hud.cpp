@@ -312,6 +312,11 @@ void CHud :: Init( void )
 	default_fov = CVAR_CREATE( "default_fov", "90", 0 );
 	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );
 	m_pCvarDraw = CVAR_CREATE( "hud_draw", "1", FCVAR_ARCHIVE );
+	m_pCvarDim = CVAR_CREATE( "hud_dim", "1", 0 );
+	m_pCvarColor = CVAR_CREATE( "hud_color", "255 160 0", 0 );
+	m_pCvarColor1 = CVAR_CREATE( "hud_color1", "0 255 0", 0 );
+	m_pCvarColor2 = CVAR_CREATE( "hud_color2", "255 160 0", 0 );
+	m_pCvarColor3 = CVAR_CREATE( "hud_color3", "255 96 0", 0 );
 	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
 
 	m_pSpriteList = NULL;
@@ -677,4 +682,34 @@ float CHud::GetSensitivity( void )
 	return m_flMouseSensitivity;
 }
 
+void GetHudColorFromCvar( char *cvar, int &r, int &g, int &b )
+{
+	char *value = cvar;
+	r = atoi(value);
+	value = strchr(value, ' ');
+	if (value == NULL) { g = b = 0; return; }
+	g = atoi(value);
+	value = strchr(value + 1, ' ');
+	if (value == NULL) { b = 0; return; }
+	b = atoi(value);
+}
 
+// hudPart: 0 - common hud, 1 - health points, 2 - armor points
+void CHud::GetHudColor( int hudPart, int value, int &r, int &g, int &b )
+{
+	if (hudPart == 0) { GetHudColorFromCvar(m_pCvarColor->string, r, g, b); }
+	else if (value >= 90) { GetHudColorFromCvar(m_pCvarColor1->string, r, g, b); }
+	else if (value >= 50 && value <= 90) { GetHudColorFromCvar(m_pCvarColor2->string, r, g, b); }
+	else if (value > 25 && value < 50 || hudPart == 2) { GetHudColorFromCvar(m_pCvarColor3->string, r, g, b); }
+	else { r = 255; g = 0; b = 0; }	// UnpackRGB(r, g, b, RGB_REDISH);
+}
+
+float CHud::GetHudTransparency()
+{
+	float hud_draw = m_pCvarDraw->value;
+
+	if (hud_draw > 1) hud_draw = 1;
+	if (hud_draw < 0) hud_draw = 0;
+
+	return hud_draw;
+}

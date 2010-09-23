@@ -99,7 +99,8 @@ int CHudFlashlight::Draw(float flTime)
 	if ( gHUD.m_iHideHUDDisplay & ( HIDEHUD_FLASHLIGHT | HIDEHUD_ALL ) )
 		return 1;
 
-	int r, g, b, x, y, a;
+	int r, g, b, x, y;
+	float a;
 	wrect_t rc;
 
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
@@ -109,11 +110,12 @@ int CHudFlashlight::Draw(float flTime)
 		a = 225;
 	else
 		a = MIN_ALPHA;
+	a *= gHUD.GetHudTransparency();
 
 	if (m_flBat < 0.20)
 		UnpackRGB(r,g,b, RGB_REDISH);
 	else
-		UnpackRGB(r,g,b, RGB_YELLOWISH);
+		gHUD.GetHudColor(0, 0, r, g, b);
 
 	ScaleColors(r, g, b, a);
 

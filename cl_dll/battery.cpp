@@ -77,40 +77,33 @@ int CHudBattery::Draw(float flTime)
 	if ( gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH )
 		return 1;
 
-	int r, g, b, x, y, a;
+	int r, g, b, x, y;
+	float a;
 	wrect_t rc;
 
 	rc = *m_prc2;
 	rc.top  += m_iHeight * ((float)(100-(min(100,m_iBat))) * 0.01);	// battery can go from 0 to 100 so * 0.01 goes from 0 to 1
 
-	UnpackRGB(r,g,b, RGB_YELLOWISH);
-
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
 		return 1;
 
-	// Has health changed? Flash the health #
-	if (m_fFade)
+	if (gHUD.m_pCvarDim->value == 0)
+		a = MIN_ALPHA + ALPHA_POINTS_MAX;
+	else if (m_fFade > 0)
 	{
-		if (m_fFade > FADE_TIME)
-			m_fFade = FADE_TIME;
-
+		// Fade the armor number back to dim
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
 		if (m_fFade <= 0)
-		{
-			a = 128;
 			m_fFade = 0;
-		}
-
-		// Fade the health number back to dim
-
-		a = MIN_ALPHA +  (m_fFade/FADE_TIME) * 128;
-
+		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_POINTS_FLASH;
 	}
 	else
 		a = MIN_ALPHA;
 
-	ScaleColors(r, g, b, a );
-	
+	a *= gHUD.GetHudTransparency();
+	gHUD.GetHudColor(2, m_iBat, r, g, b);
+	ScaleColors(r, g, b, a);
+
 	int iOffset = (m_prc1->bottom - m_prc1->top)/6;
 
 	y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight / 2;

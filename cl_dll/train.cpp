@@ -53,8 +53,12 @@ int CHudTrain::Draw(float fTime)
 	if (m_iPos)
 	{
 		int r, g, b, x, y;
+		float a;
 
-		UnpackRGB(r,g,b, RGB_YELLOWISH);
+		a = 255 * gHUD.GetHudTransparency();
+
+		gHUD.GetHudColor(0, 0, r, g, b);
+		ScaleColors(r, g, b, a);
 		SPR_Set(m_hSprite, r, g, b );
 
 		// This should show up to the right and part way up the armor number

@@ -629,7 +629,7 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 
 	}
 
-	m_fFade = 200.0f; //!!!
+	m_fFade = FADE_TIME;
 	m_iFlags |= HUD_ACTIVE;
 	
 	return 1;
@@ -834,7 +834,8 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 
 int CHudAmmo::Draw(float flTime)
 {
-	int a, x, y, r, g, b;
+	int x, y, r, g, b;
+	float a;
 	int AmmoWidth;
 
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
@@ -866,13 +867,21 @@ int CHudAmmo::Draw(float flTime)
 
 	AmmoWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;
 
-	a = (int) max( MIN_ALPHA, m_fFade );
-
-	if (m_fFade > 0)
+	if (gHUD.m_pCvarDim->value == 0)
+		a = MIN_ALPHA + ALPHA_AMMO_MAX;
+	else if (m_fFade > 0)
+	{
+		// Fade the ammo number back to dim
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
+		if (m_fFade <= 0)
+			m_fFade = 0;
+		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_AMMO_FLASH;
+	}
+	else
+		a = MIN_ALPHA;
 
-	UnpackRGB(r,g,b, RGB_YELLOWISH);
-
+	a *= gHUD.GetHudTransparency();
+	gHUD.GetHudColor(0, 0, r, g, b);
 	ScaleColors(r, g, b, a );
 
 	// Does this weapon have a clip?
@@ -900,7 +909,7 @@ int CHudAmmo::Draw(float flTime)
 
 			x += AmmoWidth/2;
 
-			UnpackRGB(r,g,b, RGB_YELLOWISH);
+			gHUD.GetHudColor(0, 0, r, g, b);
 
 			// draw the | bar
 			FillRGBA(x, y, iBarWidth, gHUD.m_iFontHeight, r, g, b, a);
@@ -954,6 +963,7 @@ int CHudAmmo::Draw(float flTime)
 int DrawBar(int x, int y, int width, int height, float f)
 {
 	int r, g, b;
+	float a;
 
 	if (f < 0)
 		f = 0;
@@ -967,15 +977,16 @@ int DrawBar(int x, int y, int width, int height, float f)
 		// Always show at least one pixel if we have ammo.
 		if (w <= 0)
 			w = 1;
+		a = 255 * gHUD.GetHudTransparency();
 		UnpackRGB(r, g, b, RGB_GREENISH);
-		FillRGBA(x, y, w, height, r, g, b, 255);
+		FillRGBA(x, y, w, height, r, g, b, a);
 		x += w;
 		width -= w;
 	}
 
-	UnpackRGB(r, g, b, RGB_YELLOWISH);
-
-	FillRGBA(x, y, width, height, r, g, b, 128);
+	a = 128 * gHUD.GetHudTransparency();
+	gHUD.GetHudColor(0, 0, r, g, b);
+	FillRGBA(x, y, width, height, r, g, b, a);
 
 	return (x + width);
 }
@@ -1018,7 +1029,8 @@ void DrawAmmoBar(WEAPON *p, int x, int y, int width, int height)
 //
 int CHudAmmo::DrawWList(float flTime)
 {
-	int r,g,b,x,y,a,i;
+	int r,g,b,x,y,i;
+	float a;
 
 	if ( !gpActiveSel )
 		return 0;
@@ -1049,14 +1061,15 @@ int CHudAmmo::DrawWList(float flTime)
 	{
 		int iWidth;
 
-		UnpackRGB(r,g,b, RGB_YELLOWISH);
-	
 		if ( iActiveSlot == i )
 			a = 255;
 		else
 			a = 192;
 
-		ScaleColors(r, g, b, 255);
+		a *= gHUD.GetHudTransparency();
+		gHUD.GetHudColor(0, 0, r, g, b);
+		ScaleColors(r, g, b, a);
+
 		SPR_Set(gHUD.GetSprite(m_HUD_bucket0 + i), r, g, b );
 
 		// make active slot wide enough to accomodate gun pictures
@@ -1077,7 +1090,6 @@ int CHudAmmo::DrawWList(float flTime)
 	}
 
 
-	a = 128; //!!!
 	x = 10;
 
 	// Draw all of the buckets
@@ -1101,12 +1113,15 @@ int CHudAmmo::DrawWList(float flTime)
 				if ( !p || !p->iId )
 					continue;
 
-				UnpackRGB( r,g,b, RGB_YELLOWISH );
-			
+				gHUD.GetHudColor(0, 0, r, g, b);
+
 				// if active, then we must have ammo.
 
 				if ( gpActiveSel == p )
 				{
+					a = 255 * gHUD.GetHudTransparency();
+					ScaleColors(r, g, b, a);
+
 					SPR_Set(p->hActive, r, g, b );
 					SPR_DrawAdditive(0, x, y, &p->rcActive);
 
@@ -1118,11 +1133,15 @@ int CHudAmmo::DrawWList(float flTime)
 					// Draw Weapon if Red if no ammo
 
 					if ( gWR.HasAmmo(p) )
-						ScaleColors(r, g, b, 192);
+					{
+						a = 192 * gHUD.GetHudTransparency();
+						ScaleColors(r, g, b, a);
+					}
 					else
 					{
+						a = 128 * gHUD.GetHudTransparency();
 						UnpackRGB(r,g,b, RGB_REDISH);
-						ScaleColors(r, g, b, 128);
+						ScaleColors(r, g, b, a);
 					}
 
 					SPR_Set( p->hInactive, r, g, b );
@@ -1143,8 +1162,6 @@ int CHudAmmo::DrawWList(float flTime)
 		{
 			// Draw Row of weapons.
 
-			UnpackRGB(r,g,b, RGB_YELLOWISH);
-
 			for ( int iPos = 0; iPos < MAX_WEAPON_POSITIONS; iPos++ )
 			{
 				WEAPON *p = gWR.GetWeaponSlot( i, iPos );
@@ -1154,13 +1171,13 @@ int CHudAmmo::DrawWList(float flTime)
 
 				if ( gWR.HasAmmo(p) )
 				{
-					UnpackRGB(r,g,b, RGB_YELLOWISH);
-					a = 128;
+					a = 128 * gHUD.GetHudTransparency();
+					gHUD.GetHudColor(0, 0, r, g, b);
 				}
 				else
 				{
+					a = 96 * gHUD.GetHudTransparency();
 					UnpackRGB(r,g,b, RGB_REDISH);
-					a = 96;
 				}
 
 				FillRGBA( x, y, giBucketWidth, giBucketHeight, r, g, b, a );
