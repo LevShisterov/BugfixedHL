@@ -1373,6 +1373,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\mp.def"
+				>
+			</File>
+			<File
 				RelativePath="..\mp5.cpp"
 				>
 				<FileConfiguration
