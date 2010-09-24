@@ -60,7 +60,7 @@ extern char *sLocalisedClasses[];
 extern int iTeamColors[5][3];
 extern int iNumberOfTeamColors;
 
-#define MAX_SERVERNAME_LENGTH	32
+#define MAX_SERVERNAME_LENGTH	64
 
 // Command Menu positions 
 #define MAX_MENUS				80
