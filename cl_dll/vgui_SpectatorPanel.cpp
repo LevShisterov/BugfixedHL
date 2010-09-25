@@ -83,11 +83,11 @@ void SpectatorPanel::Initialize()
 	CSchemeManager * pSchemes = gViewPort->GetSchemeManager();
 
 	SchemeHandle_t hSmallScheme = pSchemes->getSchemeHandle( "Team Info Text" );
-	
-	m_TopBorder = new CTransparentPanel(64, 0, 0, ScreenWidth, YRES(PANEL_HEIGHT));
+
+	m_TopBorder = new CTransparentPanel(255, 0, 0, ScreenWidth, YRES(PANEL_HEIGHT));
 	m_TopBorder->setParent(this);
 
-	m_BottomBorder = new CTransparentPanel(64, 0, ScreenHeight - YRES(32), ScreenWidth, YRES(PANEL_HEIGHT));
+	m_BottomBorder = new CTransparentPanel(255, 0, ScreenHeight - YRES(32), ScreenWidth, YRES(PANEL_HEIGHT));
 	m_BottomBorder->setParent(this);
 
 	setPaintBackgroundEnabled(false);
