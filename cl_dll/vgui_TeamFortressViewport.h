@@ -1450,6 +1450,11 @@ public:
 		m_iTransparency = iTrans;
 	}
 
+	void setTransparency(int iTrans)
+	{
+		m_iTransparency = iTrans;
+	}
+
 	virtual void paintBackground()
 	{
 		if (m_iTransparency)
