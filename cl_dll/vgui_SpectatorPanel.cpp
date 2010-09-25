@@ -84,52 +84,52 @@ void SpectatorPanel::Initialize()
 
 	SchemeHandle_t hSmallScheme = pSchemes->getSchemeHandle( "Team Info Text" );
 
-	m_TopBorder = new CTransparentPanel(255, 0, 0, ScreenWidth, YRES(PANEL_HEIGHT));
-	m_TopBorder->setParent(this);
+	//m_TopBorder = new CTransparentPanel(255, 0, 0, ScreenWidth, YRES(PANEL_HEIGHT));
+	//m_TopBorder->setParent(this);
 
 	m_BottomBorder = new CTransparentPanel(255, 0, ScreenHeight - YRES(32), ScreenWidth, YRES(PANEL_HEIGHT));
 	m_BottomBorder->setParent(this);
 
 	setPaintBackgroundEnabled(false);
 
-	m_ExtraInfo = new Label( "Extra Info", 0, 0, wide, YRES(PANEL_HEIGHT) );
-	m_ExtraInfo->setParent(m_TopBorder);
-	m_ExtraInfo->setFont( pSchemes->getFont(hSmallScheme) );
+	//m_ExtraInfo = new Label( "Extra Info", 0, 0, wide, YRES(PANEL_HEIGHT) );
+	//m_ExtraInfo->setParent(m_TopBorder);
+	//m_ExtraInfo->setFont( pSchemes->getFont(hSmallScheme) );
 
-	m_ExtraInfo->setPaintBackgroundEnabled(false);
-	m_ExtraInfo->setFgColor( 143, 143, 54, 0 );
-	m_ExtraInfo->setContentAlignment( vgui::Label::a_west );
+	//m_ExtraInfo->setPaintBackgroundEnabled(false);
+	//m_ExtraInfo->setFgColor( 143, 143, 54, 0 );
+	//m_ExtraInfo->setContentAlignment( vgui::Label::a_west );
 
 	
 
-	m_TimerImage = new CImageLabel( "timer", 0, 0, 14, 14 );
-	m_TimerImage->setParent(m_TopBorder);
+	//m_TimerImage = new CImageLabel( "timer", 0, 0, 14, 14 );
+	//m_TimerImage->setParent(m_TopBorder);
 
 	m_TopBanner = new CImageLabel( "banner", 0, 0, XRES(BANNER_WIDTH), YRES(BANNER_HEIGHT) );
 	m_TopBanner->setParent(this);
 
-	m_CurrentTime = new Label( "00:00", 0, 0, wide, YRES(PANEL_HEIGHT) );
-	m_CurrentTime->setParent(m_TopBorder);
-	m_CurrentTime->setFont( pSchemes->getFont(hSmallScheme) );
-	m_CurrentTime->setPaintBackgroundEnabled(false);
-	m_CurrentTime->setFgColor( 143, 143, 54, 0 );
-	m_CurrentTime->setContentAlignment( vgui::Label::a_west );
+	//m_CurrentTime = new Label( "00:00", 0, 0, wide, YRES(PANEL_HEIGHT) );
+	//m_CurrentTime->setParent(m_TopBorder);
+	//m_CurrentTime->setFont( pSchemes->getFont(hSmallScheme) );
+	//m_CurrentTime->setPaintBackgroundEnabled(false);
+	//m_CurrentTime->setFgColor( 143, 143, 54, 0 );
+	//m_CurrentTime->setContentAlignment( vgui::Label::a_west );
 
-	m_Separator = new Panel( 0, 0, XRES( 64 ), YRES( 96 ));
-	m_Separator->setParent( m_TopBorder );
-	m_Separator->setFgColor( 59, 58, 34, 48 );
-	m_Separator->setBgColor( 59, 58, 34, 48 );
+	//m_Separator = new Panel( 0, 0, XRES( 64 ), YRES( 96 ));
+	//m_Separator->setParent( m_TopBorder );
+	//m_Separator->setFgColor( 59, 58, 34, 48 );
+	//m_Separator->setBgColor( 59, 58, 34, 48 );
 	
-	for ( int j= 0; j < TEAM_NUMBER; j++ )
-	{
-		m_TeamScores[j] = new Label( "   ", 0, 0, wide, YRES(PANEL_HEIGHT) );
-		m_TeamScores[j]->setParent( m_TopBorder );
-		m_TeamScores[j]->setFont( pSchemes->getFont(hSmallScheme) );
-		m_TeamScores[j]->setPaintBackgroundEnabled(false);
-		m_TeamScores[j]->setFgColor( 143, 143, 54, 0 );
-		m_TeamScores[j]->setContentAlignment( vgui::Label::a_west );
-		m_TeamScores[j]->setVisible ( false );
-	}
+	//for ( int j= 0; j < TEAM_NUMBER; j++ )
+	//{
+	//	m_TeamScores[j] = new Label( "   ", 0, 0, wide, YRES(PANEL_HEIGHT) );
+	//	m_TeamScores[j]->setParent( m_TopBorder );
+	//	m_TeamScores[j]->setFont( pSchemes->getFont(hSmallScheme) );
+	//	m_TeamScores[j]->setPaintBackgroundEnabled(false);
+	//	m_TeamScores[j]->setFgColor( 143, 143, 54, 0 );
+	//	m_TeamScores[j]->setContentAlignment( vgui::Label::a_west );
+	//	m_TeamScores[j]->setVisible ( false );
+	//}
 	
 	
 	// Initialize command buttons.
@@ -202,9 +202,9 @@ void SpectatorPanel::Initialize()
 	m_NextPlayerButton->setVisible(false);
 	m_PrevPlayerButton->setVisible(false);
 	m_TopBanner->setVisible( false );
-	m_ExtraInfo->setVisible( false );
-	m_Separator->setVisible( false );
-	m_TimerImage->setVisible( false );
+	//m_ExtraInfo->setVisible( false );
+	//m_Separator->setVisible( false );
+	//m_TimerImage->setVisible( false );
 		
 }
 
@@ -215,7 +215,7 @@ void SpectatorPanel::ShowMenu(bool isVisible)
 	m_CamButton->setVisible(isVisible);			m_CamButton->setArmed( false );
 	m_NextPlayerButton->setVisible(isVisible);	m_NextPlayerButton->setArmed( false );
 	m_PrevPlayerButton->setVisible(isVisible);	m_PrevPlayerButton->setArmed( false );
-	
+	m_BottomBorder->setTransparency(isVisible ? 64 : 255);
 	if ( !isVisible )
 	{
 		int iLabelSizeX, iLabelSizeY;
@@ -288,7 +288,7 @@ void SpectatorPanel::EnableInsetView(bool isEnabled)
 	if ( isEnabled )
 	{
 		// short black bar to see full inset
-		m_TopBorder->setBounds(	XRES(offset), 0, XRES(640 - offset ), YRES(PANEL_HEIGHT) );
+		//m_TopBorder->setBounds(	XRES(offset), 0, XRES(640 - offset ), YRES(PANEL_HEIGHT) );
 
 		if ( gEngfuncs.IsSpectateOnly() )
 		{
@@ -314,7 +314,7 @@ void SpectatorPanel::EnableInsetView(bool isEnabled)
 		else
 			m_TopBanner->setVisible( false );
 
-		m_TopBorder->setBounds( 0, 0, ScreenWidth, YRES(PANEL_HEIGHT) );
+		//m_TopBorder->setBounds( 0, 0, ScreenWidth, YRES(PANEL_HEIGHT) );
 						
 		m_InsetViewButton->setVisible(false);
 	}
@@ -342,19 +342,19 @@ void SpectatorPanel::Update()
 
 	bool visible = gHUD.m_Spectator.m_drawstatus->value != 0;
 	
-	m_ExtraInfo->setVisible( visible );
-	m_TimerImage->setVisible( visible );
-	m_CurrentTime->setVisible( visible );
-	m_Separator->setVisible( visible );
+	//m_ExtraInfo->setVisible( visible );
+	//m_TimerImage->setVisible( visible );
+	//m_CurrentTime->setVisible( visible );
+	//m_Separator->setVisible( visible );
 
-	for ( j= 0; j < TEAM_NUMBER; j++ )
-		m_TeamScores[j]->setVisible( visible );
+	//for ( j= 0; j < TEAM_NUMBER; j++ )
+	//	m_TeamScores[j]->setVisible( visible );
 
 	if ( !visible )
 		return;
 		
-	m_ExtraInfo->getTextSize( iTextWidth, iTextHeight );
-	m_CurrentTime->getTextSize( iTimeWidth, iTimeHeight );
+	//m_ExtraInfo->getTextSize( iTextWidth, iTextHeight );
+	//m_CurrentTime->getTextSize( iTimeWidth, iTimeHeight );
 
 	iTimeWidth += XRES ( 14 ); // +timer icon
 	iTimeWidth += ( 4-(iTimeWidth%4) );
@@ -364,20 +364,20 @@ void SpectatorPanel::Update()
 
 	int xPos = ScreenWidth - ( iTextWidth + XRES ( 4 + offset ) );
 
-	m_ExtraInfo->setBounds( xPos, YRES( 1 ), iTextWidth, iTextHeight );
+	//m_ExtraInfo->setBounds( xPos, YRES( 1 ), iTextWidth, iTextHeight );
 
-	m_TimerImage->setBounds( xPos, YRES( 2 ) + iTextHeight , XRES(14), YRES(14) );
-	
-	m_CurrentTime->setBounds( xPos + XRES ( 14 + 1 ), YRES( 2 ) + iTextHeight , iTimeWidth, iTimeHeight );
+	//m_TimerImage->setBounds( xPos, YRES( 2 ) + iTextHeight , XRES(14), YRES(14) );
 
-	m_Separator->setPos( ScreenWidth - ( iTextWidth + XRES ( 4+2+4+offset ) ) , YRES( 1 ) );
-	m_Separator->setSize( XRES( 4 ), YRES( PANEL_HEIGHT - 2 ) );
+	//m_CurrentTime->setBounds( xPos + XRES ( 14 + 1 ), YRES( 2 ) + iTextHeight , iTimeWidth, iTimeHeight );
 
-	for ( j= 0; j < TEAM_NUMBER; j++ )
-	{
-		int iwidth, iheight;
-			
-		m_TeamScores[j]->getTextSize( iwidth, iheight );
-		m_TeamScores[j]->setBounds( ScreenWidth - ( iTextWidth + XRES ( 4+2+4+2+offset ) + iwidth ), YRES( 1 ) + ( iheight * j ), iwidth, iheight );
-	}
+	//m_Separator->setPos( ScreenWidth - ( iTextWidth + XRES ( 4+2+4+offset ) ) , YRES( 1 ) );
+	//m_Separator->setSize( XRES( 4 ), YRES( PANEL_HEIGHT - 2 ) );
+
+	//for ( j= 0; j < TEAM_NUMBER; j++ )
+	//{
+	//	int iwidth, iheight;
+	//		
+	//	m_TeamScores[j]->getTextSize( iwidth, iheight );
+	//	m_TeamScores[j]->setBounds( ScreenWidth - ( iTextWidth + XRES ( 4+2+4+2+offset ) + iwidth ), YRES( 1 ) + ( iheight * j ), iwidth, iheight );
+	//}
 }

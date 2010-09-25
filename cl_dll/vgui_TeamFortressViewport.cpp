@@ -1458,7 +1458,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 
 		m_pSpectatorPanel->m_BottomMainLabel->setText( CHudTextMessage::BufferedLocaliseTextString( bottomText ) );
 
-		
+		/*
 		// update extra info field
 		char szText[64];
 

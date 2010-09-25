@@ -57,18 +57,18 @@ public:
 	ColorButton	  *	m_NextPlayerButton;
 	ColorButton     *	m_CamButton;	
 
-	CTransparentPanel *			m_TopBorder;
+	//CTransparentPanel *			m_TopBorder;
 	CTransparentPanel *			m_BottomBorder;
 
 	ColorButton		*m_InsetViewButton;
 	
 	Label			*m_BottomMainLabel;
-	CImageLabel		*m_TimerImage;
-	Label			*m_CurrentTime;
-	Label			*m_ExtraInfo;
-	Panel			*m_Separator;
+	//CImageLabel		*m_TimerImage;
+	//Label			*m_CurrentTime;
+	//Label			*m_ExtraInfo;
+	//Panel			*m_Separator;
 
-	Label			*m_TeamScores[TEAM_NUMBER];
+	//Label			*m_TeamScores[TEAM_NUMBER];
 	
 	CImageLabel		*m_TopBanner;
 
