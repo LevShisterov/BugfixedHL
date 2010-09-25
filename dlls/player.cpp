@@ -883,7 +883,7 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 
 	SetAnimation( PLAYER_DIE );
 	
-	m_iRespawnFrames = 0;
+	m_flDeathAnimationStartTime = gpGlobals->time;
 
 	pev->modelindex = g_ulModelIndexPlayer;    // don't use eyes
 
@@ -1284,8 +1284,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	{
 		StudioFrameAdvance( );
 
-		m_iRespawnFrames++;				// Note, these aren't necessarily real "frames", so behavior is dependent on # of client movement commands
-		if ( m_iRespawnFrames < 120 )   // Animations should be no longer than this
+		if (gpGlobals->time < m_flDeathAnimationStartTime + 1.5)	// time given to animate corpse
 			return;
 	}
 
@@ -1300,7 +1299,6 @@ void CBasePlayer::PlayerDeathThink(void)
 	StopAnimation();
 
 	pev->effects |= EF_NOINTERP;
-	pev->framerate = 0.0;
 
 	BOOL fAnyButtonDown = (pev->button & ~IN_SCORE );
 	
@@ -1334,7 +1332,7 @@ void CBasePlayer::PlayerDeathThink(void)
 		return;
 
 	pev->button = 0;
-	m_iRespawnFrames = 0;
+	m_flDeathAnimationStartTime = 0;
 
 	//ALERT(at_console, "Respawn\n");
 

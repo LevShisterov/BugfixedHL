@@ -49,7 +49,7 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 		flInterval = (gpGlobals->time - pev->animtime);
 		if (flInterval <= 0.001)
 		{
-			pev->animtime = gpGlobals->time;
+			//pev->animtime = gpGlobals->time;
 			return 0.0;
 		}
 	}

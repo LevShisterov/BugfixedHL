@@ -176,7 +176,7 @@ public:
 	Vector				m_vecAutoAim;
 	BOOL				m_fOnTarget;
 	int					m_iDeaths;
-	float				m_iRespawnFrames;	// used in PlayerDeathThink() to make sure players can always respawn
+	float				m_flDeathAnimationStartTime;	// used in PlayerDeathThink() to make sure players can always respawn
 
 	int m_lastx, m_lasty;  // These are the previous update's crosshair angles, DON"T SAVE/RESTORE
 
