@@ -119,7 +119,7 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 		// only expand column size for res greater than 640
 		xpos = XRES(xpos);
 	}
-	m_TitleLabel.setBounds(xpos, 4, wide, SBOARD_TITLE_SIZE_Y);
+	m_TitleLabel.setBounds(xpos, 4, wide - xpos * 2, SBOARD_TITLE_SIZE_Y);
 	m_TitleLabel.setContentFitted(false);
 	m_TitleLabel.setParent(this);
 
@@ -260,8 +260,8 @@ void ScorePanel::Update()
 	// Set the title
 	if (gViewPort->m_szServerName)
 	{
-		char sz[MAX_SERVERNAME_LENGTH + 16];
-		sprintf(sz, "%s", gViewPort->m_szServerName );
+		char sz[MAX_SERVERNAME_LENGTH];
+		sprintf_s(sz, MAX_SERVERNAME_LENGTH, "%s", gViewPort->m_szServerName );
 		m_TitleLabel.setText(sz);
 	}
 
