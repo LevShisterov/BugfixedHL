@@ -883,7 +883,7 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 
 	SetAnimation( PLAYER_DIE );
 	
-	m_iRespawnFrames = 0;
+	m_flDeathAnimationStartTime = gpGlobals->time;
 
 	pev->modelindex = g_ulModelIndexPlayer;    // don't use eyes
 
@@ -916,13 +916,14 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 		WRITE_BYTE(0);
 	MESSAGE_END();
 
+	// Make dead player not solid so it will not lag other players passing over it
+	pev->solid = SOLID_NOT;
 
 	// UNDONE: Put this in, but add FFADE_PERMANENT and make fade time 8.8 instead of 4.12
 	// UTIL_ScreenFade( edict(), Vector(128,0,0), 6, 15, 255, FFADE_OUT | FFADE_MODULATE );
 
 	if ( ( pev->health < -40 && iGib != GIB_NEVER ) || iGib == GIB_ALWAYS )
 	{
-		pev->solid			= SOLID_NOT;
 		GibMonster();	// This clears pev->model
 		pev->effects |= EF_NODRAW;
 		return;
@@ -1284,8 +1285,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	{
 		StudioFrameAdvance( );
 
-		m_iRespawnFrames++;				// Note, these aren't necessarily real "frames", so behavior is dependent on # of client movement commands
-		if ( m_iRespawnFrames < 120 )   // Animations should be no longer than this
+		if (gpGlobals->time < m_flDeathAnimationStartTime + 1.5)	// time given to animate corpse
 			return;
 	}
 
@@ -1300,7 +1300,6 @@ void CBasePlayer::PlayerDeathThink(void)
 	StopAnimation();
 
 	pev->effects |= EF_NOINTERP;
-	pev->framerate = 0.0;
 
 	BOOL fAnyButtonDown = (pev->button & ~IN_SCORE );
 	
@@ -1334,7 +1333,7 @@ void CBasePlayer::PlayerDeathThink(void)
 		return;
 
 	pev->button = 0;
-	m_iRespawnFrames = 0;
+	m_flDeathAnimationStartTime = 0;
 
 	//ALERT(at_console, "Respawn\n");
 
