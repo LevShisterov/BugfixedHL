@@ -1300,8 +1300,9 @@ void CBasePlayer::PlayerDeathThink(void)
 
 	pev->effects |= EF_NOINTERP;
 
-	BOOL fAnyButtonDown = (pev->button & ~IN_SCORE );
-	
+	BOOL fAnyButtonDown = (m_afButtonPressed & ~IN_SCORE );
+	m_afButtonLast = pev->button;
+
 	// wait for all buttons released
 	if (pev->deadflag == DEAD_DEAD)
 	{
