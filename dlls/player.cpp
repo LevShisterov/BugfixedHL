@@ -4066,6 +4066,8 @@ void CBasePlayer :: UpdateClientData( void )
 	for ( int i = 0; i < MAX_ITEM_TYPES; i++ )
 	{
 		if ( m_rgpPlayerItems[i] )  // each item updates it's successors
+			// BUG: m_rgpPlayerItems[i] sometimes is not valid!
+			// BugCheck: It is not NULL. But pointing to non-existing entity?
 			m_rgpPlayerItems[i]->UpdateClientData( this );
 	}
 
