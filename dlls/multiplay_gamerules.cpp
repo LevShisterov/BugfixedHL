@@ -504,6 +504,12 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 					GETPLAYERUSERID( pPlayer->edict() ) );
 			}
 
+			if ( pPlayer->m_pTank != NULL )
+			{
+				// Stop controlling the tank
+				pPlayer->m_pTank->Use( pPlayer, pPlayer, USE_OFF, 0 );
+			}
+
 			pPlayer->RemoveAllItems( TRUE );// destroy all of the players weapons and items
 		}
 	}
