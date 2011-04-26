@@ -288,6 +288,14 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat;for;f90"
 			>
 			<File
+				RelativePath="..\aflock.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\agrunt.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\airtank.cpp"
 				>
 				<FileConfiguration
@@ -381,6 +389,26 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\apache.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\barnacle.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\barney.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\bigmomma.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\bloater.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\bmodels.cpp"
 				>
 				<FileConfiguration
@@ -410,6 +438,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\bullsquid.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\buttons.cpp"
@@ -536,6 +568,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\controller.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\crossbow.cpp"
 				>
 				<FileConfiguration
@@ -596,6 +632,14 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\defaultai.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\defaultai.h"
+				>
 			</File>
 			<File
 				RelativePath="..\doors.cpp"
@@ -722,6 +766,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\flyingmonster.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\flyingmonster.h"
+				>
+			</File>
+			<File
 				RelativePath="..\func_break.cpp"
 				>
 				<FileConfiguration
@@ -846,6 +898,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\gargantua.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\gauss.cpp"
 				>
 				<FileConfiguration
@@ -875,6 +931,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\genericmonster.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\ggrenade.cpp"
@@ -939,6 +999,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\gman.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\h_ai.cpp"
 				>
 				<FileConfiguration
@@ -999,6 +1063,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\h_cine.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\h_cycler.cpp"
@@ -1094,6 +1162,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\hassassin.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\headcrab.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\healthkit.cpp"
 				>
 				<FileConfiguration
@@ -1123,6 +1199,14 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\hgrunt.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\hl.def"
+				>
 			</File>
 			<File
 				RelativePath="..\wpn_shared\hl_wpn_glock.cpp"
@@ -1218,6 +1302,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\houndeye.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\ichthyosaur.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\common\interface.cpp"
 				>
 				<FileConfiguration
@@ -1249,6 +1341,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\islave.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\items.cpp"
 				>
 				<FileConfiguration
@@ -1278,6 +1374,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\leech.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\lights.cpp"
@@ -1342,6 +1442,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\monstermaker.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\monsters.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\monsterstate.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\mortar.cpp"
 				>
 				<FileConfiguration
@@ -1373,42 +1485,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\hl.def"
-				>
-			</File>
-			<File
 				RelativePath="..\mp5.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Profile|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\mpstubb.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -1468,6 +1545,18 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\nihilanth.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\nodes.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\osprey.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\pathcorner.cpp"
@@ -1594,6 +1683,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\playermonster.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\pm_shared\pm_debug.c"
 				>
 				<FileConfiguration
@@ -1718,6 +1811,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\rat.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\roach.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\rpg.cpp"
 				>
 				<FileConfiguration
@@ -1778,6 +1879,22 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\schedule.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\scientist.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\scripted.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\scripted.h"
+				>
 			</File>
 			<File
 				RelativePath="..\shotgun.cpp"
@@ -1966,6 +2083,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\squad.h"
+				>
+			</File>
+			<File
+				RelativePath="..\squadmonster.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\squadmonster.h"
+				>
+			</File>
+			<File
 				RelativePath="..\squeakgrenade.cpp"
 				>
 				<FileConfiguration
@@ -1995,6 +2124,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\stats.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\subs.cpp"
@@ -2028,6 +2161,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\talkmonster.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\teamplay_gamerules.cpp"
 				>
 				<FileConfiguration
@@ -2057,6 +2194,14 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\tempmonster.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\tentacle.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\triggers.cpp"
@@ -2119,6 +2264,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\turret.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\util.cpp"
@@ -2245,6 +2394,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\Wxdebug.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\wxdebug.h"
+				>
+			</File>
+			<File
 				RelativePath="..\xen.cpp"
 				>
 				<FileConfiguration
@@ -2274,6 +2431,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\zombie.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
