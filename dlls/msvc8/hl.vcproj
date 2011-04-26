@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="mp"
+	Name="hl"
 	ProjectGUID="{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}"
-	RootNamespace="mp"
+	RootNamespace="hl"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -42,7 +42,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\debugmp/mp.tlb"
+				TypeLibraryName=".\debughl/hl.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -74,7 +74,7 @@
 				OutputFile="$(OutDir)\hl.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\mp.def"
+				ModuleDefinitionFile="..\hl.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
@@ -130,7 +130,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Releasemp/mp.tlb"
+				TypeLibraryName=".\Releasehl/hl.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -163,7 +163,7 @@
 				OutputFile="$(OutDir)\hl.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\mp.def"
+				ModuleDefinitionFile="..\hl.def"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -218,7 +218,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Profilemp/mp.tlb"
+				TypeLibraryName=".\Profilehl/hl.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -251,7 +251,7 @@
 				OutputFile="$(OutDir)\hl.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\mp.def"
+				ModuleDefinitionFile="..\hl.def"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -1373,7 +1373,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\mp.def"
+				RelativePath="..\hl.def"
 				>
 			</File>
 			<File
