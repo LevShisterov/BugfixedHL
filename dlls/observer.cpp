@@ -81,6 +81,17 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 	pev->deadflag = DEAD_RESPAWNABLE;
 	pev->health = 1;
 
+
+	//pev->flags &= FL_SPECTATOR;
+	//pev->flags = FL_SPECTATOR;
+	//pev->movetype = MOVETYPE_NOCLIP;
+	//pev->deadflag = DEAD_NO;
+	//ClearBits(pev->flags, FL_ONGROUND);
+
+	// left from original SDK function
+	//pev->modelindex = 0;
+
+
 	// Clear out the status bar
 	m_fInitHUD = TRUE;
 
@@ -106,6 +117,32 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 }
 
 //=========================================================
+// Leave observer mode
+//=========================================================
+void CBasePlayer::StopObserver(void)
+{
+	// Turn off spectator
+	if (pev->iuser1 || pev->iuser2)
+	{
+		// Tell all clients this player is not a spectator anymore
+		//MESSAGE_BEGIN(MSG_ALL, gmsgSpectator);
+		//	WRITE_BYTE(ENTINDEX(edict()));
+		//	WRITE_BYTE(0);
+		//MESSAGE_END();
+
+		pev->iuser1 = pev->iuser2 = 0; 
+		m_hObserverTarget = NULL;
+		m_iHideHUD = 0;
+
+		//pev->team = 
+		MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
+			WRITE_BYTE(ENTINDEX(edict()));
+			WRITE_STRING(m_szTeamName);
+		MESSAGE_END();
+	}
+}
+
+//=========================================================
 // Attempt to change the observer mode
 //=========================================================
 void CBasePlayer::Observer_SetMode(int iMode)
@@ -119,7 +156,8 @@ void CBasePlayer::Observer_SetMode(int iMode)
 		iMode = OBS_IN_EYE; // now it is
 
 	if (m_hObserverTarget && 
-		(m_hObserverTarget == this || m_hObserverTarget->pev->iuser1 || (m_hObserverTarget->pev->effects & EF_NODRAW)))
+		(m_hObserverTarget == this || m_hObserverTarget->pev->iuser1))
+		// UNDONE: This broke spectating on killed target || (m_hObserverTarget->pev->effects & EF_NODRAW)))
 	{
 		m_hObserverTarget = NULL;
 	}
@@ -187,7 +225,8 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 		if (pEnt == this)
 			continue;
 		// Don't spec observers or invisible players
-		if (((CBasePlayer*)pEnt)->IsObserver() || (pEnt->pev->effects & EF_NODRAW))
+		if (((CBasePlayer*)pEnt)->IsObserver())
+			// UNDONE: This doesn't allow to select dead player || (pEnt->pev->effects & EF_NODRAW))
 			continue;
 
 		m_hObserverTarget = pEnt;
@@ -204,7 +243,10 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 		// Store the target in pev so the physics DLL can get to it
 		if (pev->iuser1 != OBS_ROAMING)
 			pev->iuser2 = ENTINDEX(m_hObserverTarget->edict());
+		// TODO: Optimize code and just return from this function if pev->iuser1 == OBS_ROAMING 
+		// or do cleanup of m_hObserverTarget (not good too)
 
+		//pev->groupinfo = m_hObserverTarget->pev->groupinfo;
 		//ALERT(at_console, "Now Tracking %s\n", STRING(m_hObserverTarget->pev->netname));
 	}
 	else
@@ -242,7 +284,7 @@ void CBasePlayer::Observer_HandleButtons()
 			iMode = OBS_MAP_CHASE;
 			break;
 		case OBS_MAP_CHASE:
-			iMode = OBS_CHASE_FREE;
+			iMode = OBS_CHASE_LOCKED;	// UNDONE: Was OBS_CHASE_FREE
 			break;
 		default:
 			iMode = OBS_ROAMING;
@@ -289,7 +331,8 @@ void CBasePlayer::Observer_CheckTarget()
 		else
 		{
 			CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
-			if (!pPlayer || (pPlayer->pev->deadflag == DEAD_DEAD && pPlayer->m_fDeadTime + 2.0 < gpGlobals->time))
+			if (!pPlayer)
+				// UNDONE: Fix || (pPlayer->pev->deadflag == DEAD_DEAD && pPlayer->m_fDeadTime + 2.0 < gpGlobals->time))
 				Observer_FindNextPlayer(false);
 		}
 	}
