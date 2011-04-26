@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="mp"
+	Name="hl"
 	ProjectGUID="{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}"
-	RootNamespace="mp"
+	RootNamespace="hl"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -42,7 +42,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\debugmp/mp.tlb"
+				TypeLibraryName=".\debughl/hl.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -130,7 +130,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Releasemp/mp.tlb"
+				TypeLibraryName=".\Releasehl/hl.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -218,7 +218,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Profilemp/mp.tlb"
+				TypeLibraryName=".\Profilehl/hl.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
