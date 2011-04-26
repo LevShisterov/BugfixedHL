@@ -74,7 +74,7 @@
 				OutputFile="$(OutDir)\hl.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\mp.def"
+				ModuleDefinitionFile="..\hl.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
@@ -163,7 +163,7 @@
 				OutputFile="$(OutDir)\hl.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\mp.def"
+				ModuleDefinitionFile="..\hl.def"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -251,7 +251,7 @@
 				OutputFile="$(OutDir)\hl.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\mp.def"
+				ModuleDefinitionFile="..\hl.def"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -1373,7 +1373,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\mp.def"
+				RelativePath="..\hl.def"
 				>
 			</File>
 			<File
