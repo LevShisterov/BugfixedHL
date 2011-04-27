@@ -973,13 +973,6 @@ void SetupVisibility( edict_t *pViewEntity, edict_t *pClient, unsigned char **pv
 		pView = pViewEntity;
 	}
 
-	// Tracking Spectators use the visibility of their target
-	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
-	if ( (pPlayer->pev->iuser2 != 0) && (pPlayer->m_hObserverTarget != NULL) )
-	{
-		pView = pPlayer->m_hObserverTarget->edict();
-	}
-
 	if ( pClient->v.flags & FL_PROXY )
 	{
 		*pvs = NULL;	// the spectator proxy sees
