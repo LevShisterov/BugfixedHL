@@ -256,19 +256,19 @@ void CBasePlayer::Observer_HandleButtons()
 			iMode = OBS_CHASE_FREE;
 			break;
 		case OBS_CHASE_FREE:
-			iMode = OBS_IN_EYE;
-			break;
-		case OBS_ROAMING:
-			iMode = OBS_MAP_FREE;
-			break;
-		case OBS_IN_EYE:
-			iMode = OBS_ROAMING;
-			break;
-		case OBS_MAP_FREE:
 			iMode = OBS_MAP_CHASE;
 			break;
+		case OBS_ROAMING:
+			iMode = OBS_IN_EYE;
+			break;
+		case OBS_IN_EYE:
+			iMode = OBS_CHASE_LOCKED;
+			break;
+		case OBS_MAP_FREE:
+			iMode = OBS_ROAMING;
+			break;
 		case OBS_MAP_CHASE:
-			iMode = OBS_CHASE_FREE;
+			iMode = OBS_MAP_FREE;
 			break;
 		default:
 			iMode = OBS_ROAMING;
