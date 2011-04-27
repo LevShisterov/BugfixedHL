@@ -216,11 +216,11 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 // Handle buttons in observer mode
 void CBasePlayer::Observer_HandleButtons()
 {
-	// Slow down mouse clicks
+	// Slow down mouse and keyboard clicks
 	if (m_flNextObserverInput > gpGlobals->time)
 		return;
 
-	// Jump changes from modes: Chase to Roaming
+	// Jump changes view modes
 	if (m_afButtonPressed & IN_JUMP)
 	{
 		int iMode;
