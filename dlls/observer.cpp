@@ -28,7 +28,6 @@
 extern int gmsgCurWeapon;
 extern int gmsgSetFOV;
 extern int gmsgTeamInfo;
-extern int gmsgSpectator;
 
 //=========================================================
 // Player has become a spectator. Set it up.
@@ -113,12 +112,6 @@ void CBasePlayer::StopObserver(void)
 	// Turn off spectator
 	if (pev->iuser1 || pev->iuser2)
 	{
-		// Tell all clients this player is not a spectator anymore
-		//MESSAGE_BEGIN(MSG_ALL, gmsgSpectator);
-		//	WRITE_BYTE(ENTINDEX(edict()));
-		//	WRITE_BYTE(0);
-		//MESSAGE_END();
-
 		pev->iuser1 = pev->iuser2 = 0; 
 		m_hObserverTarget = NULL;
 		m_iHideHUD = 0;
