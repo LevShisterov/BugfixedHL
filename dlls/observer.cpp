@@ -137,7 +137,7 @@ void CBasePlayer::Observer_SetMode(int iMode)
 		iMode = OBS_IN_EYE; // now it is
 
 	if (m_hObserverTarget && 
-		(m_hObserverTarget == this || m_hObserverTarget->pev->iuser1 || (m_hObserverTarget->pev->effects & EF_NODRAW)))
+		(m_hObserverTarget == this || m_hObserverTarget->pev->iuser1))
 	{
 		m_hObserverTarget = NULL;
 	}
@@ -204,8 +204,8 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 			continue;
 		if (pEnt == this)
 			continue;
-		// Don't spec observers or invisible players
-		if (((CBasePlayer*)pEnt)->IsObserver() || (pEnt->pev->effects & EF_NODRAW))
+		// Don't spec observers
+		if (((CBasePlayer*)pEnt)->IsObserver())
 			continue;
 
 		m_hObserverTarget = pEnt;
