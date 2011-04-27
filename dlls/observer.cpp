@@ -113,7 +113,6 @@ void CBasePlayer::StopObserver(void)
 	if (pev->iuser1 || pev->iuser2)
 	{
 		pev->iuser1 = pev->iuser2 = 0; 
-		m_hObserverTarget = NULL;
 		m_iHideHUD = 0;
 
 		//pev->team = 
