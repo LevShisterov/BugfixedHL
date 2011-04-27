@@ -106,6 +106,32 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 }
 
 //=========================================================
+// Leave observer mode
+//=========================================================
+void CBasePlayer::StopObserver(void)
+{
+	// Turn off spectator
+	if (pev->iuser1 || pev->iuser2)
+	{
+		// Tell all clients this player is not a spectator anymore
+		//MESSAGE_BEGIN(MSG_ALL, gmsgSpectator);
+		//	WRITE_BYTE(ENTINDEX(edict()));
+		//	WRITE_BYTE(0);
+		//MESSAGE_END();
+
+		pev->iuser1 = pev->iuser2 = 0; 
+		m_hObserverTarget = NULL;
+		m_iHideHUD = 0;
+
+		//pev->team = 
+		MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
+			WRITE_BYTE(ENTINDEX(edict()));
+			WRITE_STRING(m_szTeamName);
+		MESSAGE_END();
+	}
+}
+
+//=========================================================
 // Attempt to change the observer mode
 //=========================================================
 void CBasePlayer::Observer_SetMode(int iMode)

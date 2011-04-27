@@ -1799,7 +1799,7 @@ void CBasePlayer::PreThink(void)
 	{
 		Observer_HandleButtons();
 		Observer_CheckTarget();
-		Observer_CheckProperties();
+		//Observer_CheckProperties();
 		pev->impulse = 0;
 		return;
 	}
