@@ -307,7 +307,7 @@ void CBasePlayer::Observer_CheckTarget()
 		else
 		{
 			CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
-			if (!pPlayer || (pPlayer->pev->deadflag == DEAD_DEAD && pPlayer->m_fDeadTime + 2.0 < gpGlobals->time))
+			if (!pPlayer)
 				Observer_FindNextPlayer(false);
 		}
 	}
