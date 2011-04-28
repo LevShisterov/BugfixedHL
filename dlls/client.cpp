@@ -118,10 +118,15 @@ void ClientDisconnect( edict_t *pEntity )
 		}
 	}
 
-// since the edict doesn't get deleted, fix it so it doesn't interfere.
+	// since the edict doesn't get deleted, fix it so it doesn't interfere.
 	pEntity->v.takedamage = DAMAGE_NO;// don't attract autoaim
 	pEntity->v.solid = SOLID_NOT;// nonsolid
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
+
+	// Mark player as disconnected
+	CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(pEntity));
+	if (pPlayer)
+		pPlayer->m_fGameHUDInitialized = FALSE;
 
 	g_pGameRules->ClientDisconnected( pEntity );
 }

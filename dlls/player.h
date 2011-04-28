@@ -215,6 +215,7 @@ public:
 
 	virtual BOOL IsNetClient( void ) { return TRUE; }		// Bots should return FALSE for this, they can't receive NET messages
 															// Spectators should return TRUE for this
+	virtual BOOL IsInGame( void ) { return m_fGameHUDInitialized; }
 	virtual const char *TeamID( void );
 
 	virtual int		Save( CSave &save );
