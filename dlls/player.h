@@ -251,7 +251,6 @@ public:
 
 	void StartDeathCam( void );
 	void StartObserver( Vector vecPosition, Vector vecViewAngle );
-	void StopObserver( void );
 	void Observer_FindNextPlayer( bool bReverse );
 	void Observer_HandleButtons();
 	void Observer_SetMode( int iMode );
