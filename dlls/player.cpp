@@ -839,6 +839,10 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 	for ( i = 0; i < MAX_AMMO_SLOTS;i++)
 		m_rgAmmo[i] = 0;
 
+	// Remove deployed satchels
+	if ( HasNamedPlayerItem("weapon_satchel") )
+		DeactivateSatchels( this );
+
 	UpdateClientData();
 	// send Selected Weapon Message to our client
 	MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
@@ -1303,7 +1307,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	pev->framerate = 0.0;
 
 	BOOL fAnyButtonDown = (pev->button & ~IN_SCORE );
-	
+
 	// wait for all buttons released
 	if (pev->deadflag == DEAD_DEAD)
 	{
@@ -1327,7 +1331,7 @@ void CBasePlayer::PlayerDeathThink(void)
 		// go to dead camera. 
 		StartDeathCam();
 	}
-	
+
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	if (!fAnyButtonDown 
 		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.value > 0 && (gpGlobals->time > (m_fDeadTime + 5))) )
@@ -1778,7 +1782,7 @@ void CBasePlayer::PreThink(void)
 		return;         // intermission or finale
 
 	UTIL_MakeVectors(pev->v_angle);             // is this still used?
-	
+
 	ItemPreFrame( );
 	WaterMove();
 
@@ -4020,19 +4024,19 @@ void CBasePlayer :: UpdateClientData( void )
 	{
 		m_fKnownItem = TRUE;
 
-	// WeaponInit Message
-	// byte  = # of weapons
-	//
-	// for each weapon:
-	// byte		name str length (not including null)
-	// bytes... name
-	// byte		Ammo Type
-	// byte		Ammo2 Type
-	// byte		bucket
-	// byte		bucket pos
-	// byte		flags	
-	// ????		Icons
-		
+		// WeaponInit Message
+		// byte  = # of weapons
+		//
+		// for each weapon:
+		// byte		name str length (not including null)
+		// bytes... name
+		// byte		Ammo Type
+		// byte		Ammo2 Type
+		// byte		bucket
+		// byte		bucket pos
+		// byte		flags	
+		// ????		Icons
+
 		// Send ALL the weapon info now
 		int i;
 
