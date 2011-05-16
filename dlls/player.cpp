@@ -4085,7 +4085,7 @@ void CBasePlayer :: UpdateClientData( void )
 	if ( m_flNextSBarUpdateTime < gpGlobals->time )
 	{
 		UpdateStatusBar();
-		m_flNextSBarUpdateTime = gpGlobals->time + 0.2;
+		m_flNextSBarUpdateTime = gpGlobals->time + 0.01;
 	}
 }
 
