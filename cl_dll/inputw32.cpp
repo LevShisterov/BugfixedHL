@@ -172,6 +172,12 @@ void DLLEXPORT IN_ActivateMouse (void)
 	{
 		if (mouseparmsvalid)
 			restore_spi = SystemParametersInfo (SPI_SETMOUSE, 0, newmouseparms, 0);
+
+		RECT rect;
+		HWND hwnd = GetActiveWindow();
+		GetWindowRect(hwnd, &rect);
+		ClipCursor(&rect);
+
 		mouseactive = 1;
 	}
 }
@@ -187,6 +193,8 @@ void DLLEXPORT IN_DeactivateMouse (void)
 	{
 		if (restore_spi)
 			SystemParametersInfo (SPI_SETMOUSE, 0, originalmouseparms, 0);
+
+		ClipCursor(NULL);
 
 		mouseactive = 0;
 	}
