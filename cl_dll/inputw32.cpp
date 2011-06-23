@@ -20,6 +20,7 @@
 #include "../engine/keydefs.h"
 #include "view.h"
 #include "windows.h"
+#include "dinput/dinput.h"
 
 #define MOUSE_BUTTON_COUNT 5
 
@@ -60,6 +61,7 @@ extern cvar_t *cl_pitchspeed;
 extern cvar_t *cl_movespeedkey;
 
 // mouse variables
+cvar_t		*m_input;
 cvar_t		*m_filter;
 cvar_t		*sensitivity;
 
@@ -71,9 +73,14 @@ int			mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
 static int	restore_spi;
 static int	originalmouseparms[3], newmouseparms[3] = {0, 0, 1};
 static int	mouseactive;
-int			mouseinitialized;
+static int	mouseinitialized = 0;
 static int	mouseparmsvalid;
 static int	mouseshowtoggle = 1;
+
+static LPDIRECTINPUT		lpdi = NULL;		// DirectInput interface
+static LPDIRECTINPUTDEVICE	lpdiMouse = NULL;	// mouse device interface
+static int	dinput_mouse_acquired = 0;
+DIMOUSESTATE	mousestate;
 
 // joystick defines and variables
 // where should defines be moved?
@@ -172,6 +179,13 @@ void DLLEXPORT IN_ActivateMouse (void)
 	{
 		if (mouseparmsvalid)
 			restore_spi = SystemParametersInfo (SPI_SETMOUSE, 0, newmouseparms, 0);
+
+		if (lpdiMouse != NULL && !dinput_mouse_acquired)
+		{
+			if (lpdiMouse->Acquire() == DI_OK)
+				dinput_mouse_acquired = TRUE;
+		}
+
 		mouseactive = 1;
 	}
 }
@@ -188,6 +202,12 @@ void DLLEXPORT IN_DeactivateMouse (void)
 		if (restore_spi)
 			SystemParametersInfo (SPI_SETMOUSE, 0, originalmouseparms, 0);
 
+		if (lpdiMouse != NULL && dinput_mouse_acquired)
+		{
+			if (lpdiMouse->Unacquire() == DI_OK)
+				dinput_mouse_acquired = FALSE;
+		}
+
 		mouseactive = 0;
 	}
 }
@@ -202,7 +222,10 @@ void IN_StartupMouse (void)
 	if ( gEngfuncs.CheckParm ("-nomouse", NULL ) ) 
 		return; 
 
+	if (mouseinitialized)
+		return;
 	mouseinitialized = 1;
+
 	mouseparmsvalid = SystemParametersInfo (SPI_GETMOUSE, 0, originalmouseparms, 0);
 
 	if (mouseparmsvalid)
@@ -225,6 +248,28 @@ void IN_StartupMouse (void)
 	}
 
 	mouse_buttons = MOUSE_BUTTON_COUNT;
+
+	// Program instance
+	HINSTANCE hinst;
+	hinst = GetModuleHandle("client.dll");
+
+	if (DirectInput8Create(hinst, DIRECTINPUT_VERSION, IID_IDirectInput8A, (LPVOID *)&lpdi, NULL) != DI_OK)
+		return;
+
+	// We'll skip the enumeration step, since we care only about the standard system mouse.
+	if (lpdi->CreateDevice(GUID_SysMouse, &lpdiMouse, NULL) != DI_OK)
+		return;
+
+	HWND hwnd = GetActiveWindow();
+	if (lpdiMouse->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_BACKGROUND) != DI_OK)
+		return;
+
+	// Note: c_dfDIMouse is an external DIDATAFORMAT structure supplied by DirectInput.
+	if (lpdiMouse->SetDataFormat(&c_dfDIMouse) != DI_OK)
+		return;
+
+	dinput_mouse_acquired = TRUE;
+	return;
 }
 
 /*
@@ -234,7 +279,19 @@ IN_Shutdown
 */
 void IN_Shutdown (void)
 {
-	IN_DeactivateMouse ();
+	IN_DeactivateMouse();
+
+	if (lpdiMouse)
+	{
+		IDirectInputDevice_Release(lpdiMouse);
+		lpdiMouse = NULL;
+	}
+
+	if (lpdi)
+	{
+		IDirectInput_Release(lpdi);
+		lpdi = NULL;
+	}
 }
 
 /*
@@ -313,10 +370,20 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 	//      move the camera, or if the mouse cursor is visible or if we're in intermission
 	if ( !iMouseInUse && !g_iVisibleMouse && !gHUD.m_iIntermission )
 	{
-		GetCursorPos (&current_pos);
+		if (m_input->value == 2 && dinput_mouse_acquired)
+		{
+			lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
 
-		mx = current_pos.x - gEngfuncs.GetWindowCenterX() + mx_accum;
-		my = current_pos.y - gEngfuncs.GetWindowCenterY() + my_accum;
+			mx = mousestate.lX + mx_accum;
+			my = mousestate.lY + my_accum;
+		}
+		else
+		{
+			GetCursorPos (&current_pos);
+
+			mx = current_pos.x - gEngfuncs.GetWindowCenterX() + mx_accum;
+			my = current_pos.y - gEngfuncs.GetWindowCenterY() + my_accum;
+		}
 
 		mx_accum = 0;
 		my_accum = 0;
@@ -404,12 +471,22 @@ void DLLEXPORT IN_Accumulate (void)
 	//only accumulate mouse if we are not moving the camera with the mouse
 	if ( !iMouseInUse && !g_iVisibleMouse )
 	{
-	    if (mouseactive)
-	    {
-			GetCursorPos (&current_pos);
+		if (mouseactive)
+		{
+			if (m_input->value == 2 && dinput_mouse_acquired)
+			{
+				lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
 
-			mx_accum += current_pos.x - gEngfuncs.GetWindowCenterX();
-			my_accum += current_pos.y - gEngfuncs.GetWindowCenterY();
+				mx_accum += mousestate.lX;
+				my_accum += mousestate.lY;
+			}
+			else
+			{
+				GetCursorPos (&current_pos);
+
+				mx_accum += current_pos.x - gEngfuncs.GetWindowCenterX();
+				my_accum += current_pos.y - gEngfuncs.GetWindowCenterY();
+			}
 
 			// force the mouse to the center, so there's room to move
 			IN_ResetMouse();
@@ -916,6 +993,7 @@ IN_Init
 */
 void IN_Init (void)
 {
+	m_input					= gEngfuncs.pfnRegisterVariable ( "m_input","1", FCVAR_ARCHIVE );
 	m_filter				= gEngfuncs.pfnRegisterVariable ( "m_filter","0", FCVAR_ARCHIVE );
 	sensitivity				= gEngfuncs.pfnRegisterVariable ( "sensitivity","3", FCVAR_ARCHIVE ); // user mouse sensitivity setting.
 
