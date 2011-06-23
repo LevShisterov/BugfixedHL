@@ -77,6 +77,7 @@ static int	mouseinitialized = 0;
 static int	mouseparmsvalid;
 static int	mouseshowtoggle = 1;
 
+HRESULT hr;
 static LPDIRECTINPUT		lpdi = NULL;		// DirectInput interface
 static LPDIRECTINPUTDEVICE	lpdiMouse = NULL;	// mouse device interface
 static int	dinput_mouse_acquired = 0;
@@ -163,9 +164,28 @@ void Force_CenterView_f (void)
 	if (!iMouseInUse)
 	{
 		gEngfuncs.GetViewAngles( (float *)viewangles );
-	    viewangles[PITCH] = 0;
+		viewangles[PITCH] = 0;
 		gEngfuncs.SetViewAngles( (float *)viewangles );
 	}
+}
+
+void SetDinputBufferSize(void)
+{
+	static DIPROPDWORD dipdw = { { sizeof(dipdw), sizeof(dipdw.diph), 0, DIPH_DEVICE }, 0 };
+	unsigned int bufsize;
+
+	dipdw.dwData = dipdw.dwData + max(1, dipdw.dwData / 2);
+
+	gEngfuncs.Con_DPrintf("DirectInput overflow, increasing buffer size to %u.\n", dipdw.dwData);
+
+	IN_DeactivateMouse();
+
+	hr = lpdiMouse->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
+
+	IN_ActivateMouse();
+
+	if (hr != DI_OK)
+		gEngfuncs.Con_DPrintf("Failed to increase DirectInput buffer size.\n");
 }
 
 /*
@@ -183,7 +203,7 @@ void DLLEXPORT IN_ActivateMouse (void)
 		if (lpdiMouse != NULL && !dinput_mouse_acquired)
 		{
 			if (lpdiMouse->Acquire() == DI_OK)
-				dinput_mouse_acquired = TRUE;
+				dinput_mouse_acquired = 1;
 		}
 
 		mouseactive = 1;
@@ -205,7 +225,7 @@ void DLLEXPORT IN_DeactivateMouse (void)
 		if (lpdiMouse != NULL && dinput_mouse_acquired)
 		{
 			if (lpdiMouse->Unacquire() == DI_OK)
-				dinput_mouse_acquired = FALSE;
+				dinput_mouse_acquired = 0;
 		}
 
 		mouseactive = 0;
@@ -268,7 +288,6 @@ void IN_StartupMouse (void)
 	if (lpdiMouse->SetDataFormat(&c_dfDIMouse) != DI_OK)
 		return;
 
-	dinput_mouse_acquired = TRUE;
 	return;
 }
 
@@ -292,6 +311,8 @@ void IN_Shutdown (void)
 		IDirectInput_Release(lpdi);
 		lpdi = NULL;
 	}
+
+	mouseinitialized = 0;
 }
 
 /*
@@ -315,7 +336,7 @@ FIXME: Call through to engine?
 */
 void IN_ResetMouse( void )
 {
-	SetCursorPos ( gEngfuncs.GetWindowCenterX(), gEngfuncs.GetWindowCenterY() );	
+	SetCursorPos ( gEngfuncs.GetWindowCenterX(), gEngfuncs.GetWindowCenterY() );
 }
 
 /*
@@ -372,7 +393,11 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 	{
 		if (m_input->value == 2 && dinput_mouse_acquired)
 		{
-			lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
+			hr = lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
+			if (hr == DIERR_NOTACQUIRED || hr == DIERR_INPUTLOST)
+				lpdiMouse->Acquire();
+			else if (hr == DI_BUFFEROVERFLOW)
+				SetDinputBufferSize();
 
 			mx = mousestate.lX + mx_accum;
 			my = mousestate.lY + my_accum;
@@ -475,7 +500,11 @@ void DLLEXPORT IN_Accumulate (void)
 		{
 			if (m_input->value == 2 && dinput_mouse_acquired)
 			{
-				lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
+				hr = lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
+				if (hr == DIERR_NOTACQUIRED || hr == DIERR_INPUTLOST)
+					lpdiMouse->Acquire();
+				else if (hr == DI_BUFFEROVERFLOW)
+					SetDinputBufferSize();
 
 				mx_accum += mousestate.lX;
 				my_accum += mousestate.lY;
