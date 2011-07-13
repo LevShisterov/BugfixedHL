@@ -278,7 +278,7 @@ void CLeech::AttackSound( void )
 {
 	if ( gpGlobals->time > m_attackSoundTime )
 	{
-		EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, PITCH_NORM );
+		EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, PITCH_NORM );
 		m_attackSoundTime = gpGlobals->time + 0.5;
 	}
 }
@@ -286,7 +286,7 @@ void CLeech::AttackSound( void )
 
 void CLeech::AlertSound( void )
 {
-	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM * 0.5, 0, PITCH_NORM );
+	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM * 0.5, 0, PITCH_NORM );
 }
 
 
@@ -297,9 +297,9 @@ void CLeech::Precache( void )
 	//PRECACHE_MODEL("models/icky.mdl");
 	PRECACHE_MODEL("models/leech.mdl");
 
-	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAttackSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackSounds[i]);
-	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAlertSounds ); i++ )
 		PRECACHE_SOUND((char *)pAlertSounds[i]);
 }
 
