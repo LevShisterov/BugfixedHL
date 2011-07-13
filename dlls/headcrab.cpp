@@ -42,7 +42,7 @@ Schedule_t	slHCRangeAttack1[] =
 {
 	{ 
 		tlHCRangeAttack1,
-		ARRAYSIZE ( tlHCRangeAttack1 ), 
+		HLARRAYSIZE ( tlHCRangeAttack1 ), 
 		bits_COND_ENEMY_OCCLUDED	|
 		bits_COND_NO_AMMO_LOADED,
 		0,
@@ -62,7 +62,7 @@ Schedule_t	slHCRangeAttack1Fast[] =
 {
 	{ 
 		tlHCRangeAttack1Fast,
-		ARRAYSIZE ( tlHCRangeAttack1Fast ), 
+		HLARRAYSIZE ( tlHCRangeAttack1Fast ), 
 		bits_COND_ENEMY_OCCLUDED	|
 		bits_COND_NO_AMMO_LOADED,
 		0,

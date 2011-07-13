@@ -310,7 +310,7 @@ void CAGrunt :: PrescheduleThink ( void )
 
 			do
 			{
-				num = RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1);
+				num = RANDOM_LONG(0,HLARRAYSIZE(pIdleSounds)-1);
 			} while( num == m_iLastWord );
 
 			m_iLastWord = num;
@@ -339,7 +339,7 @@ void CAGrunt :: DeathSound ( void )
 {
 	StopTalking();
 
-	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pDieSounds[RANDOM_LONG(0,ARRAYSIZE(pDieSounds)-1)], 1.0, ATTN_NORM );
+	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pDieSounds[RANDOM_LONG(0,HLARRAYSIZE(pDieSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -349,7 +349,7 @@ void CAGrunt :: AlertSound ( void )
 {
 	StopTalking();
 
-	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1)], 1.0, ATTN_NORM );
+	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0,HLARRAYSIZE(pAlertSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -359,7 +359,7 @@ void CAGrunt :: AttackSound ( void )
 {
 	StopTalking();
 
-	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pAttackSounds[RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1)], 1.0, ATTN_NORM );
+	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pAttackSounds[RANDOM_LONG(0,HLARRAYSIZE(pAttackSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -376,7 +376,7 @@ void CAGrunt :: PainSound ( void )
 
 	StopTalking();
 
-	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pPainSounds[RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1)], 1.0, ATTN_NORM );
+	EMIT_SOUND ( ENT(pev), CHAN_VOICE, pPainSounds[RANDOM_LONG(0,HLARRAYSIZE(pPainSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -519,7 +519,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 250;
 				}
 
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 				Vector vecArmPos, vecArmAng;
 				GetAttachment( 0, vecArmPos, vecArmAng );
@@ -528,7 +528,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			else
 			{
 				// Play a random attack miss sound
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 		}
 		break;
@@ -549,7 +549,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * -250;
 				}
 
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 				Vector vecArmPos, vecArmAng;
 				GetAttachment( 0, vecArmPos, vecArmAng );
@@ -558,7 +558,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			else
 			{
 				// Play a random attack miss sound
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 		}
 		break;
@@ -606,25 +606,25 @@ void CAGrunt :: Precache()
 
 	PRECACHE_MODEL("models/agrunt.mdl");
 
-	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pAttackMissSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAttackMissSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackMissSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pIdleSounds ); i++ )
 		PRECACHE_SOUND((char *)pIdleSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pDieSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pDieSounds ); i++ )
 		PRECACHE_SOUND((char *)pDieSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pPainSounds ); i++ )
 		PRECACHE_SOUND((char *)pPainSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAttackSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAlertSounds ); i++ )
 		PRECACHE_SOUND((char *)pAlertSounds[i]);
 
 
@@ -654,7 +654,7 @@ Schedule_t	slAGruntFail[] =
 {
 	{
 		tlAGruntFail,
-		ARRAYSIZE ( tlAGruntFail ),
+		HLARRAYSIZE ( tlAGruntFail ),
 		bits_COND_CAN_RANGE_ATTACK1	|
 		bits_COND_CAN_MELEE_ATTACK1,
 		0,
@@ -677,7 +677,7 @@ Schedule_t	slAGruntCombatFail[] =
 {
 	{
 		tlAGruntCombatFail,
-		ARRAYSIZE ( tlAGruntCombatFail ),
+		HLARRAYSIZE ( tlAGruntCombatFail ),
 		bits_COND_CAN_RANGE_ATTACK1	|
 		bits_COND_CAN_MELEE_ATTACK1,
 		0,
@@ -701,7 +701,7 @@ Schedule_t slAGruntStandoff[] =
 {
 	{
 		tlAGruntStandoff,
-		ARRAYSIZE ( tlAGruntStandoff ),
+		HLARRAYSIZE ( tlAGruntStandoff ),
 		bits_COND_CAN_RANGE_ATTACK1		|
 		bits_COND_CAN_MELEE_ATTACK1		|
 		bits_COND_SEE_ENEMY				|
@@ -726,7 +726,7 @@ Schedule_t slAGruntSuppress[] =
 {
 	{
 		tlAGruntSuppressHornet,
-		ARRAYSIZE ( tlAGruntSuppressHornet ),
+		HLARRAYSIZE ( tlAGruntSuppressHornet ),
 		0,
 		0,
 		"AGrunt Suppress Hornet",
@@ -747,7 +747,7 @@ Schedule_t	slAGruntRangeAttack1[] =
 {
 	{ 
 		tlAGruntRangeAttack1,
-		ARRAYSIZE ( tlAGruntRangeAttack1 ), 
+		HLARRAYSIZE ( tlAGruntRangeAttack1 ), 
 		bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
 		bits_COND_HEAVY_DAMAGE,
@@ -771,7 +771,7 @@ Schedule_t	slAGruntHiddenRangeAttack[] =
 {
 	{ 
 		tlAGruntHiddenRangeAttack1,
-		ARRAYSIZE ( tlAGruntHiddenRangeAttack1 ), 
+		HLARRAYSIZE ( tlAGruntHiddenRangeAttack1 ), 
 		bits_COND_NEW_ENEMY			|
 		bits_COND_HEAVY_DAMAGE		|
 		bits_COND_HEAR_SOUND,
@@ -800,7 +800,7 @@ Schedule_t	slAGruntTakeCoverFromEnemy[] =
 {
 	{ 
 		tlAGruntTakeCoverFromEnemy,
-		ARRAYSIZE ( tlAGruntTakeCoverFromEnemy ), 
+		HLARRAYSIZE ( tlAGruntTakeCoverFromEnemy ), 
 		bits_COND_NEW_ENEMY,
 		0,
 		"AGruntTakeCoverFromEnemy"
@@ -837,7 +837,7 @@ Schedule_t	slAGruntVictoryDance[] =
 {
 	{ 
 		tlAGruntVictoryDance,
-		ARRAYSIZE ( tlAGruntVictoryDance ), 
+		HLARRAYSIZE ( tlAGruntVictoryDance ), 
 		bits_COND_NEW_ENEMY		|
 		bits_COND_LIGHT_DAMAGE	|
 		bits_COND_HEAVY_DAMAGE,
@@ -859,7 +859,7 @@ Schedule_t	slAGruntThreatDisplay[] =
 {
 	{ 
 		tlAGruntThreatDisplay,
-		ARRAYSIZE ( tlAGruntThreatDisplay ), 
+		HLARRAYSIZE ( tlAGruntThreatDisplay ), 
 		bits_COND_NEW_ENEMY			|
 		bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE,

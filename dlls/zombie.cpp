@@ -157,14 +157,14 @@ void CZombie :: PainSound( void )
 	int pitch = 95 + RANDOM_LONG(0,9);
 
 	if (RANDOM_LONG(0,5) < 2)
-		EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+		EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,HLARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 void CZombie :: AlertSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
 
-	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 void CZombie :: IdleSound( void )
@@ -172,13 +172,13 @@ void CZombie :: IdleSound( void )
 	int pitch = 95 + RANDOM_LONG(0,9);
 
 	// Play a random idle sound
-	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,HLARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 void CZombie :: AttackSound( void )
 {
 	// Play a random attack sound
-	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	EMIT_SOUND_DYN ( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 
@@ -204,10 +204,10 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
 				}
 				// Play a random attack hit sound
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 			else // Play a random attack miss sound
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 			if (RANDOM_LONG(0,1))
 				AttackSound();
@@ -227,10 +227,10 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.x = 5;
 					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 100;
 				}
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 			else
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 			if (RANDOM_LONG(0,1))
 				AttackSound();
@@ -248,10 +248,10 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.x = 5;
 					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * -100;
 				}
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 			else
-				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,HLARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 			if (RANDOM_LONG(0,1))
 				AttackSound();
@@ -295,22 +295,22 @@ void CZombie :: Precache()
 
 	PRECACHE_MODEL("models/zombie.mdl");
 
-	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pAttackMissSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAttackMissSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackMissSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAttackSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pIdleSounds ); i++ )
 		PRECACHE_SOUND((char *)pIdleSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pAlertSounds ); i++ )
 		PRECACHE_SOUND((char *)pAlertSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
+	for ( i = 0; i < HLARRAYSIZE( pPainSounds ); i++ )
 		PRECACHE_SOUND((char *)pPainSounds[i]);
 }	
 
