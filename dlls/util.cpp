@@ -573,10 +573,10 @@ CBaseEntity *UTIL_FindEntityGeneric( const char *szWhatever, Vector &vecSrc, flo
 }
 
 
-// returns a CBaseEntity pointer to a player by index.  Only returns if the player is spawned and connected
-// otherwise returns NULL
-// Index is 1 based
-CBaseEntity	*UTIL_PlayerByIndex( int playerIndex )
+// Returns a CBaseEntity pointer to a player by index.
+// Only returns if the player is connected and was spawned, otherwise returns NULL.
+// Index is 1 based.
+CBaseEntity *UTIL_PlayerByIndex( int playerIndex )
 {
 	CBaseEntity *pPlayer = NULL;
 
@@ -586,9 +586,14 @@ CBaseEntity	*UTIL_PlayerByIndex( int playerIndex )
 		if ( pPlayerEdict && !pPlayerEdict->free )
 		{
 			pPlayer = CBaseEntity::Instance( pPlayerEdict );
+			if ( pPlayer )
+			{
+				if ( !((CBasePlayer *)pPlayer)->IsConnected() )
+					pPlayer = NULL;
+			}
 		}
 	}
-	
+
 	return pPlayer;
 }
 

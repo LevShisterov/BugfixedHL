@@ -230,30 +230,33 @@ void CHalfLifeMultiplay :: Think ( void )
 
 	if ( flFragLimit )
 	{
-		int bestfrags = 9999;
+		bool first = true;
+		int bestfrags = flFragLimit;
 		int remain;
 
 		// check if any player is over the frag limit
 		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
 			CBaseEntity *pPlayer = UTIL_PlayerByIndex( i );
+			if ( pPlayer == NULL) continue;
 
-			if ( pPlayer && pPlayer->pev->frags >= flFragLimit )
+			if ( pPlayer->pev->frags >= flFragLimit )
 			{
 				GoToIntermission();
 				return;
 			}
 
-
-			if ( pPlayer )
+			remain = flFragLimit - pPlayer->pev->frags;
+			if ( first )
 			{
-				remain = flFragLimit - pPlayer->pev->frags;
-				if ( remain < bestfrags )
-				{
-					bestfrags = remain;
-				}
+				bestfrags = remain;
+				first = false;
+				continue;
 			}
-
+			if ( remain < bestfrags )
+			{
+				bestfrags = remain;
+			}
 		}
 		frags_remaining = bestfrags;
 	}

@@ -2770,6 +2770,8 @@ ReturnSpot:
 
 void CBasePlayer::Spawn( void )
 {
+	m_bConnected = TRUE;
+
 	pev->classname		= MAKE_STRING("player");
 	pev->health			= 100;
 	pev->armorvalue		= 0;
@@ -2777,8 +2779,8 @@ void CBasePlayer::Spawn( void )
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_WALK;
 	pev->max_health		= pev->health;
-	pev->flags		   &= FL_PROXY;	// keep proxy flag sey by engine
-	pev->flags		   |= FL_CLIENT;
+	pev->flags			&= FL_PROXY;	// keep proxy flag sey by engine
+	pev->flags			|= FL_CLIENT;
 	pev->air_finished	= gpGlobals->time + 12;
 	pev->dmg			= 2;				// initial water damage
 	pev->effects		= 0;
@@ -2814,14 +2816,14 @@ void CBasePlayer::Spawn( void )
 	m_iFlashBattery = 99;
 	m_flFlashLightTime = 1; // force first message
 
-// dont let uninitialized value here hurt the player
+	// dont let uninitialized value here hurt the player
 	m_flFallVelocity = 0;
 
 	g_pGameRules->SetDefaultPlayerTeam( this );
 	g_pGameRules->GetPlayerSpawnSpot( this );
 
-    SET_MODEL(ENT(pev), "models/player.mdl");
-    g_ulModelIndexPlayer = pev->modelindex;
+	SET_MODEL(ENT(pev), "models/player.mdl");
+	g_ulModelIndexPlayer = pev->modelindex;
 	pev->sequence		= LookupActivity( ACT_IDLE );
 
 	if ( FBitSet(pev->flags, FL_DUCKING) ) 
@@ -2829,7 +2831,7 @@ void CBasePlayer::Spawn( void )
 	else
 		UTIL_SetSize(pev, VEC_HULL_MIN, VEC_HULL_MAX);
 
-    pev->view_ofs = VEC_VIEW;
+	pev->view_ofs = VEC_VIEW;
 	Precache();
 	m_HackedGunPos		= Vector( 0, 32, 0 );
 
@@ -4081,6 +4083,8 @@ void CBasePlayer :: UpdateClientData( void )
 	for ( int i = 0; i < MAX_ITEM_TYPES; i++ )
 	{
 		if ( m_rgpPlayerItems[i] )  // each item updates it's successors
+			// BUG: m_rgpPlayerItems[i] sometimes is not valid!
+			// BugCheck: It is not NULL. But pointing to non-existing entity?
 			m_rgpPlayerItems[i]->UpdateClientData( this );
 	}
 
