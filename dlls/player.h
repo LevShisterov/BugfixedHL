@@ -309,7 +309,10 @@ public:
 	char m_SbarString1[ SBAR_STRING_SIZE ];
 	
 	float m_flNextChatTime;
-	
+
+	BOOL m_bConnected;	// we set it in Spawn() so it will be TRUE only after player was spawned
+	BOOL IsConnected() { return m_bConnected; }
+	void Disconnect() { m_bConnected = FALSE; }
 };
 
 #define AUTOAIM_2DEGREES  0.0348994967025
