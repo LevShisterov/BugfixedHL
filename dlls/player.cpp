@@ -840,8 +840,7 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 		m_rgAmmo[i] = 0;
 
 	// Remove deployed satchels
-	if ( HasNamedPlayerItem("weapon_satchel") )
-		DeactivateSatchels( this );
+	DeactivateSatchels( this );
 
 	UpdateClientData();
 	// send Selected Weapon Message to our client
