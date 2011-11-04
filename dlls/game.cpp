@@ -18,7 +18,7 @@
 #include "game.h"
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
-cvar_t	allow_spectators = {"allow_spectators","0"};
+cvar_t	allow_spectators = {"allow_spectators","0", FCVAR_SERVER };
 
 // multiplayer server rules
 cvar_t	fragsleft	= {"mp_fragsleft","0", FCVAR_SERVER | FCVAR_UNLOGGED };	  // Don't spam console/log files/users with this changing
