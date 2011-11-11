@@ -251,7 +251,7 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 		{
 			MESSAGE_BEGIN( MSG_ONE, gmsgTeamInfo, NULL, pPlayer->edict() );
 				WRITE_BYTE( plr->entindex() );
-				WRITE_STRING( plr->TeamID() );
+				WRITE_STRING( plr->pev->iuser1 ? "" : plr->TeamID() );
 			MESSAGE_END();
 		}
 	}
@@ -294,7 +294,7 @@ void CHalfLifeTeamplay::ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTea
 	// notify everyone's HUD of the team change
 	MESSAGE_BEGIN( MSG_ALL, gmsgTeamInfo );
 		WRITE_BYTE( clientIndex );
-		WRITE_STRING( pPlayer->m_szTeamName );
+		WRITE_STRING( pPlayer->pev->iuser1 ? "" : pPlayer->TeamID() );
 	MESSAGE_END();
 
 	MESSAGE_BEGIN( MSG_ALL, gmsgScoreInfo );
@@ -621,7 +621,7 @@ void CHalfLifeTeamplay::RecountTeams( bool bResendInfo )
 				{
 					MESSAGE_BEGIN( MSG_ALL, gmsgTeamInfo, NULL );
 						WRITE_BYTE( plr->entindex() );
-						WRITE_STRING( plr->TeamID() );
+						WRITE_STRING( plr->pev->iuser1 ? "" : plr->TeamID() );
 					MESSAGE_END();
 				}
 			}

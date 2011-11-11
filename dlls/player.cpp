@@ -1800,7 +1800,7 @@ void CBasePlayer::PreThink(void)
 	{
 		Observer_HandleButtons();
 		Observer_CheckTarget();
-		Observer_CheckProperties();
+		//Observer_CheckProperties();
 		pev->impulse = 0;
 		return;
 	}
@@ -3943,7 +3943,7 @@ void CBasePlayer :: UpdateClientData( void )
 		m_iClientBattery = pev->armorvalue;
 
 		ASSERT( gmsgBattery > 0 );
-		// send "health" update message
+		// send "armor" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
 			WRITE_SHORT( (int)pev->armorvalue);
 		MESSAGE_END();
@@ -4017,7 +4017,7 @@ void CBasePlayer :: UpdateClientData( void )
 	if (m_iTrain & TRAIN_NEW)
 	{
 		ASSERT( gmsgTrain > 0 );
-		// send "health" update message
+		// send "train" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgTrain, NULL, pev );
 			WRITE_BYTE(m_iTrain & 0xF);
 		MESSAGE_END();

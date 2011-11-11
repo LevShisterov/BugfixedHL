@@ -28,7 +28,8 @@
 extern int gmsgCurWeapon;
 extern int gmsgSetFOV;
 extern int gmsgTeamInfo;
-extern int gmsgSpectator;
+
+extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 
 //=========================================================
 // Player has become a spectator. Set it up.
@@ -106,6 +107,27 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 }
 
 //=========================================================
+// Leave observer mode
+//=========================================================
+void CBasePlayer::StopObserver(void)
+{
+	// Turn off spectator
+	if (pev->iuser1 || pev->iuser2)
+	{
+		pev->iuser1 = pev->iuser2 = 0; 
+		m_iHideHUD = 0;
+
+		MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
+			WRITE_BYTE(ENTINDEX(edict()));
+			WRITE_STRING(m_szTeamName);
+		MESSAGE_END();
+
+		respawn(pev, false);	// don't copy a corpse
+		pev->nextthink = -1;
+	}
+}
+
+//=========================================================
 // Attempt to change the observer mode
 //=========================================================
 void CBasePlayer::Observer_SetMode(int iMode)
@@ -116,44 +138,19 @@ void CBasePlayer::Observer_SetMode(int iMode)
 
 	// is valid mode ?
 	if (iMode < OBS_CHASE_LOCKED || iMode > OBS_MAP_CHASE)
-		iMode = OBS_IN_EYE; // now it is
-
-	if (m_hObserverTarget && 
-		(m_hObserverTarget == this || m_hObserverTarget->pev->iuser1 || (m_hObserverTarget->pev->effects & EF_NODRAW)))
-	{
-		m_hObserverTarget = NULL;
-	}
+		iMode = OBS_ROAMING; // now it is
 
 	// set spectator mode
+	m_iObserverMode = iMode;
 	pev->iuser1 = iMode;
-
-	// if we are not roaming, we need a valid target to track
-	if (iMode != OBS_ROAMING && m_hObserverTarget == NULL)
-	{
-		Observer_FindNextPlayer(false);
-
-		// if we didn't find a valid target switch to roaming
-		if (m_hObserverTarget == NULL)
-		{
-			ClientPrint(pev, HUD_PRINTCENTER, "#Spec_NoTarget");
-			pev->iuser1 = OBS_ROAMING;
-		}
-	}
-
-	// set target if not roaming
-	if (pev->iuser1 == OBS_ROAMING)
-		pev->iuser2 = 0;
-	else
-		pev->iuser2 = ENTINDEX(m_hObserverTarget->edict());
-
 	pev->iuser3 = 0;
+
+	Observer_CheckTarget();
 
 	// print spectator mode on client screen
 	char modemsg[16];
 	sprintf(modemsg,"#Spec_Mode%i", pev->iuser1);
 	ClientPrint(pev, HUD_PRINTCENTER, modemsg);
-
-	m_iObserverMode = pev->iuser1;
 }
 
 // Find the next client in the game for this player to spectate
@@ -181,16 +178,16 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 		if (iCurrent < 1)
 			iCurrent = gpGlobals->maxClients;
 
-		CBaseEntity *pEnt = UTIL_PlayerByIndex(iCurrent);
-		if (!pEnt)
+		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(iCurrent);
+		if (!pPlayer)
+			continue;	// Don't spectate not connected players
+		if (pPlayer == this)
 			continue;
-		if (pEnt == this)
-			continue;
-		// Don't spec observers or invisible players
-		if (((CBasePlayer*)pEnt)->IsObserver() || (pEnt->pev->effects & EF_NODRAW))
+		// Don't spectate observers
+		if (pPlayer->IsObserver())
 			continue;
 
-		m_hObserverTarget = pEnt;
+		m_hObserverTarget = pPlayer;
 		break;
 
 	} while (iCurrent != iStart);
@@ -202,13 +199,18 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 		UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin);
 
 		// Store the target in pev so the physics DLL can get to it
-		if (pev->iuser1 != OBS_ROAMING)
+		if (pev->iuser1 != OBS_ROAMING && pev->iuser1 != OBS_MAP_FREE)
 			pev->iuser2 = ENTINDEX(m_hObserverTarget->edict());
+		else
+			pev->iuser2 = 0;
 
 		//ALERT(at_console, "Now Tracking %s\n", STRING(m_hObserverTarget->pev->netname));
 	}
 	else
 	{
+		//ClientPrint(pev, HUD_PRINTCENTER, "#Spec_NoTarget");
+		pev->iuser2 = 0;
+
 		//ALERT(at_console, "No observer targets.\n");
 	}
 }
@@ -230,19 +232,19 @@ void CBasePlayer::Observer_HandleButtons()
 			iMode = OBS_CHASE_FREE;
 			break;
 		case OBS_CHASE_FREE:
-			iMode = OBS_IN_EYE;
-			break;
-		case OBS_ROAMING:
-			iMode = OBS_MAP_FREE;
-			break;
-		case OBS_IN_EYE:
-			iMode = OBS_ROAMING;
-			break;
-		case OBS_MAP_FREE:
 			iMode = OBS_MAP_CHASE;
 			break;
+		case OBS_ROAMING:
+			iMode = OBS_IN_EYE;
+			break;
+		case OBS_IN_EYE:
+			iMode = OBS_CHASE_LOCKED;
+			break;
+		case OBS_MAP_FREE:
+			iMode = OBS_ROAMING;
+			break;
 		case OBS_MAP_CHASE:
-			iMode = OBS_CHASE_FREE;
+			iMode = OBS_MAP_FREE;
 			break;
 		default:
 			iMode = OBS_ROAMING;
@@ -253,15 +255,14 @@ void CBasePlayer::Observer_HandleButtons()
 	}
 
 	// Attack moves to the next player
-	if (m_afButtonPressed & IN_ATTACK && pev->iuser1 != OBS_ROAMING)
+	if (m_afButtonPressed & IN_ATTACK)
 	{
 		Observer_FindNextPlayer(false);
 
 		m_flNextObserverInput = gpGlobals->time + NEXT_OBSERVER_INPUT_DELAY;
 	}
-
 	// Attack2 moves to the prev player
-	if (m_afButtonPressed & IN_ATTACK2 && pev->iuser1 != OBS_ROAMING)
+	else if (m_afButtonPressed & IN_ATTACK2)
 	{
 		Observer_FindNextPlayer(true);
 
@@ -271,27 +272,31 @@ void CBasePlayer::Observer_HandleButtons()
 
 void CBasePlayer::Observer_CheckTarget()
 {
-	// if we are not roaming, we need a valid target to track
-	if (pev->iuser1 != OBS_ROAMING)
+	if (m_hObserverTarget)
 	{
+		// Don't spectate self, other spectators or not connected players
+		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
+		if (m_hObserverTarget == this || m_hObserverTarget->pev->iuser1 || !pPlayer)
+			m_hObserverTarget = NULL;
+	}
+
+	if (pev->iuser1 != OBS_ROAMING && pev->iuser1 != OBS_MAP_FREE)
+	{
+		// if we are not roaming or free overview, we need a valid target to track
 		if (m_hObserverTarget == NULL)
-		{
 			Observer_FindNextPlayer(false);
-		}
 
 		// if we didn't find a valid target switch to roaming
 		if (m_hObserverTarget == NULL)
-		{
-			int iMode = pev->iuser1;
 			Observer_SetMode(OBS_ROAMING);
-			m_iObserverMode = iMode;
-		}
 		else
-		{
-			CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
-			if (!pPlayer || (pPlayer->pev->deadflag == DEAD_DEAD && pPlayer->m_fDeadTime + 2.0 < gpGlobals->time))
-				Observer_FindNextPlayer(false);
-		}
+			// Store the target in pev so the physics DLL can get to it
+			pev->iuser2 = ENTINDEX(m_hObserverTarget->edict());
+	}
+	else
+	{
+		// Clear target in pev if roaming or free overview
+		pev->iuser2 = 0;
 	}
 }
 

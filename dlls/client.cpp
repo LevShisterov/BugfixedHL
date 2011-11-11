@@ -438,20 +438,65 @@ void ClientCommand( edict_t *pEntity )
 	}
 	else if (FStrEq(pcmd, "spectate"))
 	{
-		if ((pev->flags & FL_PROXY) || allow_spectators.value != 0.0)
+		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
+		if (!pPlayer->pev->iuser1)
 		{
-			CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
+			if ((pev->flags & FL_PROXY) || allow_spectators.value != 0.0)
+			{
+				edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
+				pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles );
 
-			edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
-			pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles);
+				// notify other clients of player switched to spectators
+				UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s switched to spectator mode\n", 
+					( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
 
-			// notify other clients of player switched to spectators
-			UTIL_ClientPrintAll( HUD_PRINTNOTIFY, UTIL_VarArgs( "%s switched to spectator mode\n", 
-				( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+				// team match?
+				if ( g_teamplay )
+				{
+					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" switched to spectator mode\n",
+						STRING( pPlayer->pev->netname ),
+						GETPLAYERUSERID( pPlayer->edict() ),
+						GETPLAYERAUTHID( pPlayer->edict() ),
+						g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
+				}
+				else
+				{
+					UTIL_LogPrintf( "\"%s<%i><%s><%i>\" switched to spectator mode\n",
+						STRING( pPlayer->pev->netname ),
+						GETPLAYERUSERID( pPlayer->edict() ),
+						GETPLAYERAUTHID( pPlayer->edict() ),
+						GETPLAYERUSERID( pPlayer->edict() ) );
+				}
+			}
+			else
+			{
+				ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Spectator mode is disabled.\n" ) );
+			}
 		}
 		else
 		{
-			ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Spectator mode is disabled.\n" ) );
+			pPlayer->StopObserver();
+			// notify other clients of player left spectators
+			UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s has left spectator mode\n", 
+				( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+
+			// team match?
+			if ( g_teamplay )
+			{
+				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" has left spectator mode\n",
+					STRING( pPlayer->pev->netname ),
+					GETPLAYERUSERID( pPlayer->edict() ),
+					GETPLAYERAUTHID( pPlayer->edict() ),
+					g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
+			}
+			else
+			{
+				UTIL_LogPrintf( "\"%s<%i><%s><%i>\" has left spectator mode\n",
+					STRING( pPlayer->pev->netname ),
+					GETPLAYERUSERID( pPlayer->edict() ),
+					GETPLAYERAUTHID( pPlayer->edict() ),
+					GETPLAYERUSERID( pPlayer->edict() ) );
+			}
 		}
 	}
 	else if (FStrEq(pcmd, "specmode"))
@@ -931,6 +976,13 @@ void SetupVisibility( edict_t *pViewEntity, edict_t *pClient, unsigned char **pv
 	if ( pViewEntity )
 	{
 		pView = pViewEntity;
+	}
+
+	// Observers use the visibility of their target
+	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
+	if ( (pPlayer->pev->iuser2 != 0) && (pPlayer->m_hObserverTarget != NULL) )
+	{
+		pView = pPlayer->m_hObserverTarget->edict();
 	}
 
 	if ( pClient->v.flags & FL_PROXY )
