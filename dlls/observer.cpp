@@ -180,14 +180,11 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 
 		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(iCurrent);
 		if (!pPlayer)
-			continue;
+			continue;	// Don't spectate not connected players
 		if (pPlayer == this)
 			continue;
 		// Don't spectate observers
 		if (pPlayer->IsObserver())
-			continue;
-		// Don't spectate disconnected players
-		if (!pPlayer->IsInGame())
 			continue;
 
 		m_hObserverTarget = pPlayer;
@@ -277,11 +274,10 @@ void CBasePlayer::Observer_CheckTarget()
 {
 	if (m_hObserverTarget)
 	{
-		// Don't spectate self, other spectators or disconnected players
+		// Don't spectate self, other spectators or not connected players
 		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
-		if (m_hObserverTarget == this || m_hObserverTarget->pev->iuser1 || 
-			(pPlayer && !pPlayer->IsInGame()))
-		m_hObserverTarget = NULL;
+		if (m_hObserverTarget == this || m_hObserverTarget->pev->iuser1 || !pPlayer)
+			m_hObserverTarget = NULL;
 	}
 
 	if (pev->iuser1 != OBS_ROAMING && pev->iuser1 != OBS_MAP_FREE)

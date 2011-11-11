@@ -215,7 +215,6 @@ public:
 
 	virtual BOOL IsNetClient( void ) { return TRUE; }		// Bots should return FALSE for this, they can't receive NET messages
 															// Spectators should return TRUE for this
-	virtual BOOL IsInGame( void ) { return m_fGameHUDInitialized; }
 	virtual const char *TeamID( void );
 
 	virtual int		Save( CSave &save );
@@ -324,6 +323,10 @@ public:
 	char m_SbarString1[ SBAR_STRING_SIZE ];
 	
 	float m_flNextChatTime;
+
+	BOOL m_bConnected;	// we set it in Spawn() so it will be TRUE only after player was spawned
+	BOOL IsConnected() { return m_bConnected; }
+	void Disconnect() { m_bConnected = FALSE; }
 };
 
 #define AUTOAIM_2DEGREES  0.0348994967025

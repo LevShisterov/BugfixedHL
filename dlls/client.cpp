@@ -124,9 +124,9 @@ void ClientDisconnect( edict_t *pEntity )
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
 
 	// Mark player as disconnected
-	CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(pEntity));
-	if (pPlayer)
-		pPlayer->m_fGameHUDInitialized = FALSE;
+	entvars_t *pev = &pEntity->v;
+	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
+	pl->Disconnect();
 
 	g_pGameRules->ClientDisconnected( pEntity );
 }
