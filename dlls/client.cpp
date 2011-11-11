@@ -123,7 +123,7 @@ void ClientDisconnect( edict_t *pEntity )
 	pEntity->v.solid = SOLID_NOT;// nonsolid
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
 
-	// mark player as disconnected
+	// Mark player as disconnected
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 	pl->Disconnect();
