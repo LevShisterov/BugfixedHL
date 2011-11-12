@@ -1801,7 +1801,14 @@ void CBasePlayer::PreThink(void)
 	{
 		Observer_HandleButtons();
 		Observer_CheckTarget();
-		//Observer_CheckProperties();
+
+		// This will fix angles, so pain display will show correct direction
+		if (m_hObserverTarget && pev->iuser1 == OBS_IN_EYE)
+		{
+			pev->angles = pev->v_angle = m_hObserverTarget->pev->angles;
+			pev->fixangle = TRUE;
+		}
+
 		pev->impulse = 0;
 		return;
 	}
@@ -3838,21 +3845,22 @@ int CBasePlayer::GetAmmoIndex(const char *psz)
 
 // Called from UpdateClientData
 // makes sure the client has all the necessary ammo info,  if values have changed
-void CBasePlayer::SendAmmoUpdate(void)
+// If this player is spectating someone target will be in pPlayer
+void CBasePlayer::SendAmmoUpdate(CBasePlayer *pPlayer)
 {
 	for (int i=0; i < MAX_AMMO_SLOTS;i++)
 	{
-		if (m_rgAmmo[i] != m_rgAmmoLast[i])
+		if (this->m_rgAmmoLast[i] != pPlayer->m_rgAmmo[i])
 		{
-			m_rgAmmoLast[i] = m_rgAmmo[i];
+			this->m_rgAmmoLast[i] = pPlayer->m_rgAmmo[i];
 
-			ASSERT( m_rgAmmo[i] >= 0 );
-			ASSERT( m_rgAmmo[i] < 255 );
+			ASSERT( pPlayer->m_rgAmmo[i] >= 0 );
+			ASSERT( pPlayer->m_rgAmmo[i] < 255 );
 
 			// send "Ammo" update message
 			MESSAGE_BEGIN( MSG_ONE, gmsgAmmoX, NULL, pev );
 				WRITE_BYTE( i );
-				WRITE_BYTE( max( min( m_rgAmmo[i], 254 ), 0 ) );  // clamp the value to one byte
+				WRITE_BYTE( max( min( pPlayer->m_rgAmmo[i], 254 ), 0 ) );  // clamp the value to one byte
 			MESSAGE_END();
 		}
 	}
@@ -3899,19 +3907,28 @@ void CBasePlayer :: UpdateClientData( void )
 		InitStatusBar();
 	}
 
-	if ( m_iHideHUD != m_iClientHideHUD )
+	CBasePlayer *pPlayer = this;
+	// We will take spectating target player status if it is
+	if (pev->iuser1 == OBS_IN_EYE && m_hObserverTarget)
 	{
-		MESSAGE_BEGIN( MSG_ONE, gmsgHideWeapon, NULL, pev );
-			WRITE_BYTE( m_iHideHUD );
-		MESSAGE_END();
-
-		m_iClientHideHUD = m_iHideHUD;
+		pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
+		if (!pPlayer)
+			pPlayer = this;
 	}
 
-	if ( m_iFOV != m_iClientFOV )
+	if ( pPlayer->m_iHideHUD != m_iClientHideHUD )
+	{
+		MESSAGE_BEGIN( MSG_ONE, gmsgHideWeapon, NULL, pev );
+			WRITE_BYTE( pPlayer->m_iHideHUD );
+		MESSAGE_END();
+
+		m_iClientHideHUD = pPlayer->m_iHideHUD;
+	}
+
+	if ( pPlayer->m_iFOV != m_iClientFOV )
 	{
 		MESSAGE_BEGIN( MSG_ONE, gmsgSetFOV, NULL, pev );
-			WRITE_BYTE( m_iFOV );
+			WRITE_BYTE( pPlayer->m_iFOV );
 		MESSAGE_END();
 
 		// cache FOV change at end of function, so weapon updates can see that FOV has changed
@@ -3926,28 +3943,28 @@ void CBasePlayer :: UpdateClientData( void )
 		gDisplayTitle = 0;
 	}
 
-	if (pev->health != m_iClientHealth)
+	if (pPlayer->pev->health != m_iClientHealth)
 	{
-		int iHealth = max( pev->health, 0 );  // make sure that no negative health values are sent
+		int iHealth = max( pPlayer->pev->health, 0 );  // make sure that no negative health values are sent
 
 		// send "health" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgHealth, NULL, pev );
 			WRITE_BYTE( iHealth );
 		MESSAGE_END();
 
-		m_iClientHealth = pev->health;
+		m_iClientHealth = pPlayer->pev->health;
 	}
 
 
-	if (pev->armorvalue != m_iClientBattery)
+	if (pPlayer->pev->armorvalue != m_iClientBattery)
 	{
-		m_iClientBattery = pev->armorvalue;
-
 		ASSERT( gmsgBattery > 0 );
 		// send "armor" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
-			WRITE_SHORT( (int)pev->armorvalue);
+			WRITE_SHORT( (int)pPlayer->pev->armorvalue);
 		MESSAGE_END();
+
+		m_iClientBattery = pPlayer->pev->armorvalue;
 	}
 
 	if (pev->dmg_take || pev->dmg_save || m_bitsHUDDamage != m_bitsDamageType)
@@ -3966,6 +3983,24 @@ void CBasePlayer :: UpdateClientData( void )
 
 		// only send down damage type that have hud art
 		int visibleDamageBits = m_bitsDamageType & DMG_SHOWNHUD;
+
+		// Send this player's damage to all his specators
+		CBasePlayer *plr;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+			if ( !plr || !plr->IsObserver() || plr->m_hObserverTarget != this )
+				continue;
+
+			MESSAGE_BEGIN( MSG_ONE, gmsgDamage, NULL, plr->pev );
+				WRITE_BYTE( pev->dmg_save );
+				WRITE_BYTE( pev->dmg_take );
+				WRITE_LONG( visibleDamageBits );
+				WRITE_COORD( damageOrigin.x );
+				WRITE_COORD( damageOrigin.y );
+				WRITE_COORD( damageOrigin.z );
+			MESSAGE_END();
+		}
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgDamage, NULL, pev );
 			WRITE_BYTE( pev->dmg_save );
@@ -4038,7 +4073,7 @@ void CBasePlayer :: UpdateClientData( void )
 		//
 		// for each weapon:
 		// byte		name str length (not including null)
-		// bytes... name
+		// bytes	name
 		// byte		Ammo Type
 		// byte		Ammo2 Type
 		// byte		bucket
@@ -4047,9 +4082,7 @@ void CBasePlayer :: UpdateClientData( void )
 		// ????		Icons
 
 		// Send ALL the weapon info now
-		int i;
-
-		for (i = 0; i < MAX_WEAPONS; i++)
+		for (int i = 0; i < MAX_WEAPONS; i++)
 		{
 			ItemInfo& II = CBasePlayerItem::ItemInfoArray[i];
 
@@ -4077,7 +4110,7 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 
-	SendAmmoUpdate();
+	SendAmmoUpdate(pPlayer);
 
 	// Update all the items
 	for ( int i = 0; i < MAX_ITEM_TYPES; i++ )
@@ -4088,9 +4121,9 @@ void CBasePlayer :: UpdateClientData( void )
 			m_rgpPlayerItems[i]->UpdateClientData( this );
 	}
 
-	// Cache and client weapon change
-	m_pClientActiveItem = m_pActiveItem;
-	m_iClientFOV = m_iFOV;
+	// Cache fov and client weapon change
+	m_pClientActiveItem = pPlayer->m_pActiveItem;
+	m_iClientFOV = pPlayer->m_iFOV;
 
 	// Update Status Bar
 	if ( m_flNextSBarUpdateTime < gpGlobals->time )
