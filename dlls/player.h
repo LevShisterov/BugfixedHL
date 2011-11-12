@@ -250,9 +250,10 @@ public:
 	void CheatImpulseCommands( int iImpulse );
 
 	void StartDeathCam( void );
-	void StartObserver( Vector vecPosition, Vector vecViewAngle );
+	void StartObserver( void );
 	void StopObserver( void );
-	void Observer_FindNextPlayer( bool bReverse );
+	void Observer_FindNextPlayer( bool bReverse, bool bOverview );
+	void Observer_FindNextSpot( bool bReverse );
 	void Observer_HandleButtons();
 	void Observer_SetMode( int iMode );
 	void Observer_CheckTarget();
