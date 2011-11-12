@@ -1187,8 +1187,10 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		state->friction     = ent->v.friction;
 
 		state->gravity      = ent->v.gravity;
-//		state->team			= ent->v.team;
-//		
+
+		if (ent->v.iuser1)
+			state->team		= -1;	// Set team if player is spectator. This will enable "Cancel" button in team menu.
+
 		state->usehull      = ( ent->v.flags & FL_DUCKING ) ? 1 : 0;
 		state->health		= ent->v.health;
 	}
