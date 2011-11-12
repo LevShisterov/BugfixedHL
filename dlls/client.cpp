@@ -101,13 +101,6 @@ void ClientDisconnect( edict_t *pEntity )
 	if (g_fGameOver)
 		return;
 
-	char text[256];
-	sprintf( text, "- %s has left the game\n", STRING(pEntity->v.netname) );
-	MESSAGE_BEGIN( MSG_ALL, gmsgSayText, NULL );
-		WRITE_BYTE( ENTINDEX(pEntity) );
-		WRITE_STRING( text );
-	MESSAGE_END();
-
 	CSound *pSound;
 	pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( pEntity ) );
 	{
@@ -118,9 +111,9 @@ void ClientDisconnect( edict_t *pEntity )
 		}
 	}
 
-// since the edict doesn't get deleted, fix it so it doesn't interfere.
-	pEntity->v.takedamage = DAMAGE_NO;// don't attract autoaim
-	pEntity->v.solid = SOLID_NOT;// nonsolid
+	// since the edict doesn't get deleted, fix it so it doesn't interfere.
+	pEntity->v.takedamage = DAMAGE_NO;	// don't attract autoaim
+	pEntity->v.solid = SOLID_NOT;		// nonsolid
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
 
 	g_pGameRules->ClientDisconnected( pEntity );
