@@ -112,19 +112,16 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 void CBasePlayer::StopObserver(void)
 {
 	// Turn off spectator
-	if (pev->iuser1 || pev->iuser2)
-	{
-		pev->iuser1 = pev->iuser2 = 0; 
-		m_iHideHUD = 0;
+	pev->iuser1 = pev->iuser2 = 0; 
+	m_iHideHUD = 0;
 
-		MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
-			WRITE_BYTE(ENTINDEX(edict()));
-			WRITE_STRING(m_szTeamName);
-		MESSAGE_END();
+	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
+		WRITE_BYTE(ENTINDEX(edict()));
+		WRITE_STRING( TeamID() );
+	MESSAGE_END();
 
-		respawn(pev, false);	// don't copy a corpse
-		pev->nextthink = -1;
-	}
+	respawn(pev, false);	// don't copy a corpse
+	pev->nextthink = -1;
 }
 
 //=========================================================
