@@ -257,7 +257,6 @@ public:
 	void Observer_HandleButtons();
 	void Observer_SetMode( int iMode );
 	void Observer_CheckTarget();
-	void Observer_CheckProperties();
 	int IsObserver() { return pev->iuser1; };
 
 	void AddPoints( int score, BOOL bAllowNegativeScore );
@@ -278,7 +277,7 @@ public:
 	void EnableControl(BOOL fControl);
 
 	int  GiveAmmo( int iAmount, char *szName, int iMax );
-	void SendAmmoUpdate(void);
+	void SendAmmoUpdate(CBasePlayer *pPlayer);
 
 	void WaterMove( void );
 	void EXPORT PlayerDeathThink( void );
