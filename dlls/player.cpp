@@ -1355,14 +1355,15 @@ void CBasePlayer::StartDeathCam( void )
 	edict_t *pSpot, *pNewSpot;
 	int iRand;
 
-	if ( pev->view_ofs == g_vecZero )
+	if ( m_afPhysicsFlags & PFLAG_OBSERVER )
 	{
 		// don't accept subsequent attempts to StartDeathCam()
 		return;
 	}
 
-	pSpot = FIND_ENTITY_BY_CLASSNAME( NULL, "info_intermission");	
+	CopyToBodyQue( pev );
 
+	pSpot = FIND_ENTITY_BY_CLASSNAME( NULL, "info_intermission");
 	if ( !FNullEnt( pSpot ) )
 	{
 		// at least one intermission spot in the world.
@@ -1380,7 +1381,6 @@ void CBasePlayer::StartDeathCam( void )
 			iRand--;
 		}
 
-		CopyToBodyQue( pev );
 		UTIL_SetOrigin( pev, pSpot->v.origin );
 		pev->angles = pev->v_angle = pSpot->v.v_angle;
 	}
@@ -1388,10 +1388,9 @@ void CBasePlayer::StartDeathCam( void )
 	{
 		// no intermission spot. Push them up in the air, looking down at their corpse
 		TraceResult tr;
-		CopyToBodyQue( pev );
 		UTIL_TraceLine( pev->origin, pev->origin + Vector( 0, 0, 128 ), ignore_monsters, edict(), &tr );
-		UTIL_SetOrigin( pev, tr.vecEndPos );
-		pev->angles = pev->v_angle = UTIL_VecToAngles( tr.vecEndPos - pev->origin );
+		UTIL_SetOrigin( pev, tr.vecEndPos - Vector( 0, 0, 10 ) );
+		pev->angles.x = pev->v_angle.x = 90;
 	}
 
 	m_afPhysicsFlags |= PFLAG_OBSERVER;
@@ -1399,8 +1398,10 @@ void CBasePlayer::StartDeathCam( void )
 	pev->fixangle = TRUE;
 	pev->solid = SOLID_NOT;
 	pev->takedamage = DAMAGE_NO;
-	pev->movetype = MOVETYPE_NONE;
-	pev->modelindex = 0;
+	pev->movetype = MOVETYPE_NOCLIP;	// HACK HACK: Player fall down with MOVETYPE_NONE
+	pev->health = 1;					// Let player stay vertically, not lie on a side
+	pev->effects = EF_NODRAW;			// Hide model. This is used instead of pev->modelindex = 0
+	//pev->modelindex = 0;				// Commented to let view point be moved
 }
 
 // 
