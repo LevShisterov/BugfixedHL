@@ -439,12 +439,11 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmd, "spectate"))
 	{
 		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		if (!pPlayer->pev->iuser1)
+		if (!pPlayer->IsObserver())
 		{
 			if ((pev->flags & FL_PROXY) || allow_spectators.value != 0.0)
 			{
-				edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
-				pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles );
+				pPlayer->StartObserver();
 
 				// notify other clients of player switched to spectators
 				UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s switched to spectator mode\n", 
@@ -502,17 +501,23 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmd, "specmode"))
 	{
 		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		if (pPlayer->pev->iuser1)
+		if (pPlayer->IsObserver())
 		{
 			pPlayer->Observer_SetMode(atoi(CMD_ARGV(1)));
 		}
 	}
 	else if (FStrEq(pcmd, "follownext"))
 	{
+		// No switching of view point in Free Overview
+		if (pev->iuser1 == OBS_MAP_FREE)
+			return;
 		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		if (pPlayer->pev->iuser1)
+		if (pPlayer->IsObserver())
 		{
-			pPlayer->Observer_FindNextPlayer(atoi(CMD_ARGV(1)) != 0);
+			if (pev->iuser1 == OBS_ROAMING)
+				pPlayer->Observer_FindNextSpot(atoi(CMD_ARGV(1)) != 0);
+			else
+				pPlayer->Observer_FindNextPlayer(atoi(CMD_ARGV(1)) != 0, false);
 		}
 	}
 	else if ( g_pGameRules->ClientCommand( GetClassPtr((CBasePlayer *)pev), pcmd ) )

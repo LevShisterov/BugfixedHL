@@ -34,7 +34,7 @@ extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 //=========================================================
 // Player has become a spectator. Set it up.
 //=========================================================
-void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
+void CBasePlayer::StartObserver( void )
 {
 	// clear any clientside entities attached to this player
 	MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, pev->origin);
@@ -67,13 +67,14 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 		WRITE_BYTE(m_iFOV);
 	MESSAGE_END();
 
+	// Store view offset to use it later
+	Vector view_ofs = pev->view_ofs;
+
 	// Setup flags
 	m_iHideHUD = HIDEHUD_WEAPONS | HIDEHUD_HEALTH;
 	m_afPhysicsFlags |= PFLAG_OBSERVER;
 	pev->effects = EF_NODRAW;
 	pev->view_ofs = g_vecZero;
-	pev->angles = pev->v_angle = vecViewAngle;
-	pev->fixangle = TRUE;
 	pev->solid = SOLID_NOT;
 	pev->takedamage = DAMAGE_NO;
 	pev->movetype = MOVETYPE_NONE;
@@ -96,13 +97,13 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 	// Remove all the player's stuff
 	RemoveAllItems(FALSE);
 
-	// Move them to the new position
-	UTIL_SetOrigin(pev, vecPosition);
+	// Move player to same view position he had on entering spectator
+	UTIL_SetOrigin(pev, pev->origin + view_ofs);
 
 	// Delay between observer inputs
 	m_flNextObserverInput = 0;
 
-	// Find a player to watch
+	// Setup spectator mode
 	Observer_SetMode(m_iObserverMode);
 }
 
@@ -137,6 +138,16 @@ void CBasePlayer::Observer_SetMode(int iMode)
 	if (iMode < OBS_CHASE_LOCKED || iMode > OBS_MAP_CHASE)
 		iMode = OBS_ROAMING; // now it is
 
+	if (iMode == OBS_ROAMING && m_hObserverTarget)
+	{
+		// Set view point at same place where we may be looked in First Person mode
+		// Fix angles
+		pev->v_angle = pev->angles = m_hObserverTarget->pev->v_angle;
+		pev->fixangle = TRUE;
+		// Compensate view offset
+		UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin + m_hObserverTarget->pev->view_ofs);
+	}
+
 	// set spectator mode
 	m_iObserverMode = iMode;
 	pev->iuser1 = iMode;
@@ -151,16 +162,17 @@ void CBasePlayer::Observer_SetMode(int iMode)
 }
 
 // Find the next client in the game for this player to spectate
-void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
+// If bOverview will be set then observer will be placed above targeted player looking down on him
+void CBasePlayer::Observer_FindNextPlayer(bool bReverse, bool bOverview)
 {
 	// MOD AUTHORS: Modify the logic of this function if you want to restrict the observer to watching
 	//				only a subset of the players. e.g. Make it check the target's team.
 
 	int iStart;
-	if (m_hObserverTarget)
-		iStart = ENTINDEX(m_hObserverTarget->edict());
-	else
+	// If target not present or was a spot, set starting index to current player
+	if (!m_hObserverTarget || (iStart = ENTINDEX(m_hObserverTarget->edict())) > gpGlobals->maxClients)
 		iStart = ENTINDEX(edict());
+
 	m_hObserverTarget = NULL;
 
 	int iCurrent = iStart;
@@ -192,8 +204,20 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 	// Did we find a target?
 	if (m_hObserverTarget)
 	{
-		// Move to the target
-		UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin);
+		if (bOverview)
+		{
+			// Move above the target
+			UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin + m_hObserverTarget->pev->view_ofs + Vector(0, 0, 14));
+			// Fix angles
+			pev->angles = m_hObserverTarget->pev->angles;
+			pev->angles.x = 30;
+			pev->fixangle = TRUE;
+		}
+		else
+		{
+			// Move to the target
+			UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin);
+		}
 
 		// Store the target in pev so the physics DLL can get to it
 		if (pev->iuser1 != OBS_ROAMING && pev->iuser1 != OBS_MAP_FREE)
@@ -210,6 +234,75 @@ void CBasePlayer::Observer_FindNextPlayer(bool bReverse)
 
 		//ALERT(at_console, "No observer targets.\n");
 	}
+}
+
+// Find the next spot and move spectator to it
+void CBasePlayer::Observer_FindNextSpot(bool bReverse)
+{
+	const int classesCount = 4;
+	char *classes[] = { "info_intermission", "info_player_coop", "info_player_start", "info_player_deathmatch" };
+	vec_t offsets[] = { 0, VEC_VIEW.z, VEC_VIEW.z, VEC_VIEW.z };	// View offset for spots (will looks like we spawn)
+
+	int iStartClass = 0;
+	if (m_hObserverTarget)
+	{
+		// Get current target's class
+		const char *name = STRING(m_hObserverTarget->edict()->v.classname);
+		// Pick starting class index
+		for (int i = 0; i < classesCount; i++)
+		{
+			if (!strcmp(classes[i], name))
+			{
+				iStartClass = i;
+				break;
+			}
+		}
+	}
+
+	CBaseEntity *pSpot = m_hObserverTarget, *pResultSpot = NULL;
+	vec_t iResultSpotOffset;
+
+	for (int i = 0; i < 4; i++)
+	{
+		int current = iStartClass + (bReverse ? -i : i);
+		if (current >= classesCount)
+			current -= classesCount;
+		if (current < 0)
+			current += classesCount;
+
+		pSpot = UTIL_FindEntityByClassname(pSpot, classes[current], pSpot == NULL, bReverse);
+		if (!pSpot)
+			continue;
+
+		// Spot found
+		pResultSpot = pSpot;
+		iResultSpotOffset = offsets[current];
+		break;
+	}
+
+	if (!pResultSpot)
+	{
+		// Overlook a player (this will be never happen actually)
+		Observer_FindNextPlayer(bReverse, true);
+		return;
+	}
+	m_hObserverTarget = pResultSpot;
+
+	// Move player there
+	UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin + Vector(0, 0, iResultSpotOffset));
+	// Find target for intermission
+	edict_t *pTarget = FIND_ENTITY_BY_TARGETNAME( NULL, STRING(m_hObserverTarget->pev->target) );
+	if (pTarget && !FNullEnt(pTarget))
+	{
+		// Calculate angles to look at camera target
+		pev->angles = UTIL_VecToAngles( pTarget->v.origin - m_hObserverTarget->pev->origin );
+		pev->angles.x = -pev->angles.x;
+	}
+	else
+	{
+		pev->angles = m_hObserverTarget->pev->angles;
+	}
+	pev->fixangle = TRUE;
 }
 
 // Handle buttons in observer mode
@@ -251,17 +344,27 @@ void CBasePlayer::Observer_HandleButtons()
 		m_flNextObserverInput = gpGlobals->time + NEXT_OBSERVER_INPUT_DELAY;
 	}
 
-	// Attack moves to the next player
+	// No switching of view point in Free Overview
+	if (pev->iuser1 == OBS_MAP_FREE)
+		return;
+
+	// Attack moves to the next player/spot
 	if (m_afButtonPressed & IN_ATTACK)
 	{
-		Observer_FindNextPlayer(false);
+		if (pev->iuser1 == OBS_ROAMING)
+			Observer_FindNextSpot(false);
+		else
+			Observer_FindNextPlayer(false, false);
 
 		m_flNextObserverInput = gpGlobals->time + NEXT_OBSERVER_INPUT_DELAY;
 	}
-	// Attack2 moves to the prev player
+	// Attack2 moves to the prev player/spot
 	else if (m_afButtonPressed & IN_ATTACK2)
 	{
-		Observer_FindNextPlayer(true);
+		if (pev->iuser1 == OBS_ROAMING)
+			Observer_FindNextSpot(true);
+		else
+			Observer_FindNextPlayer(true, false);
 
 		m_flNextObserverInput = gpGlobals->time + NEXT_OBSERVER_INPUT_DELAY;
 	}
@@ -269,19 +372,30 @@ void CBasePlayer::Observer_HandleButtons()
 
 void CBasePlayer::Observer_CheckTarget()
 {
-	if (m_hObserverTarget)
-	{
-		// Don't spectate self, other spectators or not connected players
-		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
-		if (m_hObserverTarget == this || m_hObserverTarget->pev->iuser1 || !pPlayer)
-			m_hObserverTarget = NULL;
-	}
-
 	if (pev->iuser1 != OBS_ROAMING && pev->iuser1 != OBS_MAP_FREE)
 	{
+		// Player tracking mode
+		if (m_hObserverTarget)
+		{
+			// Don't spectate self, other spectators or not connected players. Also will be cleared if target is not a player (could be a spot)
+			if (m_hObserverTarget == this ||
+				m_hObserverTarget->pev->iuser1 ||
+				!UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict())))
+			{
+				// Set view point at same place where we may be looked in First Person mode
+				// Fix angles
+				pev->v_angle = pev->angles = m_hObserverTarget->pev->v_angle;
+				pev->fixangle = TRUE;
+				// Compensate view offset
+				UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin + m_hObserverTarget->pev->view_ofs);
+
+				m_hObserverTarget = NULL;
+			}
+		}
+
 		// if we are not roaming or free overview, we need a valid target to track
 		if (m_hObserverTarget == NULL)
-			Observer_FindNextPlayer(false);
+			Observer_FindNextPlayer(false, false);
 
 		// if we didn't find a valid target switch to roaming
 		if (m_hObserverTarget == NULL)
