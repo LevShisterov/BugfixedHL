@@ -417,8 +417,9 @@ void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 {
 	// notify other clients of player joining the game
-	UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "+ %s has joined the game\n", 
-		( pl->pev->netname && STRING(pl->pev->netname)[0] != 0 ) ? STRING(pl->pev->netname) : "unconnected" ) );
+	char *name = pl->pev->netname ? STRING(pl->pev->netname) : "";
+	if (name[0] == 0) name = "unconnected";
+	UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "+ %s has joined the game\n", name ) );
 
 	// team match?
 	if ( g_teamplay )
@@ -481,41 +482,45 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 //=========================================================
 void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 {
-	if ( pClient )
-	{
+	if ( !pClient )
+		return;
+
 		CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
+	if ( !pPlayer )
+		return;
 
-		if ( pPlayer )
-		{
-			FireTargets( "game_playerleave", pPlayer, pPlayer, USE_TOGGLE, 0 );
+	// notify other clients of player leaving the game
+	char *name = pPlayer->pev->netname ? STRING(pPlayer->pev->netname) : "";
+	if (name[0] == 0) name = "unconnected";
+	UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "- %s has left the game\n", name ) );
 
-			// team match?
-			if ( g_teamplay )
-			{
-				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" disconnected\n",  
-					STRING( pPlayer->pev->netname ), 
-					GETPLAYERUSERID( pPlayer->edict() ),
-					GETPLAYERAUTHID( pPlayer->edict() ),
-					g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
-			}
-			else
-			{
-				UTIL_LogPrintf( "\"%s<%i><%s><%i>\" disconnected\n",  
-					STRING( pPlayer->pev->netname ), 
-					GETPLAYERUSERID( pPlayer->edict() ),
-					GETPLAYERAUTHID( pPlayer->edict() ),
-					GETPLAYERUSERID( pPlayer->edict() ) );
-			}
+	FireTargets( "game_playerleave", pPlayer, pPlayer, USE_TOGGLE, 0 );
 
-			if ( pPlayer->m_pTank != NULL )
-			{
-				// Stop controlling the tank
-				pPlayer->m_pTank->Use( pPlayer, pPlayer, USE_OFF, 0 );
-			}
-
-			pPlayer->RemoveAllItems( TRUE );// destroy all of the players weapons and items
-		}
+	// team match?
+	if ( g_teamplay )
+	{
+		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" disconnected\n",  
+			STRING( pPlayer->pev->netname ), 
+			GETPLAYERUSERID( pPlayer->edict() ),
+			GETPLAYERAUTHID( pPlayer->edict() ),
+			g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
 	}
+	else
+	{
+		UTIL_LogPrintf( "\"%s<%i><%s><%i>\" disconnected\n",  
+			STRING( pPlayer->pev->netname ), 
+			GETPLAYERUSERID( pPlayer->edict() ),
+			GETPLAYERAUTHID( pPlayer->edict() ),
+			GETPLAYERUSERID( pPlayer->edict() ) );
+	}
+
+	if ( pPlayer->m_pTank != NULL )
+	{
+		// Stop controlling the tank
+		pPlayer->m_pTank->Use( pPlayer, pPlayer, USE_OFF, 0 );
+	}
+
+	pPlayer->RemoveAllItems( TRUE );// destroy all of the players weapons and items
 }
 
 //=========================================================
