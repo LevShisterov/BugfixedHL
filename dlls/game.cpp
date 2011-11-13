@@ -18,7 +18,10 @@
 #include "game.h"
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
-cvar_t	allow_spectators = {"allow_spectators","0", FCVAR_SERVER };
+
+// Spectator settings
+cvar_t	allow_spectators = {"allow_spectators","1", FCVAR_SERVER };
+cvar_t	spectator_cmd_delay = {"spectator_cmd_delay","5"};
 
 // multiplayer server rules
 cvar_t	fragsleft	= {"mp_fragsleft","0", FCVAR_SERVER | FCVAR_UNLOGGED };	  // Don't spam console/log files/users with this changing
@@ -453,14 +456,18 @@ cvar_t	sk_player_leg3	= { "sk_player_leg3","1" };
 // This gets called one time when the game is initialied
 void GameDLLInit( void )
 {
-	// Register cvars here:
+	// Get cvars here:
 
 	g_psv_gravity = CVAR_GET_POINTER( "sv_gravity" );
 	g_psv_aim = CVAR_GET_POINTER( "sv_aim" );
 	g_footsteps = CVAR_GET_POINTER( "mp_footsteps" );
 
+	// Register cvars here:
+
 	CVAR_REGISTER (&displaysoundlist);
+
 	CVAR_REGISTER (&allow_spectators);
+	CVAR_REGISTER (&spectator_cmd_delay);
 
 	CVAR_REGISTER (&teamplay);
 	CVAR_REGISTER (&fraglimit);

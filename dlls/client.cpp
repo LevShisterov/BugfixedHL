@@ -77,7 +77,7 @@ called when a player connects to a server
 ============
 */
 BOOL ClientConnect( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ]  )
-{	
+{
 	return g_pGameRules->ClientConnected( pEntity, pszName, pszAddress, szRejectReason );
 
 // a client connecting during an intermission can cause problems
@@ -400,7 +400,6 @@ void ClientCommand( edict_t *pEntity )
 			GetClassPtr((CBasePlayer *)pev)->GiveNamedItem( STRING(iszItem) );
 		}
 	}
-
 	else if ( FStrEq(pcmd, "drop" ) )
 	{
 		// player is dropping an item. 
@@ -432,20 +431,54 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmd, "spectate"))
 	{
 		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		if (!pPlayer->IsObserver())
+		// Block too offten spectator command usage
+		if (pPlayer->m_flNextSpectatorCommand < gpGlobals->time)
 		{
-			if ((pev->flags & FL_PROXY) || allow_spectators.value != 0.0)
+			pPlayer->m_flNextSpectatorCommand = gpGlobals->time + (spectator_cmd_delay.value < 1.0 ? 1.0 : spectator_cmd_delay.value);
+			if (!pPlayer->IsObserver())
 			{
-				pPlayer->StartObserver();
+				if ((pev->flags & FL_PROXY) || allow_spectators.value != 0.0)
+				{
+					pPlayer->StartObserver();
 
-				// notify other clients of player switched to spectators
-				UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s switched to spectator mode\n", 
+					// notify other clients of player switched to spectators
+					UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s switched to spectator mode\n", 
+						( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+
+					// team match?
+					if ( g_teamplay )
+					{
+						UTIL_LogPrintf( "\"%s<%i><%s><%s>\" switched to spectator mode\n",
+							STRING( pPlayer->pev->netname ),
+							GETPLAYERUSERID( pPlayer->edict() ),
+							GETPLAYERAUTHID( pPlayer->edict() ),
+							g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
+					}
+					else
+					{
+						UTIL_LogPrintf( "\"%s<%i><%s><%i>\" switched to spectator mode\n",
+							STRING( pPlayer->pev->netname ),
+							GETPLAYERUSERID( pPlayer->edict() ),
+							GETPLAYERAUTHID( pPlayer->edict() ),
+							GETPLAYERUSERID( pPlayer->edict() ) );
+					}
+				}
+				else
+				{
+					ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Spectator mode is disabled.\n" ) );
+				}
+			}
+			else
+			{
+				pPlayer->StopObserver();
+				// notify other clients of player left spectators
+				UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s has left spectator mode\n", 
 					( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
 
 				// team match?
 				if ( g_teamplay )
 				{
-					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" switched to spectator mode\n",
+					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" has left spectator mode\n",
 						STRING( pPlayer->pev->netname ),
 						GETPLAYERUSERID( pPlayer->edict() ),
 						GETPLAYERAUTHID( pPlayer->edict() ),
@@ -453,41 +486,12 @@ void ClientCommand( edict_t *pEntity )
 				}
 				else
 				{
-					UTIL_LogPrintf( "\"%s<%i><%s><%i>\" switched to spectator mode\n",
+					UTIL_LogPrintf( "\"%s<%i><%s><%i>\" has left spectator mode\n",
 						STRING( pPlayer->pev->netname ),
 						GETPLAYERUSERID( pPlayer->edict() ),
 						GETPLAYERAUTHID( pPlayer->edict() ),
 						GETPLAYERUSERID( pPlayer->edict() ) );
 				}
-			}
-			else
-			{
-				ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Spectator mode is disabled.\n" ) );
-			}
-		}
-		else
-		{
-			pPlayer->StopObserver();
-			// notify other clients of player left spectators
-			UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s has left spectator mode\n", 
-				( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
-
-			// team match?
-			if ( g_teamplay )
-			{
-				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" has left spectator mode\n",
-					STRING( pPlayer->pev->netname ),
-					GETPLAYERUSERID( pPlayer->edict() ),
-					GETPLAYERAUTHID( pPlayer->edict() ),
-					g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
-			}
-			else
-			{
-				UTIL_LogPrintf( "\"%s<%i><%s><%i>\" has left spectator mode\n",
-					STRING( pPlayer->pev->netname ),
-					GETPLAYERUSERID( pPlayer->edict() ),
-					GETPLAYERAUTHID( pPlayer->edict() ),
-					GETPLAYERUSERID( pPlayer->edict() ) );
 			}
 		}
 	}
