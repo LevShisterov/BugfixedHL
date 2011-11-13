@@ -323,6 +323,7 @@ public:
 	char m_SbarString1[ SBAR_STRING_SIZE ];
 	
 	float m_flNextChatTime;
+	float m_flNextSpectatorCommand;
 
 	BOOL m_bConnected;	// we set it in Spawn() so it will be TRUE only after player was spawned
 	BOOL IsConnected() { return m_bConnected; }
