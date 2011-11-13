@@ -406,6 +406,8 @@ BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszNam
 
 extern int gmsgSayText;
 extern int gmsgGameMode;
+extern int gmsgSpectator;
+extern int gmsgAllowSpec;
 
 void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
@@ -416,6 +418,11 @@ void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 
 void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 {
+	// Send allow_spectators status
+	MESSAGE_BEGIN( MSG_ONE, gmsgAllowSpec, NULL, pl->edict() );
+		WRITE_BYTE( allow_spectators.value );
+	MESSAGE_END();
+
 	// notify other clients of player joining the game
 	char *name = pl->pev->netname ? STRING(pl->pev->netname) : "";
 	if (name[0] == 0) name = "unconnected";
@@ -449,6 +456,12 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
+	MESSAGE_END();
+
+	// Send player spectator status (it is not used in client dll)
+	MESSAGE_BEGIN( MSG_ALL, gmsgSpectator );  
+		WRITE_BYTE( pl->entindex() );
+		WRITE_BYTE( pl->IsObserver() );
 	MESSAGE_END();
 
 	SendMOTDToClient( pl->edict() );
@@ -521,6 +534,12 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 	}
 
 	pPlayer->RemoveAllItems( TRUE );// destroy all of the players weapons and items
+
+	// Tell all clients this player isn't a spectator anymore
+	MESSAGE_BEGIN( MSG_ALL, gmsgSpectator );  
+		WRITE_BYTE( ENTINDEX(pClient) );
+		WRITE_BYTE( 0 );
+	MESSAGE_END();
 }
 
 //=========================================================

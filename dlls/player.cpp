@@ -187,6 +187,9 @@ int gmsgTeamNames = 0;
 int gmsgStatusText = 0;
 int gmsgStatusValue = 0; 
 
+int gmsgSpectator = 0;
+int gmsgAllowSpec = 0;
+
 
 
 void LinkUserMessages( void )
@@ -234,6 +237,8 @@ void LinkUserMessages( void )
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3); 
 
+	gmsgSpectator = REG_USER_MSG( "Spectator", 2 );	// sends observer status on entering and exiting observer mode (it is not used in client dll)
+	gmsgAllowSpec = REG_USER_MSG( "AllowSpec", 1 );	// sends allow_spectators value (this will enable Spectate command button in Team select panel)
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
