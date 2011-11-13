@@ -28,6 +28,7 @@
 extern int gmsgCurWeapon;
 extern int gmsgSetFOV;
 extern int gmsgTeamInfo;
+extern int gmsgSpectator;
 
 extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 
@@ -86,14 +87,6 @@ void CBasePlayer::StartObserver( void )
 	// Clear out the status bar
 	m_fInitHUD = TRUE;
 
-	// Update Team Status
-	pev->team = 0;
-
-	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
-		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
-		WRITE_STRING("");
-	MESSAGE_END();
-
 	// Remove all the player's stuff
 	RemoveAllItems(FALSE);
 
@@ -105,6 +98,19 @@ void CBasePlayer::StartObserver( void )
 
 	// Setup spectator mode
 	Observer_SetMode(m_iObserverMode);
+
+	// Update Team Status
+	//pev->team = 0;
+	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
+		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
+		WRITE_STRING("");
+	MESSAGE_END();
+
+	// Send Spectator message (it is not used in client dll)
+	MESSAGE_BEGIN(MSG_ALL, gmsgSpectator);
+		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
+		WRITE_BYTE(1);
+	MESSAGE_END();
 }
 
 //=========================================================
@@ -123,6 +129,12 @@ void CBasePlayer::StopObserver(void)
 
 	respawn(pev, false);	// don't copy a corpse
 	pev->nextthink = -1;
+
+	// Send Spectator message (it is not used in client dll)
+	MESSAGE_BEGIN(MSG_ALL, gmsgSpectator);
+		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
+		WRITE_BYTE(0);
+	MESSAGE_END();
 }
 
 //=========================================================
