@@ -207,27 +207,28 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	int		j;
 	char	*p;
 	char	text[128];
-	char    szTemp[256];
+	char	szTemp[256];
 	const char *cpSay = "say";
 	const char *cpSayTeam = "say_team";
 	const char *pcmd = CMD_ARGV(0);
+	const int cmdc = CMD_ARGC();
 
 	// We can get a raw string now, without the "say " prepended
-	if ( CMD_ARGC() == 0 )
+	if ( cmdc == 0 )
 		return;
 
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer* player = GetClassPtr((CBasePlayer *)pev);
 
-	//Not yet.
+	// Not yet.
 	if ( player->m_flNextChatTime > gpGlobals->time )
 		 return;
 
-	if ( !_stricmp( pcmd, cpSay) || !_stricmp( pcmd, cpSayTeam ) )
+	if ( !_stricmp( pcmd, cpSay ) || !_stricmp( pcmd, cpSayTeam ) )
 	{
-		if ( CMD_ARGC() >= 2 )
+		if ( cmdc > 1 )
 		{
-			p = (char *)CMD_ARGS();
+			sprintf( szTemp, "%s", (char *)CMD_ARGS() );
 		}
 		else
 		{
@@ -235,39 +236,42 @@ void Host_Say( edict_t *pEntity, int teamonly )
 			return;
 		}
 	}
-	else  // Raw text, need to prepend argv[0]
+	else // Raw text, need to prepend argv[0]
 	{
-		if ( CMD_ARGC() >= 2 )
+		if ( cmdc > 1 )
 		{
-			sprintf( szTemp, "%s %s", ( char * )pcmd, (char *)CMD_ARGS() );
+			sprintf( szTemp, "%s %s", (char *)pcmd, (char *)CMD_ARGS() );
 		}
 		else
 		{
 			// Just a one word command, use the first word...sigh
-			sprintf( szTemp, "%s", ( char * )pcmd );
+			sprintf( szTemp, "%s", (char *)pcmd );
 		}
-		p = szTemp;
 	}
+	p = szTemp;
 
 	// remove quotes if present
 	if (*p == '"')
 	{
 		p++;
-		p[strlen(p)-1] = 0;
+		int len = (int)strlen(p);
+		if (p[len - 1] == '"')
+			p[len - 1] = 0;
 	}
 
 	// make sure the text has content
 	char *pc;
 	for ( pc = p; pc != NULL && *pc != 0; pc++ )
 	{
-		if ( isprint( *pc ) && !isspace( *pc ) )
+		if ( (byte)(*pc) >= (byte)0x80 ||	// UTF-8 symbol
+			 isprint( *pc ) && !isspace( *pc ) )
 		{
 			pc = NULL;	// we've found an alphanumeric character,  so text is valid
 			break;
 		}
 	}
 	if ( pc != NULL )
-		return;  // no character found, so say nothing
+		return; // no character found, so say nothing
 
 	// turn on color set 2  (color on,  no sound)
 	if ( teamonly )
@@ -275,9 +279,20 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	else
 		sprintf( text, "%c%s: ", 2, STRING( pEntity->v.netname ) );
 
-	j = sizeof(text) - 2 - strlen(text);  // -2 for /n and null terminator
+	j = sizeof(text) - 2 - strlen(text);  // -2 for \n and null terminator
 	if ( (int)strlen(p) > j )
 		p[j] = 0;
+
+	// remove empty space at the end
+ 	for ( pc = p + (int)strlen(p) - 1; pc != p; pc-- )
+	{
+		if ( (byte)(*pc) >= (byte)0x80 ||	// UTF-8 symbol
+			 !isspace( *pc ) )
+		{
+			break;
+		}
+		*pc = 0;
+	}
 
 	strcat( text, p );
 	strcat( text, "\n" );
