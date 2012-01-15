@@ -2791,7 +2791,7 @@ void CBasePlayer::Spawn( void )
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_WALK;
 	pev->max_health		= pev->health;
-	pev->flags			&= FL_PROXY;	// keep proxy flag sey by engine
+	pev->flags			&= FL_PROXY;	// keep proxy flag set by engine, clear others
 	pev->flags			|= FL_CLIENT;
 	pev->air_finished	= gpGlobals->time + 12;
 	pev->dmg			= 2;				// initial water damage
@@ -2816,7 +2816,7 @@ void CBasePlayer::Spawn( void )
 
 	m_flgeigerDelay = gpGlobals->time + 2.0;	// wait a few seconds until user-defined message registrations
 												// are recieved by all clients
-	
+
 	m_flTimeStepSound	= 0;
 	m_iStepLeft = 0;
 	m_flFieldOfView		= 0.5;// some monsters use this to determine whether or not the player is looking at them.
@@ -2846,6 +2846,9 @@ void CBasePlayer::Spawn( void )
 	pev->view_ofs = VEC_VIEW;
 	Precache();
 	m_HackedGunPos		= Vector( 0, 32, 0 );
+
+	// Reset view entity
+	SET_VIEW( edict(), edict() );
 
 	if ( m_iPlayerSound == SOUNDLIST_EMPTY )
 	{
