@@ -411,10 +411,10 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 		}
 		else
 		{
-		GetCursorPos (&current_pos);
+			GetCursorPos (&current_pos);
 
-		mx = current_pos.x - gEngfuncs.GetWindowCenterX() + mx_accum;
-		my = current_pos.y - gEngfuncs.GetWindowCenterY() + my_accum;
+			mx = current_pos.x - gEngfuncs.GetWindowCenterX() + mx_accum;
+			my = current_pos.y - gEngfuncs.GetWindowCenterY() + my_accum;
 		}
 
 		mx_accum = 0;
