@@ -551,6 +551,7 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 	CBaseEntity		*pClass;
 
 	// Every call to ServerActivate should be matched by a call to ServerDeactivate
+	ASSERT( g_serveractive == 0 );
 	g_serveractive = 1;
 
 	// Clients have not been initialized yet
