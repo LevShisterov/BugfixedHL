@@ -122,13 +122,14 @@ void CBasePlayer::StopObserver(void)
 	pev->iuser1 = pev->iuser2 = 0; 
 	m_iHideHUD = 0;
 
-	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
-		WRITE_BYTE(ENTINDEX(edict()));
-		WRITE_STRING( TeamID() );
-	MESSAGE_END();
-
 	respawn(pev, false);	// don't copy a corpse
 	pev->nextthink = -1;
+
+	// Update Team Status
+	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
+		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
+		WRITE_STRING(TeamID());
+	MESSAGE_END();
 
 	// Send Spectator message (it is not used in client dll)
 	MESSAGE_BEGIN(MSG_ALL, gmsgSpectator);

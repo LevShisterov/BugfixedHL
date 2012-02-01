@@ -989,8 +989,9 @@ void SetupVisibility( edict_t *pViewEntity, edict_t *pClient, unsigned char **pv
 
 	// Observers use the visibility of their target
 	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
-	if ( (pPlayer->pev->iuser2 != 0) && (pPlayer->m_hObserverTarget != NULL) )
+	if ( pPlayer->pev->iuser1 == OBS_IN_EYE && pPlayer->pev->iuser2 != 0 && pPlayer->m_hObserverTarget != NULL )
 	{
+		ASSERT( pPlayer->pev->iuser2 == ENTINDEX(pPlayer->m_hObserverTarget->edict()));
 		pView = pPlayer->m_hObserverTarget->edict();
 	}
 
