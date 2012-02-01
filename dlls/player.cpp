@@ -1807,13 +1807,6 @@ void CBasePlayer::PreThink(void)
 		Observer_HandleButtons();
 		Observer_CheckTarget();
 
-		// This will fix angles, so pain display will show correct direction
-		if (m_hObserverTarget && pev->iuser1 == OBS_IN_EYE)
-		{
-			pev->angles = pev->v_angle = m_hObserverTarget->pev->angles;
-			pev->fixangle = TRUE;
-		}
-
 		pev->impulse = 0;
 		return;
 	}
@@ -3916,9 +3909,12 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 	CBasePlayer *pPlayer = this;
-	// We will take spectating target player status if it is
+	// We will take spectating target player status if we have it
 	if (pev->iuser1 == OBS_IN_EYE && m_hObserverTarget)
 	{
+		// This will fix angles, so pain display will show correct direction
+		pev->angles = pev->v_angle = m_hObserverTarget->pev->angles;
+		pev->fixangle = TRUE;
 		pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
 		if (!pPlayer)
 			pPlayer = this;
