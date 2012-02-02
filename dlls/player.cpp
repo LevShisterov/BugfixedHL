@@ -2827,6 +2827,22 @@ void CBasePlayer::Spawn( void )
 	g_pGameRules->SetDefaultPlayerTeam( this );
 	g_pGameRules->GetPlayerSpawnSpot( this );
 
+	// Move all player spectators to new traget origin (bugfix for pmove/PAS issue)
+	CBasePlayer *plr;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+		if (!plr ||
+			plr->pev->iuser1 == 0 ||
+			plr->pev->iuser1 == OBS_ROAMING ||
+			plr->pev->iuser1 == OBS_MAP_FREE ||
+			plr->pev->iuser2 == 0 ||
+			plr->m_hObserverTarget != this)
+			continue;
+
+		UTIL_SetOrigin(plr->pev, pev->origin);
+	}
+
 	SET_MODEL(ENT(pev), "models/player.mdl");
 	g_ulModelIndexPlayer = pev->modelindex;
 	pev->sequence		= LookupActivity( ACT_IDLE );
@@ -2865,7 +2881,7 @@ void CBasePlayer::Spawn( void )
 	}
 
 	m_lastx = m_lasty = 0;
-	
+
 	m_flNextChatTime = gpGlobals->time;
 
 	g_pGameRules->PlayerSpawn( this );
