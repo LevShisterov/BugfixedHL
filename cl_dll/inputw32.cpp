@@ -24,10 +24,10 @@
 
 #define MOUSE_BUTTON_COUNT 5
 
-// Set this to 1 to show mouse cursor.  Experimental
-int	g_iVisibleMouse = 0;
+int g_iVisibleMouse = 1;	// Set this to 1 to show mouse cursor.  Experimental
+int g_iMouseInGame = 0;		// Mouse checked that is is in game and could be used for input and resets
 
-extern "C" 
+extern "C"
 {
 	void DLLEXPORT IN_ActivateMouse( void );
 	void DLLEXPORT IN_DeactivateMouse( void );
@@ -188,6 +188,40 @@ void SetDinputBufferSize(void)
 		gEngfuncs.Con_DPrintf("Failed to increase DirectInput buffer size.\n");
 }
 
+bool CheckIsMouseInGame()
+{
+	// Detect for a case when window isn't active, but ActivateMouse was called - bug in engine
+	HWND hwndA = GetActiveWindow();
+	HWND hwndF = GetForegroundWindow();
+	if (hwndA != NULL && hwndA == hwndF)
+	{
+		CURSORINFO ci;
+		ci.cbSize = sizeof(ci);
+		GetCursorInfo(&ci);
+		RECT rect;
+		POINT point;
+		HWND hwnd = GetActiveWindow();
+		GetClientRect(hwnd, &rect);
+		point.x = rect.left;
+		point.y = rect.top;
+		ClientToScreen(hwnd, &point);
+		OffsetRect(&rect, point.x, point.y);
+		bool isCursorInWindow = rect.left <= ci.ptScreenPos.x && ci.ptScreenPos.x <= rect.right && rect.top <= ci.ptScreenPos.y && ci.ptScreenPos.y <= rect.bottom;
+		if (!ci.flags & CURSOR_SHOWING && isCursorInWindow)
+		{
+			ClipCursor(&rect);
+			g_iMouseInGame = 1;
+			mx_accum = 0;
+			my_accum = 0;
+			SetCursorPos ( gEngfuncs.GetWindowCenterX(), gEngfuncs.GetWindowCenterY() );
+			return true;
+		}
+	}
+	g_iMouseInGame = 0;
+	ClipCursor(NULL);
+	return false;
+}
+
 /*
 ===========
 IN_ActivateMouse
@@ -195,24 +229,34 @@ IN_ActivateMouse
 */
 void DLLEXPORT IN_ActivateMouse (void)
 {
-	if (mouseinitialized)
+	if (!mouseinitialized)
+		return;
+
+	if (mouseparmsvalid)
+		restore_spi = SystemParametersInfo (SPI_SETMOUSE, 0, newmouseparms, 0);
+
+	if (lpdiMouse != NULL && !dinput_mouse_acquired)
 	{
-		if (mouseparmsvalid)
-			restore_spi = SystemParametersInfo (SPI_SETMOUSE, 0, newmouseparms, 0);
-
-		RECT rect;
-		HWND hwnd = GetActiveWindow();
-		GetWindowRect(hwnd, &rect);
-		ClipCursor(&rect);
-
-		if (lpdiMouse != NULL && !dinput_mouse_acquired)
-		{
-			if (lpdiMouse->Acquire() == DI_OK)
-				dinput_mouse_acquired = 1;
-		}
-
-		mouseactive = 1;
+		if (lpdiMouse->Acquire() == DI_OK)
+			dinput_mouse_acquired = 1;
 	}
+
+	// Always clip cursor in fullscreen mode
+	HWND hwndA = GetActiveWindow();
+	if (hwndA)
+	{
+		HWND hwndF = GetForegroundWindow();
+		if (hwndA == hwndF && hwndF != GetDesktopWindow() && hwndF != GetShellWindow())
+		{
+			RECT appBounds, rect;
+			GetWindowRect(hwndA, &appBounds);
+			GetWindowRect(GetDesktopWindow(), &rect);
+			if (appBounds.left == rect.left && appBounds.right == rect.right && appBounds.top == rect.top && appBounds.bottom == rect.bottom)
+				ClipCursor(&rect);
+		}
+	}
+
+	mouseactive = 1;
 }
 
 /*
@@ -222,21 +266,22 @@ IN_DeactivateMouse
 */
 void DLLEXPORT IN_DeactivateMouse (void)
 {
-	if (mouseinitialized)
+	if (!mouseinitialized)
+		return;
+
+	if (restore_spi)
+		SystemParametersInfo (SPI_SETMOUSE, 0, originalmouseparms, 0);
+
+	if (lpdiMouse != NULL && dinput_mouse_acquired)
 	{
-		if (restore_spi)
-			SystemParametersInfo (SPI_SETMOUSE, 0, originalmouseparms, 0);
-
-		ClipCursor(NULL);
-
-		if (lpdiMouse != NULL && dinput_mouse_acquired)
-		{
-			if (lpdiMouse->Unacquire() == DI_OK)
-				dinput_mouse_acquired = 0;
-		}
-
-		mouseactive = 0;
+		if (lpdiMouse->Unacquire() == DI_OK)
+			dinput_mouse_acquired = 0;
 	}
+
+	ClipCursor(NULL);
+
+	mouseactive = 0;
+	g_iMouseInGame = 0;	// We should check mouse later
 }
 
 /*
@@ -246,7 +291,7 @@ IN_StartupMouse
 */
 void IN_StartupMouse (void)
 {
-	if ( gEngfuncs.CheckParm ("-nomouse", NULL ) ) 
+	if ( gEngfuncs.CheckParm ("-nomouse", NULL ) )
 		return; 
 
 	if (mouseinitialized)
@@ -343,6 +388,9 @@ FIXME: Call through to engine?
 */
 void IN_ResetMouse( void )
 {
+	if (!g_iMouseInGame && !CheckIsMouseInGame())
+		return;
+
 	SetCursorPos ( gEngfuncs.GetWindowCenterX(), gEngfuncs.GetWindowCenterY() );
 }
 
@@ -353,13 +401,11 @@ IN_MouseEvent
 */
 void DLLEXPORT IN_MouseEvent (int mstate)
 {
-	int		i;
-
 	if ( iMouseInUse || g_iVisibleMouse )
 		return;
 
 	// perform button actions
-	for (i=0 ; i<mouse_buttons ; i++)
+	for (int i = 0; i < mouse_buttons; i++)
 	{
 		if ( (mstate & (1<<i)) &&
 			!(mouse_oldbuttonstate & (1<<i)) )
@@ -372,8 +418,8 @@ void DLLEXPORT IN_MouseEvent (int mstate)
 		{
 			gEngfuncs.Key_Event (K_MOUSE1 + i, 0);
 		}
-	}	
-	
+	}
+
 	mouse_oldbuttonstate = mstate;
 }
 
@@ -396,7 +442,7 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 
 	//jjb - this disbles normal mouse control if the user is trying to 
 	//      move the camera, or if the mouse cursor is visible or if we're in intermission
-	if ( !iMouseInUse && !g_iVisibleMouse && !gHUD.m_iIntermission )
+	if ( !iMouseInUse && !g_iVisibleMouse && !gHUD.m_iIntermission && ( g_iMouseInGame || CheckIsMouseInGame() ) )
 	{
 		if (m_input->value == 2 && dinput_mouse_acquired)
 		{
@@ -500,35 +546,36 @@ IN_Accumulate
 */
 void DLLEXPORT IN_Accumulate (void)
 {
-	//only accumulate mouse if we are not moving the camera with the mouse
-	if ( !iMouseInUse && !g_iVisibleMouse )
+	// Only accumulate mouse if we are not moving the camera with the mouse
+	if ( iMouseInUse || g_iVisibleMouse )
+		return;
+	if (!mouseactive)
+		return;
+
+	if (!g_iMouseInGame && !CheckIsMouseInGame())
+		return;
+
+	if (m_input->value == 2 && dinput_mouse_acquired)
 	{
-		if (mouseactive)
-		{
-			if (m_input->value == 2 && dinput_mouse_acquired)
-			{
-				hr = lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
-				if (hr == DIERR_NOTACQUIRED || hr == DIERR_INPUTLOST)
-					lpdiMouse->Acquire();
-				else if (hr == DI_BUFFEROVERFLOW)
-					SetDinputBufferSize();
+		hr = lpdiMouse->GetDeviceState(sizeof(DIMOUSESTATE), (LPVOID)&mousestate);
+		if (hr == DIERR_NOTACQUIRED || hr == DIERR_INPUTLOST)
+			lpdiMouse->Acquire();
+		else if (hr == DI_BUFFEROVERFLOW)
+			SetDinputBufferSize();
 
-				mx_accum += mousestate.lX;
-				my_accum += mousestate.lY;
-			}
-			else
-			{
-				GetCursorPos (&current_pos);
+		mx_accum += mousestate.lX;
+		my_accum += mousestate.lY;
+	}
+	else
+	{
+		GetCursorPos (&current_pos);
 
-				mx_accum += current_pos.x - gEngfuncs.GetWindowCenterX();
-				my_accum += current_pos.y - gEngfuncs.GetWindowCenterY();
-			}
-
-			// force the mouse to the center, so there's room to move
-			IN_ResetMouse();
-		}
+		mx_accum += current_pos.x - gEngfuncs.GetWindowCenterX();
+		my_accum += current_pos.y - gEngfuncs.GetWindowCenterY();
 	}
 
+	// force the mouse to the center, so there's room to move
+	IN_ResetMouse();
 }
 
 /*
