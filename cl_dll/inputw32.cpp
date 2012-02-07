@@ -518,10 +518,10 @@ void DLLEXPORT IN_Accumulate (void)
 			}
 			else
 			{
-			GetCursorPos (&current_pos);
+				GetCursorPos (&current_pos);
 
-			mx_accum += current_pos.x - gEngfuncs.GetWindowCenterX();
-			my_accum += current_pos.y - gEngfuncs.GetWindowCenterY();
+				mx_accum += current_pos.x - gEngfuncs.GetWindowCenterX();
+				my_accum += current_pos.y - gEngfuncs.GetWindowCenterY();
 			}
 
 			// force the mouse to the center, so there's room to move
