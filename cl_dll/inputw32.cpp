@@ -206,6 +206,11 @@ void DLLEXPORT IN_ActivateMouse (void)
 				dinput_mouse_acquired = 1;
 		}
 
+		RECT rect;
+		HWND hwnd = GetActiveWindow();
+		GetWindowRect(hwnd, &rect);
+		ClipCursor(&rect);
+
 		mouseactive = 1;
 	}
 }
@@ -227,6 +232,8 @@ void DLLEXPORT IN_DeactivateMouse (void)
 			if (lpdiMouse->Unacquire() == DI_OK)
 				dinput_mouse_acquired = 0;
 		}
+
+		ClipCursor(NULL);
 
 		mouseactive = 0;
 	}
