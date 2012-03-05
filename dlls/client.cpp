@@ -114,6 +114,7 @@ void ClientDisconnect( edict_t *pEntity )
 	// since the edict doesn't get deleted, fix it so it doesn't interfere.
 	pEntity->v.takedamage = DAMAGE_NO;	// don't attract autoaim
 	pEntity->v.solid = SOLID_NOT;		// nonsolid
+	pEntity->v.flags = 0;	// clear client flags, because engine doesn't clear them before calling ClientConnect, but only before ClientPutInServer, on next connection to this slot
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
 
 	// Mark player as disconnected
