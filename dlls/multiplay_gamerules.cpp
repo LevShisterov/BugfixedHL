@@ -406,18 +406,34 @@ BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszNam
 
 extern int gmsgSayText;
 extern int gmsgGameMode;
+extern int gmsgTeamInfo;
+extern int gmsgTeamNames;
 extern int gmsgSpectator;
 extern int gmsgAllowSpec;
 
 void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
 	MESSAGE_BEGIN( MSG_ONE, gmsgGameMode, NULL, pPlayer->edict() );
+	// There is plugin (su-27) for scoreboard manipulation under AMXX, it should receive 0 for correct behaviour
+	// So in any case (AMXX installed and have or not su-27) we should send 0 down
+	if (g_amxmodx_version)
 		WRITE_BYTE( 0 );  // game mode none
+	else
+		WRITE_BYTE( 1 );  // game mode teamplay
 	MESSAGE_END();
 }
 
-void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
+void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl, bool bSendTeamInfo )
 {
+	if (bSendTeamInfo)
+	{
+		// Send down the team names
+		MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pl->edict() );
+			WRITE_BYTE( 1 );
+			WRITE_STRING( "Players" );
+		MESSAGE_END();
+	}
+
 	// Send allow_spectators status
 	MESSAGE_BEGIN( MSG_ONE, gmsgAllowSpec, NULL, pl->edict() );
 		WRITE_BYTE( allow_spectators.value );
@@ -455,8 +471,20 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
-		WRITE_SHORT( 0 );
+		WRITE_SHORT( GetTeamIndex( pl->m_szTeamName ) + 1 );
 	MESSAGE_END();
+
+	if (bSendTeamInfo)
+	{
+		// Send this player team info to all
+		MESSAGE_BEGIN( MSG_ALL, gmsgTeamInfo );
+			WRITE_BYTE( pl->entindex() );
+		if (g_teamplay || g_amxmodx_version)
+			WRITE_STRING( pl->pev->iuser1 ? "" : pl->TeamID() );
+		else
+			WRITE_STRING( pl->pev->iuser1 ? "" : "Players" );
+		MESSAGE_END();
+	}
 
 	// Send player spectator status (it is not used in client dll)
 	MESSAGE_BEGIN( MSG_ALL, gmsgSpectator );  
@@ -466,7 +494,7 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 
 	SendMOTDToClient( pl->edict() );
 
-	// loop through all active players and send their score info to the new client
+	// loop through all active players and send their score and team info to the new client
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		// FIXME:  Probably don't need to cast this just to read m_iDeaths
@@ -481,6 +509,17 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 				WRITE_SHORT( 0 );
 				WRITE_SHORT( GetTeamIndex( plr->m_szTeamName ) + 1 );
 			MESSAGE_END();
+
+			if (bSendTeamInfo)
+			{
+				MESSAGE_BEGIN( MSG_ONE, gmsgTeamInfo, NULL, pl->edict() );
+					WRITE_BYTE( plr->entindex() );
+				if (g_teamplay || g_amxmodx_version)
+					WRITE_STRING( plr->pev->iuser1 ? "" : plr->TeamID() );
+				else
+					WRITE_STRING( plr->pev->iuser1 ? "" : "Players" );
+				MESSAGE_END();
+			}
 		}
 	}
 

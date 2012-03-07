@@ -46,4 +46,7 @@ extern cvar_t	*g_psv_gravity;
 extern cvar_t	*g_psv_aim;
 extern cvar_t	*g_footsteps;
 
+// AMXX
+extern cvar_t	*g_amxmodx_version;
+
 #endif		// GAME_H
