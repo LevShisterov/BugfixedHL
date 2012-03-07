@@ -526,11 +526,10 @@ void CBasePlayerItem::Materialize( void )
 	}
 
 	pev->solid = SOLID_TRIGGER;
-
 	UTIL_SetOrigin( pev, pev->origin );// link into world.
-	SetTouch (&CBasePlayerItem::DefaultTouch);
-	SetThink (NULL);
 
+	SetTouch( &CBasePlayerItem::DefaultTouch );
+	SetThink( NULL );
 }
 
 //=========================================================
@@ -765,8 +764,9 @@ void CBasePlayerItem::AttachToPlayer ( CBasePlayer *pPlayer )
 	pev->modelindex = 0;// server won't send down to clients if modelindex == 0
 	pev->model = iStringNull;
 	pev->owner = pPlayer->edict();
-	pev->nextthink = gpGlobals->time + .1;
+	pev->nextthink = 0; // Remove think - prevents futher attempts to materialize
 	SetTouch( NULL );
+	SetThink( NULL );
 }
 
 // CALLED THROUGH the newly-touched weapon's instance. The existing player weapon is pOriginal
@@ -1092,6 +1092,7 @@ void CBasePlayerAmmo::Materialize( void )
 	}
 
 	SetTouch( &CBasePlayerAmmo::DefaultTouch );
+	SetThink( NULL );
 }
 
 void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther )
