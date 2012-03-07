@@ -18,6 +18,7 @@
 // observer.cpp
 //
 #include	"extdll.h"
+#include	"game.h"
 #include	"util.h"
 #include	"cbase.h"
 #include	"player.h"
@@ -29,6 +30,8 @@ extern int gmsgCurWeapon;
 extern int gmsgSetFOV;
 extern int gmsgTeamInfo;
 extern int gmsgSpectator;
+
+extern int g_teamplay;
 
 extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 
@@ -125,16 +128,19 @@ void CBasePlayer::StopObserver(void)
 	respawn(pev, false);	// don't copy a corpse
 	pev->nextthink = -1;
 
-	// Update Team Status
-	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
-		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
-		WRITE_STRING(TeamID());
-	MESSAGE_END();
-
 	// Send Spectator message (it is not used in client dll)
 	MESSAGE_BEGIN(MSG_ALL, gmsgSpectator);
 		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
 		WRITE_BYTE(0);
+	MESSAGE_END();
+
+	// Update Team Status
+	MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
+		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
+	if (g_teamplay || g_amxmodx_version)
+		WRITE_STRING(TeamID());
+	else
+		WRITE_STRING("Players");
 	MESSAGE_END();
 }
 

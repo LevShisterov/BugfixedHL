@@ -213,10 +213,10 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 	int i;
 
 	SetDefaultPlayerTeam( pPlayer );
-	CHalfLifeMultiplay::InitHUD( pPlayer );
+	CHalfLifeMultiplay::InitHUD( pPlayer, false );
 
 	// Send down the team names
-	MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pPlayer->edict() );  
+	MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pPlayer->edict() );
 		WRITE_BYTE( num_teams );
 		for ( i = 0; i < num_teams; i++ )
 		{
@@ -240,7 +240,6 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 
 	ChangePlayerTeam( pPlayer, pPlayer->m_szTeamName, FALSE, FALSE );
 	UTIL_SayText( text, pPlayer );
-	int clientIndex = pPlayer->entindex();
 	RecountTeams();
 	// update this player with all the other players team info
 	// loop through all active players and send their team info to the new client
