@@ -117,12 +117,12 @@ void ClientDisconnect( edict_t *pEntity )
 	pEntity->v.flags = 0;	// clear client flags, because engine doesn't clear them before calling ClientConnect, but only before ClientPutInServer, on next connection to this slot
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
 
+	g_pGameRules->ClientDisconnected( pEntity );
+
 	// Mark player as disconnected
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 	pl->Disconnect();
-
-	g_pGameRules->ClientDisconnected( pEntity );
 }
 
 

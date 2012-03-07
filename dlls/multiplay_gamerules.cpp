@@ -466,7 +466,8 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl, bool bSendTeamInfo )
 
 	// sending just one score makes the hud scoreboard active;  otherwise
 	// it is just disabled for single play
-	MESSAGE_BEGIN( MSG_ONE, gmsgScoreInfo, NULL, pl->edict() );
+	// Let all know that new player have zero score
+	MESSAGE_BEGIN( MSG_ALL, gmsgScoreInfo, NULL );
 		WRITE_BYTE( ENTINDEX(pl->edict()) );
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
