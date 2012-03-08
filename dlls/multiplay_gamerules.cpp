@@ -420,17 +420,8 @@ void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 	MESSAGE_END();
 }
 
-void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl, bool bSendTeamInfo )
+void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 {
-	if (bSendTeamInfo)
-	{
-		// Send down the team names
-		MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pl->edict() );
-			WRITE_BYTE( 1 );
-			WRITE_STRING( "Players" );
-		MESSAGE_END();
-	}
-
 	// Send allow_spectators status
 	MESSAGE_BEGIN( MSG_ONE, gmsgAllowSpec, NULL, pl->edict() );
 		WRITE_BYTE( allow_spectators.value );
@@ -470,12 +461,12 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl, bool bSendTeamInfo )
 		WRITE_SHORT( GetTeamIndex( pl->m_szTeamName ) + 1 );
 	MESSAGE_END();
 
-	if (bSendTeamInfo)
+	if (!g_teamplay)
 	{
 		// Send this player team info to all
 		MESSAGE_BEGIN( MSG_ALL, gmsgTeamInfo );
 			WRITE_BYTE( pl->entindex() );
-		if (g_teamplay || g_amxmodx_version)
+		if (g_amxmodx_version)
 			WRITE_STRING( pl->pev->iuser1 ? "" : pl->TeamID() );
 		else
 			WRITE_STRING( pl->pev->iuser1 ? "" : "Players" );
@@ -506,11 +497,11 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl, bool bSendTeamInfo )
 				WRITE_SHORT( GetTeamIndex( plr->m_szTeamName ) + 1 );
 			MESSAGE_END();
 
-			if (bSendTeamInfo)
+			if (!g_teamplay)
 			{
 				MESSAGE_BEGIN( MSG_ONE, gmsgTeamInfo, NULL, pl->edict() );
 					WRITE_BYTE( plr->entindex() );
-				if (g_teamplay || g_amxmodx_version)
+				if (g_amxmodx_version)
 					WRITE_STRING( plr->pev->iuser1 ? "" : plr->TeamID() );
 				else
 					WRITE_STRING( plr->pev->iuser1 ? "" : "Players" );
@@ -717,7 +708,7 @@ void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKille
 			WRITE_SHORT( PK->pev->frags );
 			WRITE_SHORT( PK->m_iDeaths );
 			WRITE_SHORT( 0 );
-			WRITE_SHORT( GetTeamIndex( PK->m_szTeamName) + 1 );
+			WRITE_SHORT( GetTeamIndex( PK->m_szTeamName ) + 1 );
 		MESSAGE_END();
 
 		// let the killer paint another decal as soon as he'd like.

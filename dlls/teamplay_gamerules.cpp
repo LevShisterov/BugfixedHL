@@ -213,7 +213,7 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 	int i;
 
 	SetDefaultPlayerTeam( pPlayer );
-	CHalfLifeMultiplay::InitHUD( pPlayer, false );
+	CHalfLifeMultiplay::InitHUD( pPlayer );
 
 	// Send down the team names
 	MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pPlayer->edict() );
