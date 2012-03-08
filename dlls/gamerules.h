@@ -276,8 +276,7 @@ public:
 	//  svRejectReason
 	// Only the client's name and remote address are provided to the dll for verification.
 	virtual BOOL ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ] );
-	virtual void InitHUD( CBasePlayer *pl ) { InitHUD( pl, true ); }	// the client dll is ready for updating
-	virtual void InitHUD( CBasePlayer *pl, bool bSendTeamInfo );		// the client dll is ready for updating
+	virtual void InitHUD( CBasePlayer *pl );		// the client dll is ready for updating
 	virtual void ClientDisconnected( edict_t *pClient );
 	virtual void UpdateGameMode( CBasePlayer *pPlayer );  // the client needs to be informed of the current game mode
 
