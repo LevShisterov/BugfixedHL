@@ -429,8 +429,11 @@ int CHalfLifeTeamplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pT
 {
 	// half life multiplay has a simple concept of Player Relationships.
 	// you are either on another player's team, or you are not.
-	if ( !pPlayer || !pTarget || !pTarget->IsPlayer() )
+	if ( !pPlayer || !pTarget || !pPlayer->IsPlayer() || !pTarget->IsPlayer() )
 		return GR_NOTTEAMMATE;
+	// Spectators are teammates
+	if (((CBasePlayer*)pPlayer)->IsObserver() && ((CBasePlayer*)pTarget)->IsObserver())
+		return GR_TEAMMATE;
 
 	if ( (*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !_stricmp( GetTeamID(pPlayer), GetTeamID(pTarget) ) )
 	{
