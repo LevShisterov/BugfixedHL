@@ -1164,7 +1164,11 @@ edict_t *CHalfLifeMultiplay::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 //=========================================================
 int CHalfLifeMultiplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
-	// half life deathmatch has only enemies
+	if ( !pPlayer || !pTarget || !pPlayer->IsPlayer() || !pTarget->IsPlayer() )
+		return GR_NOTTEAMMATE;
+	if (((CBasePlayer*)pPlayer)->IsObserver() && ((CBasePlayer*)pTarget)->IsObserver())
+		return GR_TEAMMATE;
+	// half life deathmatch has only enemies and spectators
 	return GR_NOTTEAMMATE;
 }
 
