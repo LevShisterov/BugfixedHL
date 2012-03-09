@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "vgui_TeamFortressViewport.h"
 
@@ -44,6 +45,10 @@ static float flScrollTime = 0;  // the time at which the lines next scroll up
 
 static int Y_START = 0;
 static int line_height = 0;
+static char time_buf[12];
+
+static struct tm *current;
+static time_t now;
 
 DECLARE_MESSAGE( m_SayText, SayText );
 
@@ -79,7 +84,6 @@ int CHudSayText :: VidInit( void )
 
 int ScrollTextUp( void )
 {
-	ConsolePrint( g_szLineBuffer[0] ); // move the first line into the console buffer
 	g_szLineBuffer[MAX_LINES][0] = 0;
 	memmove( g_szLineBuffer[0], g_szLineBuffer[1], sizeof(g_szLineBuffer) - sizeof(g_szLineBuffer[0]) ); // overwrite the first line
 	memmove( &g_pflNameColors[0], &g_pflNameColors[1], sizeof(g_pflNameColors) - sizeof(g_pflNameColors[0]) );
@@ -101,9 +105,6 @@ int CHudSayText :: Draw( float flTime )
 
 	if ( ( gViewPort && gViewPort->AllowedToPrintText() == FALSE) || !m_HUD_saytext->value )
 		return 1;
-
-	// make sure the scrolltime is within reasonable bounds,  to guard against the clock being reset
-	flScrollTime = min( flScrollTime, flTime + m_HUD_saytext_time->value );
 
 	// make sure the scrolltime is within reasonable bounds,  to guard against the clock being reset
 	flScrollTime = min( flScrollTime, flTime + m_HUD_saytext_time->value );
@@ -166,10 +167,19 @@ int CHudSayText :: MsgFunc_SayText( const char *pszName, int iSize, void *pbuf )
 
 void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIndex )
 {
+	// Print to the console
+	time(&now);
+	current = localtime(&now);
+	// Prepend time for say messages
+	if (now && *pszBuf == 2 && clientIndex > 0)
+	{
+		sprintf(time_buf, "(%00i:%00i:%00i) ", current->tm_hour, current->tm_min, current->tm_sec);
+		ConsolePrint(time_buf);
+	}
+	ConsolePrint(pszBuf);
+
 	if ( gViewPort && gViewPort->AllowedToPrintText() == FALSE )
 	{
-		// Print it straight to the console
-		ConsolePrint( pszBuf );
 		return;
 	}
 
@@ -227,7 +237,6 @@ void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIn
 	else
 		Y_START = ScreenHeight - 45;
 	Y_START -= (line_height * (MAX_LINES+1));
-
 }
 
 void CHudSayText :: EnsureTextFitsInOneLineAndWrapIfHaveTo( int line )
