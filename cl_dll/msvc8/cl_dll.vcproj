@@ -27,6 +27,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Setup version from SVN revision"
+				CommandLine="IF EXIST &quot;$(ProjectDir)\PreBuild.bat&quot; (&#x0D;&#x0A;CALL &quot;$(ProjectDir)\PreBuild.bat&quot; &quot;$(ProjectDir)\..\&quot; &quot;$(ProjectDir)\..\&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -115,6 +117,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Setup version from SVN revision"
+				CommandLine="IF EXIST &quot;$(ProjectDir)\PreBuild.bat&quot; (&#x0D;&#x0A;CALL &quot;$(ProjectDir)\PreBuild.bat&quot; &quot;$(ProjectDir)\..\&quot; &quot;$(ProjectDir)\..\&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -308,6 +312,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\cl_dll.rc"
+				>
 			</File>
 			<File
 				RelativePath="..\com_weapons.cpp"
@@ -1080,6 +1088,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\version.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\game_shared\vgui_checkbutton2.cpp"
@@ -2120,6 +2132,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
 				RelativePath="..\studio_util.h"
 				>
 			</File>
@@ -2133,6 +2149,10 @@
 			</File>
 			<File
 				RelativePath="..\util_vector.h"
+				>
+			</File>
+			<File
+				RelativePath="..\version.h"
 				>
 			</File>
 			<File
