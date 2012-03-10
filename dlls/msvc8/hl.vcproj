@@ -26,6 +26,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Setup version from SVN revision"
+				CommandLine="IF EXIST &quot;$(ProjectDir)\PreBuild.bat&quot; (&#x0D;&#x0A;CALL &quot;$(ProjectDir)\PreBuild.bat&quot; &quot;$(ProjectDir)\..\&quot; &quot;$(ProjectDir)\..\&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -114,6 +116,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Setup version from SVN revision"
+				CommandLine="IF EXIST &quot;$(ProjectDir)\PreBuild.bat&quot; (&#x0D;&#x0A;CALL &quot;$(ProjectDir)\PreBuild.bat&quot; &quot;$(ProjectDir)\..\&quot; &quot;$(ProjectDir)\..\&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -202,6 +206,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Setup version from SVN revision"
+				CommandLine="IF EXIST &quot;$(ProjectDir)\PreBuild.bat&quot; (&#x0D;&#x0A;CALL &quot;$(ProjectDir)\PreBuild.bat&quot; &quot;$(ProjectDir)\..\&quot; &quot;$(ProjectDir)\..\&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -1206,6 +1212,10 @@
 			</File>
 			<File
 				RelativePath="..\hl.def"
+				>
+			</File>
+			<File
+				RelativePath=".\hl.rc"
 				>
 			</File>
 			<File
@@ -2305,6 +2315,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\version.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\game_shared\voice_gamemgr.cpp"
 				>
 				<FileConfiguration
@@ -2566,6 +2580,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
 				RelativePath="..\saverestore.h"
 				>
 			</File>
@@ -2607,6 +2625,10 @@
 			</File>
 			<File
 				RelativePath="..\vector.h"
+				>
+			</File>
+			<File
+				RelativePath="..\version.h"
 				>
 			</File>
 			<File
