@@ -110,16 +110,13 @@ DEL /F /Q "%Temp%.\%TempFile%.h" 2>NUL
 SET version_pdate=%version_pdate_1% %version_pdate_2%
 
 ::
-:: Detect changes and mixed revisions
+:: Detect local modifications
 ::
 SubWCRev.exe "%repodir%\." -nm >NUL
 
 IF "%ERRORLEVEL%" == "7" (
 	echo SubWCRev.exe detected modifications.
 	set version_specialbuild=modified
-) ELSE IF "%ERRORLEVEL%" == "8" (
-	echo SubWCRev.exe detected mixed revisions.
-	set version_specialbuild=mixed
 ) ELSE (
 	set version_specialbuild=
 )
