@@ -16,6 +16,14 @@
 #include "eiface.h"
 #include "util.h"
 #include "game.h"
+#include "appversion.h"
+
+// Version cvar
+#if APP_VERSION_FLAGS == 0x0L
+cvar_t	hlds_version = {"aghl.ru",APP_VERSION_STRD, FCVAR_SERVER };
+#else
+cvar_t	hlds_version = {"aghl.ru",APP_VERSION_STRD " " APP_VERSION_SPECIALBUILD, FCVAR_SERVER };
+#endif
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
 
@@ -468,6 +476,7 @@ void GameDLLInit( void )
 	g_amxmodx_version = CVAR_GET_POINTER( "amxmodx_version" );
 
 	// Register cvars here:
+	CVAR_REGISTER (&hlds_version);
 
 	CVAR_REGISTER (&displaysoundlist);
 

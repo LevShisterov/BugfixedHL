@@ -1,13 +1,15 @@
+@echo OFF
 ::
 :: Pre-build auto-versioning script
-::
 ::
 
 SET srcdir=%~1
 SET repodir=%~2
 
 set old_version=
+set old_specialbuild=
 set version_revision=
+set version_specialbuild=
 set version_date=
 set version_pdate=
 set version_pdate_1=
@@ -28,6 +30,7 @@ IF EXIST "%srcdir%\appversion.h" (
 	FOR /F "usebackq tokens=1,2,3" %%i in ("%srcdir%\appversion.h") do (
 		IF %%i==#define (
 			IF %%j==APP_VERSION_C SET old_version=%%k
+			IF %%j==APP_VERSION_SPECIALBUILD SET old_specialbuild=%%k
 		)
 	)
 )
@@ -106,6 +109,21 @@ FOR /F "usebackq tokens=1,2,3" %%i in ("%Temp%.\%TempFile%.h") do (
 DEL /F /Q "%Temp%.\%TempFile%.h" 2>NUL
 SET version_pdate=%version_pdate_1% %version_pdate_2%
 
+::
+:: Detect changes and mixed revisions
+::
+SubWCRev.exe "%repodir%\." -nm >NUL
+
+IF "%ERRORLEVEL%" == "7" (
+	echo SubWCRev.exe detected modifications.
+	set version_specialbuild="modified"
+) ELSE IF "%ERRORLEVEL%" == "8" (
+	echo SubWCRev.exe detected mixed revisions.
+	set version_specialbuild="mixed"
+) ELSE (
+	set version_specialbuild=""
+)
+
 :_readVersionH
 ::
 :: Read major, minor and maintenance version components from Version.h
@@ -128,47 +146,58 @@ IF "%version_maintenance%" == "" (
 )
 
 ::
-:: Update appversion.h if version has changed
+:: Update appversion.h if version has changed or modifications/mixed revisions detected
 ::
-IF NOT "%new_version%"=="%old_version%" (
+IF NOT "%new_version%"=="%old_version%" goto _update
+IF NOT "%version_specialbuild%"=="%old_specialbuild%" goto _update
+goto _exit
 
-	echo Updating appversion.h, new version is %new_version%, the old one was %old_version%
-	echo #ifndef __APPVERSION_H__ >"%srcdir%\appversion.h"
-	echo #define __APPVERSION_H__ >>"%srcdir%\appversion.h"
-	echo.  >>"%srcdir%\appversion.h"
-	echo // >>"%srcdir%\appversion.h"
-	echo // This file is generated automatically. >>"%srcdir%\appversion.h"
-	echo // Don't edit it. >>"%srcdir%\appversion.h"
-	echo // >>"%srcdir%\appversion.h"
-	echo.  >>"%srcdir%\appversion.h"
-	echo //Version defines >>"%srcdir%\appversion.h"
+:_update
+echo Updating appversion.h, new version is %new_version%, the old one was %old_version%
+echo new special build is %version_specialbuild%, the old one was %old_specialbuild%
 
-	IF "%version_maintenance%" == "" (
-		echo #define APP_VERSION_D %version_major%.%version_minor%.%version_revision% >>"%srcdir%\appversion.h"
-		echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_revision%" >>"%srcdir%\appversion.h"
-		echo #define APP_VERSION_C %version_major%,%version_minor%,0,%version_revision% >>"%srcdir%\appversion.h"
-		echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, 0, %version_revision%" >>"%srcdir%\appversion.h"
-	) ELSE (
-		echo #define APP_VERSION_D %version_major%.%version_minor%.%version_maintenance%.%version_revision% >>"%srcdir%\appversion.h"
-		echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_maintenance%.%version_revision%" >>"%srcdir%\appversion.h"
-		echo #define APP_VERSION_C %version_major%,%version_minor%,%version_maintenance%,%version_revision% >>"%srcdir%\appversion.h"
-		echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, %version_maintenance%, %version_revision%" >>"%srcdir%\appversion.h"
-	)
+echo #ifndef __APPVERSION_H__ >"%srcdir%\appversion.h"
+echo #define __APPVERSION_H__ >>"%srcdir%\appversion.h"
+echo.  >>"%srcdir%\appversion.h"
+echo // >>"%srcdir%\appversion.h"
+echo // This file is generated automatically. >>"%srcdir%\appversion.h"
+echo // Don't edit it. >>"%srcdir%\appversion.h"
+echo // >>"%srcdir%\appversion.h"
+echo.  >>"%srcdir%\appversion.h"
+echo // Version defines >>"%srcdir%\appversion.h"
 
-
-	echo.  >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_DATE %version_date% >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_DATE_STR "%version_date%" >>"%srcdir%\appversion.h"
-	echo.  >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_PDATE_STR "%version_pdate%" >>"%srcdir%\appversion.h"
-	echo.  >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_YMD_STR "%version_pdate_1%" >>"%srcdir%\appversion.h"
-	echo.  >>"%srcdir%\appversion.h"
-
-	echo #endif //__APPVERSION_H__ >>"%srcdir%\appversion.h"
-	echo.  >>"%srcdir%\appversion.h"
-
+IF "%version_maintenance%" == "" (
+	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_revision% >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_revision%" >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_C %version_major%,%version_minor%,0,%version_revision% >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, 0, %version_revision%" >>"%srcdir%\appversion.h"
+) ELSE (
+	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_maintenance%.%version_revision% >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_maintenance%.%version_revision%" >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_C %version_major%,%version_minor%,%version_maintenance%,%version_revision% >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, %version_maintenance%, %version_revision%" >>"%srcdir%\appversion.h"
 )
+
+echo.  >>"%srcdir%\appversion.h"
+echo #define APP_VERSION_DATE %version_date% >>"%srcdir%\appversion.h"
+echo #define APP_VERSION_DATE_STR "%version_date%" >>"%srcdir%\appversion.h"
+echo.  >>"%srcdir%\appversion.h"
+echo #define APP_VERSION_PDATE_STR "%version_pdate%" >>"%srcdir%\appversion.h"
+echo.  >>"%srcdir%\appversion.h"
+echo #define APP_VERSION_YMD_STR "%version_pdate_1%" >>"%srcdir%\appversion.h"
+echo.  >>"%srcdir%\appversion.h"
+
+IF NOT "%version_specialbuild%" == "" (
+	echo #define APP_VERSION_FLAGS VS_FF_SPECIALBUILD >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_SPECIALBUILD %version_specialbuild% >>"%srcdir%\appversion.h"
+) ELSE (
+	echo #define APP_VERSION_FLAGS 0x0L >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_SPECIALBUILD "" >>"%srcdir%\appversion.h"
+)
+echo.  >>"%srcdir%\appversion.h"
+
+echo #endif //__APPVERSION_H__ >>"%srcdir%\appversion.h"
+echo.  >>"%srcdir%\appversion.h"
 
 :_exit
 exit /B 0

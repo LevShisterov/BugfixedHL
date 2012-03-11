@@ -56,11 +56,11 @@ END
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION APP_VERSION_C
  PRODUCTVERSION APP_VERSION_C
- FILEFLAGSMASK 0x17L
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+ FILEFLAGS (APP_VERSION_FLAGS|VS_FF_DEBUG)
 #else
- FILEFLAGS 0x0L
+ FILEFLAGS (APP_VERSION_FLAGS)
 #endif
  FILEOS 0x4L
  FILETYPE 0x2L
@@ -70,13 +70,17 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "FileDescription", "Fixed HLSDK hl.dll"
+            VALUE "CompanyName", "aghl.ru"
+            VALUE "FileDescription", "Fixed and improved HLSDK hl.dll"
             VALUE "FileVersion", APP_VERSION_STRCS
             VALUE "InternalName", "hl.dll"
             VALUE "LegalCopyright", "Copyright aghl.ru (C) 2012"
             VALUE "OriginalFilename", "hl.dll"
-            VALUE "ProductName", "Fixed HLSDK hl.dll"
+            VALUE "ProductName", "Fixed and improved HLSDK"
             VALUE "ProductVersion", APP_VERSION_STRCS
+#if APP_VERSION_FLAGS != 0x0L
+            VALUE "SpecialBuild", APP_VERSION_SPECIALBUILD
+#endif
         END
     END
     BLOCK "VarFileInfo"
