@@ -110,16 +110,12 @@ DEL /F /Q "%Temp%.\%TempFile%.h" 2>NUL
 SET version_pdate=%version_pdate_1% %version_pdate_2%
 
 ::
-:: Detect changes and mixed revisions
+:: Detect local modifications
 ::
 SubWCRev.exe "%repodir%\." -nm >NUL
 
 IF "%ERRORLEVEL%" == "7" (
-	echo SubWCRev.exe detected modifications.
 	set version_specialbuild=modified
-) ELSE IF "%ERRORLEVEL%" == "8" (
-	echo SubWCRev.exe detected mixed revisions.
-	set version_specialbuild=mixed
 ) ELSE (
 	set version_specialbuild=
 )
@@ -149,12 +145,12 @@ IF "%version_maintenance%" == "" (
 :: Update appversion.h if version has changed or modifications/mixed revisions detected
 ::
 IF NOT "%new_version%"=="%old_version%" goto _update
-IF NOT "%version_specialbuild%"=="%old_specialbuild%" goto _update
+IF NOT "%version_specialbuild%"==%old_specialbuild% goto _update
 goto _exit
 
 :_update
 echo Updating appversion.h, new version is %new_version%, the old one was %old_version%
-echo new special build is %version_specialbuild%, the old one was %old_specialbuild%
+echo new special build is "%version_specialbuild%", the old one was %old_specialbuild%
 
 echo #ifndef __APPVERSION_H__ >"%srcdir%\appversion.h"
 echo #define __APPVERSION_H__ >>"%srcdir%\appversion.h"
