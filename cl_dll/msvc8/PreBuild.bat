@@ -116,12 +116,12 @@ SubWCRev.exe "%repodir%\." -nm >NUL
 
 IF "%ERRORLEVEL%" == "7" (
 	echo SubWCRev.exe detected modifications.
-	set version_specialbuild="modified"
+	set version_specialbuild=modified
 ) ELSE IF "%ERRORLEVEL%" == "8" (
 	echo SubWCRev.exe detected mixed revisions.
-	set version_specialbuild="mixed"
+	set version_specialbuild=mixed
 ) ELSE (
-	set version_specialbuild=""
+	set version_specialbuild=
 )
 
 :_readVersionH
@@ -137,7 +137,7 @@ FOR /F "usebackq tokens=1,2,3" %%i in ("%srcdir%\version.h") do (
 )
 
 ::
-:: Now form full version string like "1.0.0.1"
+:: Now form full version string like 1.0.0.1
 ::
 IF "%version_maintenance%" == "" (
 	set new_version=%version_major%,%version_minor%,0,%version_revision%
@@ -189,7 +189,7 @@ echo.  >>"%srcdir%\appversion.h"
 
 IF NOT "%version_specialbuild%" == "" (
 	echo #define APP_VERSION_FLAGS VS_FF_SPECIALBUILD >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_SPECIALBUILD %version_specialbuild% >>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_SPECIALBUILD "%version_specialbuild%" >>"%srcdir%\appversion.h"
 ) ELSE (
 	echo #define APP_VERSION_FLAGS 0x0L >>"%srcdir%\appversion.h"
 	echo #define APP_VERSION_SPECIALBUILD "" >>"%srcdir%\appversion.h"

@@ -78,7 +78,9 @@ BEGIN
             VALUE "OriginalFilename", "client.dll"
             VALUE "ProductName", "Fixed and improved HLSDK"
             VALUE "ProductVersion", APP_VERSION_STRCS
+#if APP_VERSION_FLAGS != 0x0L
             VALUE "SpecialBuild", APP_VERSION_SPECIALBUILD
+#endif
         END
     END
     BLOCK "VarFileInfo"
