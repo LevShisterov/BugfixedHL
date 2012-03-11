@@ -15,6 +15,7 @@ set version_pdate_2=
 set version_major=
 set version_minor=
 set version_maintenance=
+set version_modifications=
 
 ::
 :: Check for SubWCRev.exe presence
@@ -106,6 +107,19 @@ FOR /F "usebackq tokens=1,2,3" %%i in ("%Temp%.\%TempFile%.h") do (
 DEL /F /Q "%Temp%.\%TempFile%.h" 2>NUL
 SET version_pdate=%version_pdate_1% %version_pdate_2%
 
+::
+:: Detect changes and mixed revisions
+::
+SubWCRev.exe "%repodir%\." >NUL
+
+IF "%ERRORLEVEL%" == "7" (
+	echo SubWCRev.exe detected modifications.
+	set version_modifications="7"
+) ELSE IF "%ERRORLEVEL%" == "8" (
+	echo SubWCRev.exe detected mixed revisions.
+	set version_modifications="8"
+)
+
 :_readVersionH
 ::
 :: Read major, minor and maintenance version components from Version.h
@@ -167,6 +181,17 @@ IF NOT "%new_version%"=="%old_version%" (
 
 	echo #endif //__APPVERSION_H__ >>"%srcdir%\appversion.h"
 	echo.  >>"%srcdir%\appversion.h"
+
+	IF "%version_modifications%" == "7" (
+		echo #define APP_VERSION_FLAGS VS_FF_SPECIALBUILD >>"%srcdir%\appversion.h"
+		echo #define APP_VERSION_SPECIALBUILD "modified" >>"%srcdir%\appversion.h"
+	) ELSE IF "%version_modifications%" == "8" (
+		echo #define APP_VERSION_FLAGS VS_FF_SPECIALBUILD >>"%srcdir%\appversion.h"
+		echo #define APP_VERSION_SPECIALBUILD "mixed" >>"%srcdir%\appversion.h"
+	) ELSE (
+		echo #define APP_VERSION_FLAGS 0x0L >>"%srcdir%\appversion.h"
+		echo #define APP_VERSION_SPECIALBUILD "" >>"%srcdir%\appversion.h"
+	)
 
 )
 
