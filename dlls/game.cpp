@@ -19,6 +19,8 @@
 #include "appversion.h"
 
 // Version cvar
+// You can remove it, but remember that this will lower amout of people getting knowing about that HLSDK release.
+// And thus reducing good comments, suggestion and bugfixes.
 #if APP_VERSION_FLAGS == 0x0L
 cvar_t	hlds_version = {"aghl.ru",APP_VERSION_STRD, FCVAR_SERVER };
 #else
