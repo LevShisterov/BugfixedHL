@@ -28,6 +28,8 @@
 #include	"voice_gamemgr.h"
 #include	"hltv.h"
 
+#include	<ctype.h>
+
 extern DLL_GLOBAL CGameRules	*g_pGameRules;
 extern DLL_GLOBAL BOOL	g_fGameOver;
 extern int gmsgDeathMsg;	// client dll messages
@@ -431,7 +433,7 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 	MESSAGE_END();
 
 	// notify other clients of player joining the game
-	char *name = pl->pev->netname ? STRING(pl->pev->netname) : "";
+	const char *name = pl->pev->netname ? STRING(pl->pev->netname) : "";
 	if (name[0] == 0) name = "unconnected";
 	UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "+ %s has joined the game\n", name ) );
 
@@ -534,7 +536,7 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 		return;
 
 	// notify other clients of player leaving the game
-	char *name = pPlayer->pev->netname ? STRING(pPlayer->pev->netname) : "";
+	const char *name = pPlayer->pev->netname ? STRING(pPlayer->pev->netname) : "";
 	if (name[0] == 0) name = "unconnected";
 	UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "- %s has left the game\n", name ) );
 
