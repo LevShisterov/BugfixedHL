@@ -8,9 +8,9 @@ SET repodir=%~2
 
 set old_version=
 set old_specialbuild=
-set version_revision=
+set version_revision=0
 set version_specialbuild=
-set version_date=
+set version_date=?
 set version_pdate=
 set version_pdate_1=
 set version_pdate_2=
