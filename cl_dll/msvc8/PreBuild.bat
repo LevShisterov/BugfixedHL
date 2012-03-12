@@ -7,7 +7,7 @@ SET srcdir=%~1
 SET repodir=%~2
 
 set old_version=
-set old_specialbuild=
+set old_specialbuild=""
 set version_revision=0
 set version_specialbuild=
 set version_date=?
@@ -51,37 +51,37 @@ IF NOT "%ERRORLEVEL%" == "1" (
 :: Create template file for SubWCRev
 ::
 
-:: Use creation time as prefix
-SET TempFile=%Time%
+:GETTEMPNAME
+:: Use current path, current time and random number to create unique file name
+SET TMPFILE=svn-%CD:~-15%-%RANDOM%-%TIME:~-5%-%RANDOM%
+:: Remove bad characters
+SET TMPFILE=%TMPFILE:\=%
+SET TMPFILE=%TMPFILE:.=%
+SET TMPFILE=%TMPFILE:,=%
+SET TMPFILE=%TMPFILE: =%
+:: Will put in a temporary directory
+SET TMPFILE=%TMP%.\%TMPFILE%
+ECHO %TMPFILE%
+IF EXIST "%TMPFILE%" GOTO :GETTEMPNAME
 
-:: Remove time delimiters
-SET TempFile=%TempFile::=%
-SET TempFile=%TempFile:.=%
-SET TempFile=%TempFile:,=%
-SET TempFile=%TempFile: =%
-
-:: Create a really large random number and append it to the prefix
-SET TempFile=%TempFile%%Random%
-SET TempFile=%TempFile%%Random%
-
-echo #define SVNV_REVISION ^$WCREV^$ >"%Temp%.\%TempFile%.templ"
-echo #define SVNV_DATE ^$WCDATE=^%%Y-^%%m-^%%d__^%%H-^%%M-^%%S^$ >>"%Temp%.\%TempFile%.templ"
-echo #define SVNV_PDATE_1 ^$WCDATE=^%%Y-^%%m-^%%d^$ >>"%Temp%.\%TempFile%.templ"
-echo #define SVNV_PDATE_2 ^$WCDATE=^%%H:^%%M:^%%S^$ >>"%Temp%.\%TempFile%.templ"
-echo .  >>"%Temp%.\%TempFile%.templ"
+echo #define SVNV_REVISION ^$WCREV^$ >"%TMPFILE%.templ"
+echo #define SVNV_DATE ^$WCDATE=^%%Y-^%%m-^%%d__^%%H-^%%M-^%%S^$ >>"%TMPFILE%.templ"
+echo #define SVNV_PDATE_1 ^$WCDATE=^%%Y-^%%m-^%%d^$ >>"%TMPFILE%.templ"
+echo #define SVNV_PDATE_2 ^$WCDATE=^%%H:^%%M:^%%S^$ >>"%TMPFILE%.templ"
+echo .  >>"%TMPFILE%.templ"
 
 ::
 :: Process template
 ::
-SubWCRev.exe "%repodir%\." "%Temp%.\%TempFile%.templ" "%Temp%.\%TempFile%.h" >NUL
+SubWCRev.exe "%repodir%\." "%TMPFILE%.templ" "%TMPFILE%.h" >NUL
 
 IF NOT "%ERRORLEVEL%" == "0" (
 	echo SubWCRev.exe done with errors [%ERRORLEVEL%].
 	echo Check if you have correct SVN repository at '%repodir%'
 	echo Auto-versioning step will not be performed.
 
-	DEL /F /Q "%Temp%.\%TempFile%.templ" 2>NUL
-	DEL /F /Q "%Temp%.\%TempFile%.h" 2>NUL
+	DEL /F /Q "%TMPFILE%.templ" 2>NUL
+	DEL /F /Q "%TMPFILE%.h" 2>NUL
 
 	:: if we haven't appversion.h, we need to create it
 	IF "%old_version%" == "" (
@@ -92,12 +92,12 @@ IF NOT "%ERRORLEVEL%" == "0" (
 	exit /B 0
 )
 
-DEL /F /Q "%Temp%.\%TempFile%.templ" 2>NUL
+DEL /F /Q "%TMPFILE%.templ" 2>NUL
 
 ::
 :: Read revision and release date from it
 ::
-FOR /F "usebackq tokens=1,2,3" %%i in ("%Temp%.\%TempFile%.h") do (
+FOR /F "usebackq tokens=1,2,3" %%i in ("%TMPFILE%.h") do (
 	IF %%i==#define (
 		IF %%j==SVNV_REVISION SET version_revision=%%k
 		IF %%j==SVNV_DATE SET version_date=%%k
@@ -106,7 +106,7 @@ FOR /F "usebackq tokens=1,2,3" %%i in ("%Temp%.\%TempFile%.h") do (
 	)
 )
 
-DEL /F /Q "%Temp%.\%TempFile%.h" 2>NUL
+DEL /F /Q "%TMPFILE%.h" 2>NUL
 SET version_pdate=%version_pdate_1% %version_pdate_2%
 
 ::
@@ -149,7 +149,7 @@ IF NOT "%version_specialbuild%"==%old_specialbuild% goto _update
 goto _exit
 
 :_update
-echo Updating appversion.h, new version is %new_version%, the old one was %old_version%
+echo Updating appversion.h, new version is "%new_version%", the old one was "%old_version%"
 echo new special build is "%version_specialbuild%", the old one was %old_specialbuild%
 
 echo #ifndef __APPVERSION_H__ >"%srcdir%\appversion.h"
