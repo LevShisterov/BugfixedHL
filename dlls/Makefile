@@ -157,6 +157,7 @@ OBJ = \
 	$(DLL_OBJDIR)/tripmine.o \
 	$(DLL_OBJDIR)/turret.o \
 	$(DLL_OBJDIR)/util.o \
+	$(DLL_OBJDIR)/version.o \
 	$(DLL_OBJDIR)/weapons.o \
 	$(DLL_OBJDIR)/world.o \
 	$(DLL_OBJDIR)/xen.o \
