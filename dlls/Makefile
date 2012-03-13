@@ -51,6 +51,13 @@ DO_CC=$(CC) $(CFLAGS) $(SHLIBCFLAGS) $(INCLUDEDIRS) -o $@ -c $<
 # GAME
 #############################################################################
 
+all : versioning $(DLLNAME)_$(ARCH).$(SHLIBEXT)
+
+versioning:
+	./appversion.sh
+
+$(DLL_OBJDIR)/game.o: $(DLL_SRCDIR)/appversion.h
+
 $(DLL_OBJDIR)/%.o: $(DLL_SRCDIR)/%.cpp
 	$(DO_CC)
 
