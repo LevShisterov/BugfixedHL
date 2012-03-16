@@ -397,6 +397,8 @@ int CRpg::AddToPlayer( CBasePlayer *pPlayer )
 
 BOOL CRpg::Deploy( )
 {
+	m_bHolstered = FALSE;
+
 	if ( m_iClip == 0 )
 	{
 		return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW_UL, "rpg" );
@@ -435,6 +437,8 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 		m_pSpot = NULL;
 	}
 #endif
+
+	m_bHolstered = TRUE;
 }
 
 
