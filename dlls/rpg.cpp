@@ -289,8 +289,6 @@ void CRpgRocket :: FollowThink( void  )
 
 void CRpg::Reload( void )
 {
-	int iResult;
-
 	if ( m_iClip > 0 )
 	{
 		// don't bother with any of this if don't need to reload.
