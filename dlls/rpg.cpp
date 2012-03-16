@@ -322,7 +322,6 @@ void CRpg::Reload( void )
 
 	if ( DefaultReload( RPG_MAX_CLIP, RPG_RELOAD, 2 ) )
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
-	
 }
 
 void CRpg::Spawn( )
@@ -552,7 +551,7 @@ void CRpg::UpdateSpot( void )
 {
 
 #ifndef CLIENT_DLL
-	if (m_fSpotActive && !m_bHolstered)
+	if (m_fSpotActive && !m_bHolstered && !m_fInReload)
 	{
 		if (!m_pSpot)
 		{
