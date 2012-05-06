@@ -139,7 +139,6 @@ private:
 	WEAPON *m_pWeapon;
 	int	m_HUD_bucket0;
 	int m_HUD_selection;
-
 };
 
 //
@@ -669,6 +668,7 @@ public:
 class TeamFortressViewport;
 
 extern CHud gHUD;
+extern int g_iMaxSlot;
 extern TeamFortressViewport *gViewPort;
 
 extern int g_iPlayerClass;
