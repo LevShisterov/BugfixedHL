@@ -15,7 +15,7 @@
 //
 // hud_redraw.cpp
 //
-#include <math.h>
+#include <windows.h>
 #include "hud.h"
 #include "cl_util.h"
 
@@ -29,6 +29,8 @@ int grgLogoFrame[MAX_LOGO_FRAMES] =
 	16, 17, 18, 19, 20, 20, 20, 20, 20, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 
 	29, 29, 29, 29, 29, 28, 27, 26, 25, 24, 30, 31 
 };
+
+#define MAX_HUD_STRING 80
 
 
 extern int g_iVisibleMouse;
@@ -206,20 +208,15 @@ void ScaleColors( int &r, int &g, int &b, int a )
 	b = (int)(b * x);
 }
 
-int CHud :: DrawHudString(int xpos, int ypos, int iMaxX, char *szIt, int r, int g, int b )
+int CHud :: DrawHudString(int xpos, int ypos, int iMaxX, const char *szString, int r, int g, int b )
 {
-	// draw the string until we hit the null character or a newline character
-	for ( ; *szIt != 0 && *szIt != '\n'; szIt++ )
-	{
-		int next = xpos + gHUD.m_scrinfo.charWidths[ *szIt ]; // variable-width fonts look cool
-		if ( next > iMaxX )
-			return xpos;
-
-		TextMessageDrawChar( xpos, ypos, *szIt, r, g, b );
-		xpos = next;		
-	}
-
-	return xpos;
+	char buffer[MAX_HUD_STRING + 1];
+	int i = 0;
+	while ( i < MAX_HUD_STRING && szString[i] != '\0' && szString[i] != '\n' )
+		i++;
+	strncpy(buffer, szString, i);
+	buffer[i] = 0;
+	return xpos + TextMessageDrawString( xpos, ypos, buffer, r, g, b );
 }
 
 int CHud :: DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b )
@@ -227,22 +224,31 @@ int CHud :: DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int
 	char szString[32];
 	sprintf( szString, "%d", iNumber );
 	return DrawHudStringReverse( xpos, ypos, iMinX, szString, r, g, b );
-
 }
 
 // draws a string from right to left (right-aligned)
-int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b )
+int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, const char *szString, int r, int g, int b )
 {
-	// find the end of the string
-	char *szIt;
-	for ( szIt = szString; *szIt != 0; szIt++ )
-	{ // we should count the length?		
-	}
+	// Sadly new found pfnDrawStringReverse engine function draws symbols crooked, so we will use old method, but will tune it a bit.
+	char buffer[MAX_HUD_STRING + 1];
+	int i = 0;
+	while ( i < MAX_HUD_STRING && szString[i] != '\0' && szString[i] != '\n' )
+		i++;
+	strncpy(buffer, szString, i);
+	buffer[i] = 0;
 
-	// iterate throug the string in reverse
-	for ( szIt--;  szIt != (szString-1);  szIt-- )	
+	wchar_t wcbuffer[MAX_HUD_STRING + 1];
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wcbuffer, MAX_HUD_STRING);
+
+	// iterate through the string in reverse
+	i = 0;
+	while ( i < MAX_HUD_STRING && wcbuffer[i] != '\0' && szString[i] != '\n' )
+		i++;
+	wchar_t *szIt = wcbuffer + i;
+	for ( szIt--;  szIt != (wcbuffer - 1);  szIt-- )
 	{
-		int next = xpos - gHUD.m_scrinfo.charWidths[ *szIt ]; // variable-width fonts look cool
+		wchar_t ch = *szIt; // All I can do for
+		int next = xpos - (ch > 0 && ch < 256 ? gHUD.m_scrinfo.charWidths[ *szIt ] : 11); // variable-width fonts look cool
 		if ( next < iMinX )
 			return xpos;
 		xpos = next;
