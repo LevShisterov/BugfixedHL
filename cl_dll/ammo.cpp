@@ -198,6 +198,9 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 // Returns the first weapon for a given slot.
 WEAPON *WeaponsResource :: GetFirstPos( int iSlot )
 {
+	if (iSlot >= MAX_WEAPON_SLOTS)
+		return NULL;
+
 	WEAPON *pret = NULL;
 
 	for (int i = 0; i < MAX_WEAPON_POSITIONS; i++)
@@ -215,10 +218,10 @@ WEAPON *WeaponsResource :: GetFirstPos( int iSlot )
 
 WEAPON* WeaponsResource :: GetNextActivePos( int iSlot, int iSlotPos )
 {
-	if ( iSlotPos >= MAX_WEAPON_POSITIONS || iSlot >= MAX_WEAPON_SLOTS )
+	if (iSlot >= MAX_WEAPON_SLOTS || iSlotPos + 1 >= MAX_WEAPON_POSITIONS)
 		return NULL;
 
-	WEAPON *p = gWR.rgSlots[ iSlot ][ iSlotPos+1 ];
+	WEAPON *p = gWR.rgSlots[ iSlot ][ iSlotPos + 1 ];
 	
 	if ( !p || !gWR.HasAmmo(p) )
 		return GetNextActivePos( iSlot, iSlotPos + 1 );
@@ -235,7 +238,7 @@ DECLARE_MESSAGE(m_Ammo, CurWeapon );	// Current weapon and clip
 DECLARE_MESSAGE(m_Ammo, WeaponList);	// new weapon type
 DECLARE_MESSAGE(m_Ammo, AmmoX);			// update known ammo type's count
 DECLARE_MESSAGE(m_Ammo, AmmoPickup);	// flashes an ammo pickup record
-DECLARE_MESSAGE(m_Ammo, WeapPickup);    // flashes a weapon pickup record
+DECLARE_MESSAGE(m_Ammo, WeapPickup);	// flashes a weapon pickup record
 DECLARE_MESSAGE(m_Ammo, HideWeapon);	// hides the weapon, ammo, and crosshair displays temporarily
 DECLARE_MESSAGE(m_Ammo, ItemPickup);
 
@@ -311,6 +314,7 @@ void CHudAmmo::Reset(void)
 
 	//	VidInit();
 
+	g_iMaxSlot = 4;
 }
 
 int CHudAmmo::VidInit(void)
@@ -418,13 +422,13 @@ HLHSPRITE* WeaponsResource :: GetAmmoPicFromWeapon( int iAmmoId, wrect_t& rect )
 
 void WeaponsResource :: SelectSlot( int iSlot, int fAdvance, int iDirection )
 {
-	if ( gHUD.m_Menu.m_fMenuDisplayed && (fAdvance == FALSE) && (iDirection == 1) )	
+	if ( gHUD.m_Menu.m_fMenuDisplayed && (fAdvance == FALSE) && (iDirection == 1) )
 	{ // menu is overriding slot use commands
 		gHUD.m_Menu.SelectMenuItem( iSlot + 1 );  // slots are one off the key numbers
 		return;
 	}
 
-	if ( iSlot > MAX_WEAPON_SLOTS )
+	if ( iSlot > g_iMaxSlot )
 		return;
 
 	if ( gHUD.m_fPlayerDead || gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL ) )
@@ -645,7 +649,7 @@ int CHudAmmo::MsgFunc_WeaponList(const char *pszName, int iSize, void *pbuf )
 	WEAPON Weapon;
 
 	strcpy( Weapon.szName, READ_STRING() );
-	Weapon.iAmmoType = (int)READ_CHAR();	
+	Weapon.iAmmoType = (int)READ_CHAR();
 	
 	Weapon.iMax1 = READ_BYTE();
 	if (Weapon.iMax1 == 255)
@@ -663,6 +667,8 @@ int CHudAmmo::MsgFunc_WeaponList(const char *pszName, int iSize, void *pbuf )
 	Weapon.iClip = 0;
 
 	gWR.AddWeapon( &Weapon );
+
+	if (Weapon.iSlot > g_iMaxSlot && Weapon.iSlot < MAX_WEAPON_SLOTS) g_iMaxSlot = Weapon.iSlot;
 
 	return 1;
 
@@ -794,8 +800,8 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 	if ( !gpActiveSel || gpActiveSel == (WEAPON*)1 )
 		gpActiveSel = m_pWeapon;
 
-	int pos = MAX_WEAPON_POSITIONS-1;
-	int slot = MAX_WEAPON_SLOTS-1;
+	int pos = MAX_WEAPON_POSITIONS - 1;
+	int slot = MAX_WEAPON_SLOTS - 1;
 	if ( gpActiveSel )
 	{
 		pos = gpActiveSel->iSlotPos - 1;
@@ -817,10 +823,10 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 				}
 			}
 
-			pos = MAX_WEAPON_POSITIONS-1;
+			pos = MAX_WEAPON_POSITIONS - 1;
 		}
 		
-		slot = MAX_WEAPON_SLOTS-1;
+		slot = MAX_WEAPON_SLOTS - 1;
 	}
 
 	gpActiveSel = NULL;
@@ -1043,9 +1049,9 @@ int CHudAmmo::DrawWList(float flTime)
 			iActiveSlot = -1;
 		}
 	}
-		
+
 	// Draw top line
-	for ( i = 0; i < MAX_WEAPON_SLOTS; i++ )
+	for ( i = 0; i <= g_iMaxSlot; i++ )
 	{
 		int iWidth;
 
@@ -1081,7 +1087,7 @@ int CHudAmmo::DrawWList(float flTime)
 	x = 10;
 
 	// Draw all of the buckets
-	for (i = 0; i < MAX_WEAPON_SLOTS; i++)
+	for (i = 0; i <= g_iMaxSlot; i++)
 	{
 		y = giBucketHeight + 10;
 

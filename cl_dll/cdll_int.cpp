@@ -38,6 +38,7 @@ extern "C"
 
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;
+int g_iMaxSlot;	// There are 5 (0-4) slots by default and they can extend to 6. This will be used to draw additional weapon bucket(s) on a hud.
 TeamFortressViewport *gViewPort = NULL;
 
 void InitInput (void);
