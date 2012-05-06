@@ -86,10 +86,21 @@ inline struct cvar_s *CVAR_CREATE( const char *cv, const char *val, const int fl
 inline int SPR_Height( HLHSPRITE x, int f )	{ return gEngfuncs.pfnSPR_Height(x, f); }
 inline int SPR_Width( HLHSPRITE x, int f )	{ return gEngfuncs.pfnSPR_Width(x, f); }
 
-inline 	client_textmessage_t	*TextMessageGet( const char *pName ) { return gEngfuncs.pfnTextMessageGet( pName ); }
-inline 	int						TextMessageDrawChar( int x, int y, int number, int r, int g, int b ) 
+inline client_textmessage_t *TextMessageGet( const char *pName ) { return gEngfuncs.pfnTextMessageGet( pName ); }
+
+inline int TextMessageDrawChar( int x, int y, int number, int r, int g, int b ) 
 { 
 	return gEngfuncs.pfnDrawCharacter( x, y, number, r, g, b ); 
+}
+
+inline int TextMessageDrawString( int x, int y, const char* string, int r, int g, int b ) 
+{ 
+	return gEngfuncs.pfnDrawString( x, y, string, r, g, b ); 
+}
+
+inline int TextMessageDrawStringReverse( int x, int y, const char* string, int r, int g, int b ) 
+{ 
+	return gEngfuncs.pfnDrawStringReverse( x, y, string, r, g, b ); 
 }
 
 inline int DrawConsoleString( int x, int y, const char *string )
