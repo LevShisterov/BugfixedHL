@@ -12,7 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
-//			
+//
 //  hud.h
 //
 // class CHud declaration
@@ -21,31 +21,28 @@
 //
 
 
-#define RGB_YELLOWISH 0x00FFA000 //255,160,0
-#define RGB_REDISH 0x00FF1010 //255,160,0
-#define RGB_GREENISH 0x0000A000 //0,160,0
+#define RGB_YELLOWISH	0x00FFA000 //255,160,0
+#define RGB_REDISH		0x00FF1010 //255,160,0
+#define RGB_GREENISH	0x0000A000 //0,160,0
 
 #include "wrect.h"
 #include "cl_dll.h"
 #include "ammo.h"
 
-#define DHN_DRAWZERO 1
-#define DHN_2DIGITS  2
-#define DHN_3DIGITS  4
+#define DHN_DRAWZERO	1
+#define DHN_2DIGITS		2
+#define DHN_3DIGITS		4
 #define MIN_ALPHA	 100	
 
-#define		HUDELEM_ACTIVE	1
+#define HUDELEM_ACTIVE	1
 
 typedef struct {
 	int x, y;
 } POSITION;
 
-enum 
-{ 
-	MAX_PLAYERS = 64,
-	MAX_TEAMS = 64,
-	MAX_TEAM_NAME = 16,
-};
+#define MAX_PLAYERS		32
+#define MAX_TEAMS		32
+#define MAX_TEAM_NAME	16
 
 typedef struct {
 	unsigned char r,g,b,a;
@@ -54,8 +51,8 @@ typedef struct {
 typedef struct cvar_s cvar_t;
 
 
-#define HUD_ACTIVE	1
-#define HUD_INTERMISSION 2
+#define HUD_ACTIVE			1
+#define HUD_INTERMISSION	2
 
 #define MAX_PLAYER_NAME_LENGTH		32
 
@@ -135,6 +132,7 @@ private:
 	WEAPON *m_pWeapon;
 	int	m_HUD_bucket0;
 	int m_HUD_selection;
+
 };
 
 //
@@ -574,9 +572,9 @@ public:
 
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );
-	int DrawHudString(int x, int y, int iMaxX, const char *szString, int r, int g, int b );
-	int DrawHudStringReverse( int xpos, int ypos, int iMinX, const char *szString, int r, int g, int b );
-	int DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b );
+	int DrawHudString(int x, int y, const char *szString, int r, int g, int b );
+	int DrawHudStringReverse( int xpos, int ypos, const char *szString, int r, int g, int b );
+	int DrawHudNumberString( int xpos, int ypos, int iNumber, int r, int g, int b );
 	int GetNumWidth(int iNumber, int iFlags);
 
 private:

@@ -138,7 +138,7 @@ int HistoryResource :: DrawAmmoHistory( float flTime )
 				}
 
 				// Draw the number
-				gHUD.DrawHudNumberString( xpos - 10, ypos, xpos - 100, rgAmmoHistory[i].iCount, r, g, b );
+				gHUD.DrawHudNumberString( xpos - 10, ypos, rgAmmoHistory[i].iCount, r, g, b );
 			}
 			else if ( rgAmmoHistory[i].type == HISTSLOT_WEAP )
 			{
