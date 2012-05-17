@@ -208,7 +208,7 @@ void ScaleColors( int &r, int &g, int &b, int a )
 	b = (int)(b * x);
 }
 
-int CHud :: DrawHudString(int xpos, int ypos, int iMaxX, const char *szString, int r, int g, int b )
+int CHud :: DrawHudString(int xpos, int ypos, const char *szString, int r, int g, int b )
 {
 	char buffer[MAX_HUD_STRING + 1];
 	int i = 0;
@@ -216,20 +216,21 @@ int CHud :: DrawHudString(int xpos, int ypos, int iMaxX, const char *szString, i
 		i++;
 	strncpy(buffer, szString, i);
 	buffer[i] = 0;
+
 	return xpos + TextMessageDrawString( xpos, ypos, buffer, r, g, b );
 }
 
-int CHud :: DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b )
+int CHud :: DrawHudNumberString( int xpos, int ypos, int iNumber, int r, int g, int b )
 {
 	char szString[32];
 	sprintf( szString, "%d", iNumber );
-	return DrawHudStringReverse( xpos, ypos, iMinX, szString, r, g, b );
+	return DrawHudStringReverse( xpos, ypos, szString, r, g, b );
 }
 
 // draws a string from right to left (right-aligned)
-int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, const char *szString, int r, int g, int b )
+int CHud :: DrawHudStringReverse( int xpos, int ypos, const char *szString, int r, int g, int b )
 {
-	// Sadly new found pfnDrawStringReverse engine function draws symbols crooked, so we will use old method, but will tune it a bit.
+	// Sadly new found pfnDrawStringReverse engine function draws symbols crooked, so we will use pfnDrawString, but firstly will detect string length in pixels
 	char buffer[MAX_HUD_STRING + 1];
 	int i = 0;
 	while ( i < MAX_HUD_STRING && szString[i] != '\0' && szString[i] != '\n' )
@@ -237,26 +238,9 @@ int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, const char *szS
 	strncpy(buffer, szString, i);
 	buffer[i] = 0;
 
-	wchar_t wcbuffer[MAX_HUD_STRING + 1];
-	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wcbuffer, MAX_HUD_STRING);
-
-	// iterate through the string in reverse
-	i = 0;
-	while ( i < MAX_HUD_STRING && wcbuffer[i] != '\0' && szString[i] != '\n' )
-		i++;
-	wchar_t *szIt = wcbuffer + i;
-	for ( szIt--;  szIt != (wcbuffer - 1);  szIt-- )
-	{
-		wchar_t ch = *szIt; // All I can do for
-		int next = xpos - (ch > 0 && ch < 256 ? gHUD.m_scrinfo.charWidths[ *szIt ] : 11); // variable-width fonts look cool
-		if ( next < iMinX )
-			return xpos;
-		xpos = next;
-
-		TextMessageDrawChar( xpos, ypos, *szIt, r, g, b );
-	}
-
-	return xpos;
+	// draw the string outside the screen area to get it width
+	int width = TextMessageDrawString( ScreenWidth + 1, ypos, buffer, r, g, b );
+	return xpos + TextMessageDrawString( xpos - width, ypos, buffer, r, g, b );
 }
 
 int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b)
@@ -299,7 +283,7 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 		SPR_Set(GetSprite(m_HUD_number_0 + k), r, g, b );
 		SPR_DrawAdditive(0,  x, y, &GetSpriteRect(m_HUD_number_0 + k));
 		x += iWidth;
-	} 
+	}
 	else if (iFlags & DHN_DRAWZERO) 
 	{
 		SPR_Set(GetSprite(m_HUD_number_0), r, g, b );
@@ -350,7 +334,4 @@ int CHud::GetNumWidth( int iNumber, int iFlags )
 		return 2;
 
 	return 3;
-
-}	
-
-
+}

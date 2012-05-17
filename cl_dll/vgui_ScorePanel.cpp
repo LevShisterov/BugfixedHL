@@ -273,6 +273,9 @@ void ScorePanel::Update()
 	{
 		m_iSortedRows[i] = 0;
 		m_iIsATeam[i] = TEAM_NO;
+	}
+	for (int i = 1; i < MAX_PLAYERS; i++)
+	{
 		m_bHasBeenSorted[i] = false;
 	}
 
@@ -361,9 +364,10 @@ void ScorePanel::SortTeams()
 	}
 
 	// Draw the teams
-	while ( 1 )
+	while ( m_iRows < NUM_ROWS - 1 )	// leave one place for TEAM_BLANK at the end
 	{
-		int highest_frags = -99999; int lowest_deaths = 99999;
+		int highest_frags = -99999;
+		int lowest_deaths = 99999;
 		int best_team = 0;
 
 		for ( i = 1; i <= m_iNumTeams; i++ )
@@ -407,29 +411,27 @@ void ScorePanel::SortPlayers( int iTeam, char *team )
 {
 	bool bCreatedTeam = false;
 
-	// draw the players, in order,  and restricted to team if set
-	while ( 1 )
+	// draw the players, in order, and restricted to team if set
+	while ( m_iRows < NUM_ROWS - 1 )	// leave one place for TEAM_BLANK at the end
 	{
 		// Find the top ranking player
-		int highest_frags = -99999;	int lowest_deaths = 99999;
-		int best_player;
-		best_player = 0;
+		int highest_frags = -99999;
+		int lowest_deaths = 99999;
+		int best_player = 0;
 
 		for ( int i = 1; i < MAX_PLAYERS; i++ )
 		{
-			if ( m_bHasBeenSorted[i] == false && g_PlayerInfoList[i].name && g_PlayerExtraInfo[i].frags >= highest_frags )
-			{
-				cl_entity_t *ent = gEngfuncs.GetEntityByIndex( i );
+			if (m_bHasBeenSorted[i] || !g_PlayerInfoList[i].name || g_PlayerExtraInfo[i].frags < highest_frags) continue;
 
-				if ( ent && !(team && _stricmp(g_PlayerExtraInfo[i].teamname, team)) )  
+			cl_entity_t *ent = gEngfuncs.GetEntityByIndex( i );
+			if ( ent && !(team && _stricmp(g_PlayerExtraInfo[i].teamname, team)) )
+			{
+				extra_player_info_t *pl_info = &g_PlayerExtraInfo[i];
+				if ( pl_info->frags > highest_frags || pl_info->deaths < lowest_deaths )
 				{
-					extra_player_info_t *pl_info = &g_PlayerExtraInfo[i];
-					if ( pl_info->frags > highest_frags || pl_info->deaths < lowest_deaths )
-					{
-						best_player = i;
-						lowest_deaths = pl_info->deaths;
-						highest_frags = pl_info->frags;
-					}
+					best_player = i;
+					lowest_deaths = pl_info->deaths;
+					highest_frags = pl_info->frags;
 				}
 			}
 		}
@@ -666,11 +668,11 @@ void ScorePanel::FillGrid()
 				else if ( m_iSortedRows[row] == m_iLastKilledBy && m_fLastKillTime && m_fLastKillTime > gHUD.m_flTime )
 				{
 					// Killer's name
-					pLabel->setBgColor( 255,0,0, 255 - ((float)15 * (float)(m_fLastKillTime - gHUD.m_flTime)) );
+					pLabel->setBgColor( 255,0,0, 255 - (int)(15.0 * (m_fLastKillTime - gHUD.m_flTime)) );
 				}
-			}				
+			}
 
-			// Align 
+			// Align
 			if (col == COLUMN_NAME || col == COLUMN_CLASS)
 			{
 				pLabel->setContentAlignment( vgui::Label::a_west );
@@ -831,9 +833,6 @@ void ScorePanel::DeathMsg( int killer, int victim )
 	{
 		m_iLastKilledBy = killer ? killer : m_iPlayerNum;
 		m_fLastKillTime = gHUD.m_flTime + 10;	// display who we were killed by for 10 seconds
-
-		if ( killer == m_iPlayerNum )
-			m_iLastKilledBy = m_iPlayerNum;
 	}
 }
 

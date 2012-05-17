@@ -18,8 +18,7 @@
 
 #include <ctype.h>
 
-#define MAX_SCORES					10
-#define MAX_SCOREBOARD_TEAMS		5
+#define MAX_SCOREBOARD_TEAMS	MAX_TEAMS
 
 // Scoreboard cells
 #define COLUMN_TRACKER	0
@@ -275,7 +274,7 @@ public:
 	int				m_iIsATeam[NUM_ROWS];
 	bool			m_bHasBeenSorted[MAX_PLAYERS];
 	int				m_iLastKilledBy;
-	int				m_fLastKillTime;
+	float			m_fLastKillTime;
 
 
 public:
