@@ -22,15 +22,17 @@
 #include "cl_util.h"
 #include <string.h>
 #include <stdio.h>
+#include <windows.h>
 #include "parsemsg.h"
 
 DECLARE_MESSAGE( m_Message, HudText )
 DECLARE_MESSAGE( m_Message, GameTitle )
 
 // 1 Global client_textmessage_t for custom messages that aren't in the titles.txt
+#define MAX_MESSAGE_TEXT_LENGTH	1024
 client_textmessage_t	g_pCustomMessage;
 char *g_pCustomName = "Custom";
-char g_pCustomText[1024];
+char g_pCustomText[MAX_MESSAGE_TEXT_LENGTH];
 
 int CHudMessage::Init(void)
 {
@@ -196,8 +198,8 @@ void CHudMessage::MessageScanNextChar( void )
 
 	if ( m_parms.pMessage->effect == 1 && m_parms.charTime != 0 )
 	{
-		if ( m_parms.x >= 0 && m_parms.y >= 0 && (m_parms.x + gHUD.m_scrinfo.charWidths[ m_parms.text ]) <= ScreenWidth )
-			TextMessageDrawChar( m_parms.x, m_parms.y, m_parms.text, m_parms.pMessage->r2, m_parms.pMessage->g2, m_parms.pMessage->b2 );
+		if ( m_parms.x >= 0 && m_parms.y >= 0 && (m_parms.x + gHUD.GetHudCharWidth(m_parms.currentChar)) <= ScreenWidth )
+			TextMessageDrawChar( m_parms.x, m_parms.y, m_parms.currentChar, m_parms.pMessage->r2, m_parms.pMessage->g2, m_parms.pMessage->b2 );
 	}
 }
 
@@ -207,10 +209,9 @@ void CHudMessage::MessageScanStart( void )
 	switch( m_parms.pMessage->effect )
 	{
 	// Fade-in / out with flicker
-	case 1:
 	case 0:
+	case 1:
 		m_parms.fadeTime = m_parms.pMessage->fadein + m_parms.pMessage->holdtime;
-		
 
 		if ( m_parms.time < m_parms.pMessage->fadein )
 		{
@@ -242,75 +243,80 @@ void CHudMessage::MessageScanStart( void )
 	}
 }
 
-
 void CHudMessage::MessageDrawScan( client_textmessage_t *pMessage, float time )
 {
-	int i, j, length, width;
-	const char *pText;
-	unsigned char line[80];
+	int i, j, width;
+	wchar_t wLine[MAX_HUD_STRING + 1];
+	wchar_t wText[MAX_MESSAGE_TEXT_LENGTH + 1];
+	wchar_t  *pwText;
+	int lineHeight = gHUD.m_scrinfo.iCharHeight + ADJUST_MESSAGE;
 
-	pText = pMessage->pMessage;
-	// Count lines
-	m_parms.lines = 1;
+	MultiByteToWideChar(CP_UTF8, 0, pMessage->pMessage, -1, wText, MAX_MESSAGE_TEXT_LENGTH);
+
+	// Count lines and width
 	m_parms.time = time;
+	m_parms.charTime = 0;
 	m_parms.pMessage = pMessage;
-	length = 0;
-	width = 0;
+	m_parms.lines = 1;
+	m_parms.length = 0;
 	m_parms.totalWidth = 0;
-	while ( *pText )
+	width = 0;
+	pwText = wText;
+	while (*pwText)
 	{
-		if ( *pText == '\n' )
+		if (*pwText == '\n')
 		{
 			m_parms.lines++;
-			if ( width > m_parms.totalWidth )
+			if (width > m_parms.totalWidth)
 				m_parms.totalWidth = width;
 			width = 0;
 		}
 		else
-			width += gHUD.m_scrinfo.charWidths[*pText];
-		pText++;
-		length++;
+		{
+			int c = (int)*pwText;
+			width += gHUD.GetHudCharWidth(c);
+		}
+		pwText++;
+		m_parms.length++;
 	}
-	m_parms.length = length;
-	m_parms.totalHeight = (m_parms.lines * gHUD.m_scrinfo.iCharHeight);
-
-
-	m_parms.y = YPosition( pMessage->y, m_parms.totalHeight );
-	pText = pMessage->pMessage;
-
-	m_parms.charTime = 0;
+	m_parms.totalHeight = m_parms.lines * (lineHeight);
+	m_parms.y = YPosition(pMessage->y, m_parms.totalHeight);
 
 	MessageScanStart();
 
-	for ( i = 0; i < m_parms.lines; i++ )
+	pwText = wText;
+	for (i = 0; i < m_parms.lines; i++)
 	{
 		m_parms.lineLength = 0;
 		m_parms.width = 0;
-		while ( *pText && *pText != '\n' )
+		while (*pwText && *pwText != '\n')
 		{
-			unsigned char c = *pText;
-			line[m_parms.lineLength] = c;
-			m_parms.width += gHUD.m_scrinfo.charWidths[c];
-			m_parms.lineLength++;
-			pText++;
+			int c = *pwText;
+			if (m_parms.lineLength < MAX_HUD_STRING)
+			{
+				wLine[m_parms.lineLength] = c;
+				m_parms.width += gHUD.GetHudCharWidth(c);
+				m_parms.lineLength++;
+			}
+			pwText++;
 		}
-		pText++;		// Skip LF
-		line[m_parms.lineLength] = 0;
+		pwText++;	// Skip LF
+		wLine[m_parms.lineLength] = 0;
 
-		m_parms.x = XPosition( pMessage->x, m_parms.width, m_parms.totalWidth );
+		m_parms.x = XPosition(pMessage->x, m_parms.width, m_parms.totalWidth);
 
-		for ( j = 0; j < m_parms.lineLength; j++ )
+		for (j = 0; j < m_parms.lineLength; j++)
 		{
-			m_parms.text = line[j];
-			int next = m_parms.x + gHUD.m_scrinfo.charWidths[ m_parms.text ];
+			m_parms.currentChar = wLine[j];
+			int nextX = m_parms.x + gHUD.GetHudCharWidth(m_parms.currentChar);
 			MessageScanNextChar();
-			
-			if ( m_parms.x >= 0 && m_parms.y >= 0 && next <= ScreenWidth )
-				TextMessageDrawChar( m_parms.x, m_parms.y, m_parms.text, m_parms.r, m_parms.g, m_parms.b );
-			m_parms.x = next;
+
+			if (m_parms.x >= 0 && m_parms.y >= 0 && nextX <= ScreenWidth)
+				TextMessageDrawChar(m_parms.x, m_parms.y, m_parms.currentChar, m_parms.r, m_parms.g, m_parms.b);
+			m_parms.x = nextX;
 		}
 
-		m_parms.y += gHUD.m_scrinfo.iCharHeight;
+		m_parms.y += lineHeight;
 	}
 }
 
@@ -424,60 +430,58 @@ void CHudMessage::MessageAdd( const char *pName, float time )
 
 	for ( i = 0; i < maxHUDMessages; i++ )
 	{
-		if ( !m_pMessages[i] )
-		{
-			// Trim off a leading # if it's there
-			if ( pName[0] == '#' ) 
-				tempMessage = TextMessageGet( pName+1 );
-			else
-				tempMessage = TextMessageGet( pName );
-			// If we couldnt find it in the titles.txt, just create it
-			if ( !tempMessage )
-			{
-				g_pCustomMessage.effect = 2;
-				g_pCustomMessage.r1 = g_pCustomMessage.g1 = g_pCustomMessage.b1 = g_pCustomMessage.a1 = 100;
-				g_pCustomMessage.r2 = 240;
-				g_pCustomMessage.g2 = 110;
-				g_pCustomMessage.b2 = 0;
-				g_pCustomMessage.a2 = 0;
-				g_pCustomMessage.x = -1;		// Centered
-				g_pCustomMessage.y = 0.7;
-				g_pCustomMessage.fadein = 0.01;
-				g_pCustomMessage.fadeout = 1.5;
-				g_pCustomMessage.fxtime = 0.25;
-				g_pCustomMessage.holdtime = 5;
-				g_pCustomMessage.pName = g_pCustomName;
-				strcpy( g_pCustomText, pName );
-				g_pCustomMessage.pMessage = g_pCustomText;
+		if (m_pMessages[i]) continue;
 
-				tempMessage = &g_pCustomMessage;
+		// Trim off a leading # if it's there
+		if ( pName[0] == '#' ) 
+			tempMessage = TextMessageGet( pName+1 );
+		else
+			tempMessage = TextMessageGet( pName );
+		// If we couldnt find it in the titles.txt or server's received messages, just create it
+		if ( !tempMessage )
+		{
+			g_pCustomMessage.effect = 2;
+			g_pCustomMessage.r1 = g_pCustomMessage.g1 = g_pCustomMessage.b1 = g_pCustomMessage.a1 = 100;
+			g_pCustomMessage.r2 = 240;
+			g_pCustomMessage.g2 = 110;
+			g_pCustomMessage.b2 = 0;
+			g_pCustomMessage.a2 = 0;
+			g_pCustomMessage.x = -1;		// Centered
+			g_pCustomMessage.y = 0.7;
+			g_pCustomMessage.fadein = 0.01;
+			g_pCustomMessage.fadeout = 1.5;
+			g_pCustomMessage.fxtime = 0.25;
+			g_pCustomMessage.holdtime = 5;
+			g_pCustomMessage.pName = g_pCustomName;
+			strcpy( g_pCustomText, pName );
+			g_pCustomMessage.pMessage = g_pCustomText;
+
+			tempMessage = &g_pCustomMessage;
+		}
+
+		for ( j = 0; j < maxHUDMessages; j++ )
+		{
+			if (!m_pMessages[j]) continue;
+
+			// is this message already in the list
+			if ( !strcmp( tempMessage->pMessage, m_pMessages[j]->pMessage ) )
+			{
+				return;
 			}
 
-			for ( j = 0; j < maxHUDMessages; j++ )
+			// get rid of any other messages in same location (only one displays at a time)
+			if ( fabs( tempMessage->y - m_pMessages[j]->y ) < 0.0001 )
 			{
-				if ( m_pMessages[j] )
+				if ( fabs( tempMessage->x - m_pMessages[j]->x ) < 0.0001 )
 				{
-					// is this message already in the list
-					if ( !strcmp( tempMessage->pMessage, m_pMessages[j]->pMessage ) )
-					{
-						return;
-					}
-
-					// get rid of any other messages in same location (only one displays at a time)
-					if ( fabs( tempMessage->y - m_pMessages[j]->y ) < 0.0001 )
-					{
-						if ( fabs( tempMessage->x - m_pMessages[j]->x ) < 0.0001 )
-						{
-							m_pMessages[j] = NULL;
-						}
-					}
+					m_pMessages[j] = NULL;
 				}
 			}
-
-			m_pMessages[i] = tempMessage;
-			m_startTime[i] = time;
-			return;
 		}
+
+		m_pMessages[i] = tempMessage;
+		m_startTime[i] = time;
+		return;
 	}
 }
 

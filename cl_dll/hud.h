@@ -32,11 +32,11 @@
 #define DHN_DRAWZERO	1
 #define DHN_2DIGITS		2
 #define DHN_3DIGITS		4
-#define MIN_ALPHA	 100
-#define ALPHA_AMMO_FLASH	 100
-#define ALPHA_AMMO_MAX		 128
-#define ALPHA_POINTS_FLASH	 128
-#define ALPHA_POINTS_MAX	 155
+#define MIN_ALPHA		100
+#define ALPHA_AMMO_FLASH	100
+#define ALPHA_AMMO_MAX		128
+#define ALPHA_POINTS_FLASH	128
+#define ALPHA_POINTS_MAX	155
 
 #define HUDELEM_ACTIVE	1
 
@@ -58,9 +58,12 @@ typedef struct cvar_s cvar_t;
 #define HUD_ACTIVE			1
 #define HUD_INTERMISSION	2
 
-#define MAX_PLAYER_NAME_LENGTH		32
+#define MAX_PLAYER_NAME_LENGTH	32
+#define MAX_HUD_STRING			80
+#define	MAX_MOTD_LENGTH			1536
 
-#define	MAX_MOTD_LENGTH				1536
+#define ADJUST_MENU		-5	// space correction between text lines in hud menu in pixels
+#define ADJUST_MESSAGE	0	// space correction between text lines in hud messages in pixels
 
 //
 //-----------------------------------------------------
@@ -446,7 +449,7 @@ struct message_parms_t
 	int lineLength;
 	int length;
 	int r, g, b;
-	int text;
+	int currentChar;
 	int fadeBlend;
 	float charTime;
 	float fadeTime;
@@ -543,20 +546,36 @@ private:
 //
 //-----------------------------------------------------
 //
-
-
+#define MAX_BASE_CHARS 255
+struct CharWidths
+{
+	int indexes[MAX_BASE_CHARS];
+	int widths[MAX_BASE_CHARS];
+	CharWidths* next;
+	CharWidths()
+	{
+		Reset();
+		next = NULL;
+	}
+	void Reset()
+	{
+		memset(indexes, 0, MAX_BASE_CHARS);
+		memset(widths, 0, MAX_BASE_CHARS);
+	}
+};
 
 class CHud
 {
 private:
-	HUDLIST						*m_pHudList;
-	HLHSPRITE						m_hsprLogo;
-	int							m_iLogo;
-	client_sprite_t				*m_pSpriteList;
-	int							m_iSpriteCount;
-	int							m_iSpriteCountAllRes;
-	float						m_flMouseSensitivity;
-	int							m_iConcussionEffect; 
+	HUDLIST					*m_pHudList;
+	HLHSPRITE				m_hsprLogo;
+	int						m_iLogo;
+	client_sprite_t			*m_pSpriteList;
+	int						m_iSpriteCount;
+	int						m_iSpriteCountAllRes;
+	float					m_flMouseSensitivity;
+	int						m_iConcussionEffect;
+	CharWidths				m_CharWidths;
 
 	cvar_t	*m_pCvarColor;
 	cvar_t	*m_pCvarColor1;
@@ -586,6 +605,8 @@ public:
 	int DrawHudStringReverse( int xpos, int ypos, const char *szString, int r, int g, int b );
 	int DrawHudNumberString( int xpos, int ypos, int iNumber, int r, int g, int b );
 	int GetNumWidth(int iNumber, int iFlags);
+	int GetHudCharWidth(int c);
+	int CalculateCharWidth(int c);
 	void GetHudColor( int hudPart, int value, int &r, int &g, int &b );
 	float GetHudTransparency();
 
@@ -633,7 +654,7 @@ public:
 	int Redraw( float flTime, int intermission );
 	int UpdateClientData( client_data_t *cdata, float time );
 
-	CHud() : m_iSpriteCount(0), m_pHudList(NULL) {}  
+	CHud() : m_iSpriteCount(0), m_pHudList(NULL) {}
 	~CHud();			// destructor, frees allocated memory
 
 	// user messages
@@ -660,7 +681,6 @@ public:
 	void AddHudElem(CHudBase *p);
 
 	float GetSensitivity();
-
 };
 
 class TeamFortressViewport;

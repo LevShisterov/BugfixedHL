@@ -380,6 +380,15 @@ CHud :: ~CHud()
 		m_pHudList = NULL;
 	}
 
+	CharWidths* cur = m_CharWidths.next;
+	CharWidths* next;
+	while (cur != NULL)
+	{
+		next = cur->next;
+		delete cur;
+		cur = next;
+	}
+
 	ServersShutdown();
 }
 
@@ -403,6 +412,13 @@ void CHud :: VidInit( void )
 {
 	m_scrinfo.iSize = sizeof(m_scrinfo);
 	GetScreenInfo(&m_scrinfo);
+
+	CharWidths* cur = &m_CharWidths;
+	while (cur != NULL)
+	{
+		cur->Reset();
+		cur = cur->next;
+	}
 
 	// ----------
 	// Load Sprites

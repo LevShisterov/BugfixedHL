@@ -93,14 +93,15 @@ int CHudMenu :: Draw( float flTime )
 	}
 
 	// center it
-	int y = (ScreenHeight/2) - ((nlc/2)*15) - 40; // make sure it is above the say text
+	int lineHeight = gHUD.m_scrinfo.iCharHeight + ADJUST_MENU;
+	int y = (ScreenHeight / 2) - ((nlc / 2) * lineHeight) - 40; // make sure it is above the say text
 	int x = 20;
 
 	i = 0;
 	while ( i < MAX_MENU_STRING && g_szMenuString[i] != '\0' )
 	{
 		gHUD.DrawHudString( x, y, g_szMenuString + i, 255, 255, 255 );
-		y += 15;
+		y += lineHeight;
 
 		while ( i < MAX_MENU_STRING && g_szMenuString[i] != '\0' && g_szMenuString[i] != '\n' )
 			i++;
