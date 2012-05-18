@@ -32,7 +32,7 @@
 #define DHN_DRAWZERO	1
 #define DHN_2DIGITS		2
 #define DHN_3DIGITS		4
-#define MIN_ALPHA	 100	
+#define MIN_ALPHA		100
 
 #define HUDELEM_ACTIVE	1
 
