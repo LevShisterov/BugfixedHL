@@ -59,10 +59,10 @@ SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 	{NULL,			24,			Label::a_east},
 	{NULL,			140,		Label::a_east},		// name
 	{NULL,			56,			Label::a_east},		// class
-	{"#SCORE",		40,			Label::a_east},
-	{"#DEATHS",		46,			Label::a_east},
-	{"#LATENCY",	46,			Label::a_east},
-	{"#VOICE",		40,			Label::a_east},
+	{"Score",		35,			Label::a_east},
+	{"Deaths",		35,			Label::a_east},
+	{"Ping/Loss",	50,			Label::a_east},
+	{"Voice",		30,			Label::a_east},
 	{NULL,			2,			Label::a_east},		// blank column to take up the slack
 };
 
@@ -736,7 +736,7 @@ void ScorePanel::FillGrid()
 					break;
 				case COLUMN_LATENCY:
 					if ( m_iIsATeam[row] == TEAM_YES )
-						sprintf(sz, "%d", team_info->ping );
+						sprintf(sz, "%d/%d", team_info->ping, team_info->packetloss );
 					break;
 				default:
 					break;
@@ -797,7 +797,7 @@ void ScorePanel::FillGrid()
 					sprintf(sz, "%d",  g_PlayerExtraInfo[ m_iSortedRows[row] ].deaths );
 					break;
 				case COLUMN_LATENCY:
-					sprintf(sz, "%d", g_PlayerInfoList[ m_iSortedRows[row] ].ping );
+					sprintf(sz, "%d/%d", g_PlayerInfoList[ m_iSortedRows[row] ].ping, g_PlayerInfoList[ m_iSortedRows[row] ].packetloss );
 					break;
 				default:
 					break;
