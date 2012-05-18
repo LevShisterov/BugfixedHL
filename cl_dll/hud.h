@@ -54,9 +54,12 @@ typedef struct cvar_s cvar_t;
 #define HUD_ACTIVE			1
 #define HUD_INTERMISSION	2
 
-#define MAX_PLAYER_NAME_LENGTH		32
+#define MAX_PLAYER_NAME_LENGTH	32
+#define MAX_HUD_STRING			80
+#define MAX_MOTD_LENGTH			1536
 
-#define	MAX_MOTD_LENGTH				1536
+#define ADJUST_MENU		-5	// space correction between text lines in hud menu in pixels
+#define ADJUST_MESSAGE	0	// space correction between text lines in hud messages in pixels
 
 //
 //-----------------------------------------------------
@@ -442,7 +445,7 @@ struct message_parms_t
 	int lineLength;
 	int length;
 	int r, g, b;
-	int text;
+	int currentChar;
 	int fadeBlend;
 	float charTime;
 	float fadeTime;
@@ -539,24 +542,40 @@ private:
 //
 //-----------------------------------------------------
 //
-
-
+#define MAX_BASE_CHARS 255
+struct CharWidths
+{
+	int indexes[MAX_BASE_CHARS];
+	int widths[MAX_BASE_CHARS];
+	CharWidths* next;
+	CharWidths()
+	{
+		Reset();
+		next = NULL;
+	}
+	void Reset()
+	{
+		memset(indexes, 0, MAX_BASE_CHARS);
+		memset(widths, 0, MAX_BASE_CHARS);
+	}
+};
 
 class CHud
 {
 private:
-	HUDLIST						*m_pHudList;
-	HLHSPRITE						m_hsprLogo;
-	int							m_iLogo;
-	client_sprite_t				*m_pSpriteList;
-	int							m_iSpriteCount;
-	int							m_iSpriteCountAllRes;
-	float						m_flMouseSensitivity;
-	int							m_iConcussionEffect; 
+	HUDLIST					*m_pHudList;
+	HLHSPRITE					m_hsprLogo;
+	int						m_iLogo;
+	client_sprite_t			*m_pSpriteList;
+	int						m_iSpriteCount;
+	int						m_iSpriteCountAllRes;
+	float					m_flMouseSensitivity;
+	int						m_iConcussionEffect;
+	CharWidths				m_CharWidths;
 
 public:
 
-	HLHSPRITE						m_hsprCursor;
+	HLHSPRITE				m_hsprCursor;
 	float m_flTime;	   // the current client time
 	float m_fOldTime;  // the time at which the HUD was last redrawn
 	double m_flTimeDelta; // the difference between flTime and fOldTime
@@ -576,6 +595,8 @@ public:
 	int DrawHudStringReverse( int xpos, int ypos, const char *szString, int r, int g, int b );
 	int DrawHudNumberString( int xpos, int ypos, int iNumber, int r, int g, int b );
 	int GetNumWidth(int iNumber, int iFlags);
+	int GetHudCharWidth(int c);
+	int CalculateCharWidth(int c);
 
 private:
 	// the memory for these arrays are allocated in the first call to CHud::VidInit(), when the hud.txt and associated sprites are loaded.
@@ -599,21 +620,21 @@ public:
 	
 	int GetSpriteIndex( const char *SpriteName );	// gets a sprite index, for use in the m_rghSprites[] array
 
-	CHudAmmo		m_Ammo;
-	CHudHealth		m_Health;
+	CHudAmmo			m_Ammo;
+	CHudHealth			m_Health;
 	CHudSpectator		m_Spectator;
-	CHudGeiger		m_Geiger;
-	CHudBattery		m_Battery;
-	CHudTrain		m_Train;
-	CHudFlashlight	m_Flash;
-	CHudMessage		m_Message;
-	CHudStatusBar   m_StatusBar;
-	CHudDeathNotice m_DeathNotice;
-	CHudSayText		m_SayText;
-	CHudMenu		m_Menu;
+	CHudGeiger			m_Geiger;
+	CHudBattery			m_Battery;
+	CHudTrain			m_Train;
+	CHudFlashlight		m_Flash;
+	CHudMessage			m_Message;
+	CHudStatusBar		m_StatusBar;
+	CHudDeathNotice		m_DeathNotice;
+	CHudSayText			m_SayText;
+	CHudMenu			m_Menu;
 	CHudAmmoSecondary	m_AmmoSecondary;
-	CHudTextMessage m_TextMessage;
-	CHudStatusIcons m_StatusIcons;
+	CHudTextMessage		m_TextMessage;
+	CHudStatusIcons		m_StatusIcons;
 
 	void Init( void );
 	void VidInit( void );
@@ -621,7 +642,7 @@ public:
 	int Redraw( float flTime, int intermission );
 	int UpdateClientData( client_data_t *cdata, float time );
 
-	CHud() : m_iSpriteCount(0), m_pHudList(NULL) {}  
+	CHud() : m_iSpriteCount(0), m_pHudList(NULL) {}
 	~CHud();			// destructor, frees allocated memory
 
 	// user messages
@@ -648,7 +669,6 @@ public:
 	void AddHudElem(CHudBase *p);
 
 	float GetSensitivity();
-
 };
 
 class TeamFortressViewport;

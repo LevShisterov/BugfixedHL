@@ -222,7 +222,7 @@ int __MsgFunc_RandomPC(const char *pszName, int iSize, void *pbuf)
 		return gViewPort->MsgFunc_RandomPC( pszName, iSize, pbuf );
 	return 0;
 }
- 
+
 int __MsgFunc_ServerName(const char *pszName, int iSize, void *pbuf)
 {
 	if (gViewPort)
@@ -264,7 +264,7 @@ int __MsgFunc_AllowSpec(const char *pszName, int iSize, void *pbuf)
 		return gViewPort->MsgFunc_AllowSpec( pszName, iSize, pbuf );
 	return 0;
 }
- 
+
 // This is called every time the DLL is loaded
 void CHud :: Init( void )
 {
@@ -375,6 +375,15 @@ CHud :: ~CHud()
 		m_pHudList = NULL;
 	}
 
+	CharWidths* cur = m_CharWidths.next;
+	CharWidths* next;
+	while (cur != NULL)
+	{
+		next = cur->next;
+		delete cur;
+		cur = next;
+	}
+
 	ServersShutdown();
 }
 
@@ -399,10 +408,17 @@ void CHud :: VidInit( void )
 	m_scrinfo.iSize = sizeof(m_scrinfo);
 	GetScreenInfo(&m_scrinfo);
 
+	CharWidths* cur = &m_CharWidths;
+	while (cur != NULL)
+	{
+		cur->Reset();
+		cur = cur->next;
+	}
+
 	// ----------
 	// Load Sprites
 	// ---------
-//	m_hsprFont = LoadSprite("sprites/%d_font.spr");
+	//	m_hsprFont = LoadSprite("sprites/%d_font.spr");
 	
 	m_hsprLogo = 0;	
 	m_hsprCursor = 0;
@@ -676,5 +692,3 @@ float CHud::GetSensitivity( void )
 {
 	return m_flMouseSensitivity;
 }
-
-

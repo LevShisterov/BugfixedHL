@@ -30,8 +30,6 @@ int grgLogoFrame[MAX_LOGO_FRAMES] =
 	29, 29, 29, 29, 29, 28, 27, 26, 25, 24, 30, 31 
 };
 
-#define MAX_HUD_STRING 80
-
 
 extern int g_iVisibleMouse;
 
@@ -212,19 +210,19 @@ int CHud :: DrawHudString(int xpos, int ypos, const char *szString, int r, int g
 {
 	char buffer[MAX_HUD_STRING + 1];
 	int i = 0;
-	while ( i < MAX_HUD_STRING && szString[i] != '\0' && szString[i] != '\n' )
+	while (i < MAX_HUD_STRING && szString[i] != '\0' && szString[i] != '\n')
 		i++;
 	strncpy(buffer, szString, i);
 	buffer[i] = 0;
 
-	return xpos + TextMessageDrawString( xpos, ypos, buffer, r, g, b );
+	return xpos + TextMessageDrawString(xpos, ypos, buffer, r, g, b);
 }
 
 int CHud :: DrawHudNumberString( int xpos, int ypos, int iNumber, int r, int g, int b )
 {
 	char szString[32];
-	sprintf( szString, "%d", iNumber );
-	return DrawHudStringReverse( xpos, ypos, szString, r, g, b );
+	sprintf(szString, "%d", iNumber);
+	return DrawHudStringReverse(xpos, ypos, szString, r, g, b);
 }
 
 // draws a string from right to left (right-aligned)
@@ -233,14 +231,14 @@ int CHud :: DrawHudStringReverse( int xpos, int ypos, const char *szString, int 
 	// Sadly new found pfnDrawStringReverse engine function draws symbols crooked, so we will use pfnDrawString, but firstly will detect string length in pixels
 	char buffer[MAX_HUD_STRING + 1];
 	int i = 0;
-	while ( i < MAX_HUD_STRING && szString[i] != '\0' && szString[i] != '\n' )
+	while (i < MAX_HUD_STRING && szString[i] != '\0' && szString[i] != '\n')
 		i++;
 	strncpy(buffer, szString, i);
 	buffer[i] = 0;
 
 	// draw the string outside the screen area to get it width
-	int width = TextMessageDrawString( ScreenWidth + 1, ypos, buffer, r, g, b );
-	return xpos + TextMessageDrawString( xpos - width, ypos, buffer, r, g, b );
+	int width = TextMessageDrawString(ScreenWidth + 1, ypos, buffer, r, g, b);
+	return xpos + TextMessageDrawString(xpos - width, ypos, buffer, r, g, b);
 }
 
 int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b)
@@ -334,4 +332,51 @@ int CHud::GetNumWidth( int iNumber, int iFlags )
 		return 2;
 
 	return 3;
+}
+
+int CHud::GetHudCharWidth(int c)
+{
+	if (c <= 0) return 0;
+	if (c < MAX_BASE_CHARS)
+	{
+		if (m_CharWidths.widths[c] == 0)
+			m_CharWidths.widths[c] = CalculateCharWidth(c);
+		return m_CharWidths.widths[c];
+	}
+	else
+	{
+		CharWidths* last = &m_CharWidths;
+		CharWidths* cur = m_CharWidths.next;
+		while (cur != NULL)
+		{
+			for (int i = 0; i < MAX_BASE_CHARS; i++)
+			{
+				if (cur->indexes[i] == 0)
+				{
+					cur->indexes[i] = c;
+					cur->widths[i] = CalculateCharWidth(c);
+					return cur->widths[i];
+				}
+				if (cur->indexes[i] == c)
+					return cur->widths[i];
+			}
+			last = cur;
+			cur = cur->next;
+		}
+		last->next = new CharWidths();
+		last->next->indexes[0] = c;
+		last->next->widths[0] = CalculateCharWidth(c);
+		return last->next->widths[0];
+	}
+}
+
+int CHud::CalculateCharWidth(int c)
+{
+	wchar_t wch[2];
+	wch[0] = c;
+	wch[1] = 0;
+	char ch[MB_LEN_MAX + 1];
+	WideCharToMultiByte(CP_UTF8, 0, wch, -1, ch, MB_LEN_MAX + 1, NULL, NULL);
+	int width = TextMessageDrawString(ScreenWidth + 1, 0, ch, 255, 255, 255);
+	return width;
 }
