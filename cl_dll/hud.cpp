@@ -301,19 +301,20 @@ void CHud :: Init( void )
 	// VGUI Menus
 	HOOK_MESSAGE( VGUIMenu );
 
-	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );		// controls whether or not to suicide immediately on TF class switch
+	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );	// controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round
-
-
-	m_iLogo = 0;
-	m_iFOV = 0;
-
 	CVAR_CREATE( "zoom_sensitivity_ratio", "1.2", 0 );
+
 	default_fov = CVAR_CREATE( "default_fov", "90", 0 );
 	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );
 	m_pCvarDraw = CVAR_CREATE( "hud_draw", "1", FCVAR_ARCHIVE );
+	m_pCvarShowLoss = CVAR_CREATE( "hud_showlossinscore", "1", FCVAR_ARCHIVE );	// controls whether or not to show loss in scoreboard table
+	m_pCvarShowSteamId = CVAR_CREATE( "hud_showsteamidinscore", "1", FCVAR_ARCHIVE );	// controls whether or not to show SteamId in scoreboard table
+
 	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
 
+	m_iLogo = 0;
+	m_iFOV = 0;
 	m_pSpriteList = NULL;
 
 	// Clear any old HUD list
