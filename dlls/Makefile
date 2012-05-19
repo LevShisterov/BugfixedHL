@@ -9,7 +9,7 @@ DLLNAME=hl
 ARCH=i386
 
 #make sure this is the correct compiler for your system
-CC=gcc
+CC=gcc-2.95
 
 DLL_SRCDIR=.
 ENGINE_SRCDIR=../engine
@@ -29,7 +29,7 @@ BASE_CFLAGS=-D_stricmp=strcasecmp -D_strnicmp=strncasecmp -DCLIENT_WEAPONS
 CFLAGS=$(BASE_CFLAGS) -w -m486 -O1
 
 #full optimization
-#CFLAGS=$(BASE_CFLAGS) -w -O1 -m486 -ffast-math -funroll-loops \
+#CFLAGS=$(BASE_CFLAGS) -w -m486 -O1 -ffast-math -funroll-loops \
 	-fomit-frame-pointer -fexpensive-optimizations \
 	-malign-loops=2 -malign-jumps=2 -malign-functions=2
 
@@ -41,7 +41,7 @@ INCLUDEDIRS=-I. -I$(ENGINE_SRCDIR) -I$(COMMON_SRCDIR) -I$(PM_SHARED_SRCDIR) -I$(
 LDFLAGS=-lm -lstdc++
 
 SHLIBEXT=so
-SHLIBCFLAGS=-fPIC
+SHLIBCFLAGS=-fPIC -fno-exceptions
 SHLIBLDFLAGS=-shared
 
 DO_CC=$(CC) $(CFLAGS) $(SHLIBCFLAGS) $(INCLUDEDIRS) -o $@ -c $<
