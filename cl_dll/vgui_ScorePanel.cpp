@@ -52,19 +52,21 @@ public:
 	Label::Alignment	m_Alignment;	
 };
 
-// grid size is marked out for 640x480 screen
-
+// grid size is marked out for 640x480 screen, total sum should be 404 (was 394 in initial HLSDK)
 SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 {
-	{NULL,			24,			Label::a_east},
-	{NULL,			140,		Label::a_east},		// name
-	{NULL,			56,			Label::a_east},		// class
-	{"Score",		35,			Label::a_east},
-	{"Deaths",		35,			Label::a_east},
+	{NULL,			20,			Label::a_east},		// tracker
+	{NULL,			150,		Label::a_east},		// name
+	{"SteamID",		62,			Label::a_west},		// SteamID
+	{"Score",		45,			Label::a_east},
+	{"Deaths",		45,			Label::a_east},
 	{"Ping/Loss",	50,			Label::a_east},
 	{"Voice",		30,			Label::a_east},
 	{NULL,			2,			Label::a_east},		// blank column to take up the slack
 };
+
+#define DRAW_LOSS		1 << 0
+#define DRAW_STEAMID	1 << 1
 
 
 #define TEAM_NO				0
@@ -123,7 +125,7 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 	m_TitleLabel.setContentFitted(false);
 	m_TitleLabel.setParent(this);
 
-	// Setup the header (labels like "name", "class", etc..).
+	// Setup the header (labels like "name", "steamId", etc..).
 	m_HeaderGrid.SetDimensions(NUM_COLUMNS, 1);
 	m_HeaderGrid.SetSpacing(0, 0);
 	
@@ -228,10 +230,58 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 	m_pCloseButton->setBoundKey( (char)255 );
 	m_pCloseButton->setContentAlignment(Label::a_center);
 
+	m_iCurrentConfiguration = DRAW_LOSS | DRAW_STEAMID;
 
 	Initialize();
 }
 
+void ScorePanel::Configure(void)
+{
+	int newConfiguration = 0;
+	bool drawLoss = gHUD.m_pCvarShowLoss->value ? true : false;
+	bool drawSteamId = false;//gHUD.m_pCvarShowSteamId->value ? true : false;	// Not yet implemented
+	if (drawLoss) newConfiguration |= DRAW_LOSS;
+	if (drawSteamId) newConfiguration |= DRAW_STEAMID;
+
+	if (newConfiguration == m_iCurrentConfiguration) return;
+
+	if ((m_iCurrentConfiguration & DRAW_LOSS) != (newConfiguration & DRAW_LOSS))
+	{
+		if (drawLoss)
+		{
+			m_HeaderLabels[COLUMN_LATENCY].setText(g_ColumnInfo[COLUMN_LATENCY].m_pTitle);
+			m_HeaderGrid.SetColumnWidth(COLUMN_NAME, m_HeaderGrid.GetColumnWidth(COLUMN_NAME) - 10);
+			m_HeaderGrid.SetColumnWidth(COLUMN_LATENCY, m_HeaderGrid.GetColumnWidth(COLUMN_LATENCY) + 10);
+		}
+		else
+		{
+			m_HeaderLabels[COLUMN_LATENCY].setText("Ping");
+			m_HeaderGrid.SetColumnWidth(COLUMN_NAME, m_HeaderGrid.GetColumnWidth(COLUMN_NAME) + 10);
+			m_HeaderGrid.SetColumnWidth(COLUMN_LATENCY, m_HeaderGrid.GetColumnWidth(COLUMN_LATENCY) - 10);
+		}
+		for(int row = 0; row < NUM_ROWS; row++)
+		{
+			CGrid *pGridRow = &m_PlayerGrids[row];
+			pGridRow->CopyColumnWidths(&m_HeaderGrid);
+			pGridRow->setSize(PanelWidth(pGridRow), pGridRow->CalcDrawHeight());
+			pGridRow->RepositionContents();
+		}
+	}
+
+	if ((m_iCurrentConfiguration & DRAW_STEAMID) != (newConfiguration & DRAW_STEAMID))
+	{
+		if (drawSteamId)
+		{
+			m_HeaderLabels[COLUMN_STEAMID].setText(g_ColumnInfo[COLUMN_STEAMID].m_pTitle);
+		}
+		else
+		{
+			m_HeaderLabels[COLUMN_STEAMID].setText("");
+		}
+	}
+
+	m_iCurrentConfiguration = newConfiguration;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Called each time a new level is started.
@@ -251,7 +301,7 @@ bool HACK_GetPlayerUniqueID( int iPlayer, char playerID[16] )
 {
 	return !!gEngfuncs.GetPlayerUniqueID( iPlayer, playerID );
 }
-		
+
 //-----------------------------------------------------------------------------
 // Purpose: Recalculate the internal scoreboard data
 //-----------------------------------------------------------------------------
@@ -288,15 +338,17 @@ void ScorePanel::Update()
 	// set scrollbar range
 	m_PlayerList.SetScrollRange(m_iRows);
 
+	Configure();
+
 	FillGrid();
 
 	if ( gViewPort->m_pSpectatorPanel->m_menuVisible )
 	{
-		 m_pCloseButton->setVisible ( true );
+		m_pCloseButton->setVisible ( true );
 	}
-	else 
+	else
 	{
-		 m_pCloseButton->setVisible ( false );
+		m_pCloseButton->setVisible ( false );
 	}
 }
 
@@ -577,7 +629,7 @@ void ScorePanel::FillGrid()
 			pLabel->setImage(NULL);
 			pLabel->setFont(sfont);
 			pLabel->setTextOffset(0, 0);
-			
+
 			int rowheight = 13;
 			if (ScreenHeight > 480)
 			{
@@ -673,7 +725,7 @@ void ScorePanel::FillGrid()
 			}
 
 			// Align
-			if (col == COLUMN_NAME || col == COLUMN_CLASS)
+			if (col == COLUMN_NAME || col == COLUMN_STEAMID)
 			{
 				pLabel->setContentAlignment( vgui::Label::a_west );
 			}
@@ -694,6 +746,8 @@ void ScorePanel::FillGrid()
 
 				switch (col)
 				{
+				case COLUMN_TRACKER:
+					break;
 				case COLUMN_NAME:
 					if ( m_iIsATeam[row] == TEAM_SPECTATORS )
 					{
@@ -722,21 +776,26 @@ void ScorePanel::FillGrid()
 						pLabel->setFont2(smallfont);
 					}
 					break;
-				case COLUMN_VOICE:
-					break;
-				case COLUMN_CLASS:
+				case COLUMN_STEAMID:
 					break;
 				case COLUMN_KILLS:
 					if ( m_iIsATeam[row] == TEAM_YES )
-						sprintf(sz, "%d",  team_info->frags );
+						sprintf(sz, "%d", team_info->frags );
 					break;
 				case COLUMN_DEATHS:
 					if ( m_iIsATeam[row] == TEAM_YES )
-						sprintf(sz, "%d",  team_info->deaths );
+						sprintf(sz, "%d", team_info->deaths );
 					break;
 				case COLUMN_LATENCY:
 					if ( m_iIsATeam[row] == TEAM_YES )
-						sprintf(sz, "%d/%d", team_info->ping, team_info->packetloss );
+					{
+						if (gHUD.m_pCvarShowLoss->value)
+							sprintf(sz, "%d/%d", team_info->ping, team_info->packetloss);
+						else
+							sprintf(sz, "%d", team_info->ping);
+					}
+					break;
+				case COLUMN_VOICE:
 					break;
 				default:
 					break;
@@ -744,60 +803,36 @@ void ScorePanel::FillGrid()
 			}
 			else
 			{
-				bool bShowClass = false;
-
 				switch (col)
 				{
+				case COLUMN_TRACKER:
+					break;
 				case COLUMN_NAME:
 					sprintf(sz, "%s  ", pl_info->name);
 					break;
-				case COLUMN_VOICE:
-					sz[0] = 0;
-					// in HLTV mode allow spectator to turn on/off commentator voice
-					if (!pl_info->thisplayer || gEngfuncs.IsSpectateOnly() )
-					{
-						GetClientVoiceMgr()->UpdateSpeakerImage(pLabel, m_iSortedRows[row]);
-					}
-					break;
-				case COLUMN_CLASS:
-					// No class for other team's members (unless allied or spectator)
-					if ( gViewPort && EV_TFC_IsAllyTeam( g_iTeamNumber, g_PlayerExtraInfo[ m_iSortedRows[row] ].teamnumber )  )
-						bShowClass = true;
-					// Don't show classes if this client hasnt picked a team yet
-					if ( g_iTeamNumber == 0 )
-						bShowClass = false;
-
-					if (bShowClass)
-					{
-						// Only print Civilian if this team are all civilians
-						bool bNoClass = false;
-						if ( g_PlayerExtraInfo[ m_iSortedRows[row] ].playerclass == 0 )
-						{
-							if ( gViewPort->GetValidClasses( g_PlayerExtraInfo[ m_iSortedRows[row] ].teamnumber ) != -1 )
-								bNoClass = true;
-						}
-
-						if (bNoClass)
-							sprintf(sz, "");
-						else
-							sprintf( sz, "%s", CHudTextMessage::BufferedLocaliseTextString( sLocalisedClasses[ g_PlayerExtraInfo[ m_iSortedRows[row] ].playerclass ] ) );
-					}
-					else
-					{
-						strcpy(sz, "");
-					}
-					break;
-
-				case COLUMN_TRACKER:
+				case COLUMN_STEAMID:
+					// Not yet implemented
+					//if (gHUD.m_pCvarShowSteamId->value)
+					//{
+					//	sprintf(sz, "%s", "0:0:123456789");
+					//}
 					break;
 				case COLUMN_KILLS:
-					sprintf(sz, "%d",  g_PlayerExtraInfo[ m_iSortedRows[row] ].frags );
+					sprintf(sz, "%d", g_PlayerExtraInfo[ m_iSortedRows[row] ].frags);
 					break;
 				case COLUMN_DEATHS:
-					sprintf(sz, "%d",  g_PlayerExtraInfo[ m_iSortedRows[row] ].deaths );
+					sprintf(sz, "%d", g_PlayerExtraInfo[ m_iSortedRows[row] ].deaths);
 					break;
 				case COLUMN_LATENCY:
-					sprintf(sz, "%d/%d", g_PlayerInfoList[ m_iSortedRows[row] ].ping, g_PlayerInfoList[ m_iSortedRows[row] ].packetloss );
+					if (gHUD.m_pCvarShowLoss->value)
+						sprintf(sz, "%d/%d", g_PlayerInfoList[ m_iSortedRows[row] ].ping, g_PlayerInfoList[ m_iSortedRows[row] ].packetloss);
+					else
+						sprintf(sz, "%d", g_PlayerInfoList[ m_iSortedRows[row] ].ping);
+					break;
+				case COLUMN_VOICE:
+					// in HLTV mode allow spectator to turn on/off commentator voice
+					if (!pl_info->thisplayer || gEngfuncs.IsSpectateOnly())
+						GetClientVoiceMgr()->UpdateSpeakerImage(pLabel, m_iSortedRows[row]);
 					break;
 				default:
 					break;
@@ -967,7 +1002,7 @@ void CLabelHeader::paintBackground()
 
 	setBgColor(oldBg);
 }
-		
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Label paint functions - take into account current highligh status

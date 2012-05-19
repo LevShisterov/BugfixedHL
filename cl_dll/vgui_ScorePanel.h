@@ -23,7 +23,7 @@
 // Scoreboard cells
 #define COLUMN_TRACKER	0
 #define COLUMN_NAME		1
-#define COLUMN_CLASS	2
+#define COLUMN_STEAMID	2
 #define COLUMN_KILLS	3
 #define COLUMN_DEATHS	4
 #define COLUMN_LATENCY	5
@@ -240,8 +240,9 @@ private:
 
 private:
 
+	int				m_iCurrentConfiguration;	// Used to remember current columns configuration
 	Label			m_TitleLabel;
-	
+
 	// Here is how these controls are arranged hierarchically.
 	// m_HeaderGrid
 	//     m_HeaderLabels
@@ -280,6 +281,7 @@ public:
 public:
 
 	ScorePanel(int x,int y,int wide,int tall);
+	void Configure(void);
 
 	void Update( void );
 
