@@ -445,7 +445,7 @@ void CRpg::PrimaryAttack()
 	if ( !m_iClip )
 	{
 		PlayEmptySound( );
-		m_flNextPrimaryAttack = 0.15;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.15;
 		return;
 	}
 
