@@ -61,6 +61,7 @@ extern int iTeamColors[5][3];
 extern int iNumberOfTeamColors;
 
 #define MAX_SERVERNAME_LENGTH	64
+#define MAX_TEAMS_IN_MENU		4
 
 // Command Menu positions 
 #define MAX_MENUS				80
@@ -74,7 +75,6 @@ extern int iNumberOfTeamColors;
 
 #define CMENU_TOP				(BUTTON_SIZE_Y * 4)
 
-#define MAX_TEAMNAME_SIZE		64
 #define MAX_BUTTON_SIZE			32
 
 // Map Briefing Window
@@ -444,8 +444,8 @@ private:
 	char	m_szMOTD[ MAX_MOTD_LENGTH ];
 
 	//  Command Menu Team buttons
-	CommandButton *m_pTeamButtons[6];
-	CommandButton *m_pDisguiseButtons[5];
+	CommandButton *m_pTeamButtons[MAX_TEAMS_IN_MENU + 2];
+	CommandButton *m_pDisguiseButtons[MAX_TEAMS_IN_MENU + 1];
 	BuildButton   *m_pBuildButtons[3];
 	BuildButton   *m_pBuildActiveButtons[3];
 
@@ -461,7 +461,7 @@ private:
 	int			m_iNumberOfTeams;
 	int			m_iBuildState;
 	int			m_iRandomPC;
-	char		m_sTeamNames[5][MAX_TEAMNAME_SIZE];
+	char		m_sTeamNames[MAX_TEAMS_IN_MENU + 1][MAX_TEAM_NAME];
 
 	// Localisation strings
 	char		m_sDetpackStrings[3][MAX_BUTTON_SIZE];

@@ -50,8 +50,8 @@ cvar_t	flashlight	= {"mp_flashlight","0", FCVAR_SERVER };
 cvar_t	aimcrosshair= {"mp_autocrosshair","1", FCVAR_SERVER };
 cvar_t	decalfrequency = {"decalfrequency","30", FCVAR_SERVER };
 cvar_t	teamlist	= {"mp_teamlist","hgrunt;scientist", FCVAR_SERVER };
-cvar_t	teamoverride= {"mp_teamoverride","1" };
-cvar_t	defaultteam = {"mp_defaultteam","0" };
+cvar_t	teamoverride= {"mp_teamoverride","1" };		// Could or not a map override team list
+cvar_t	defaultteam = {"mp_defaultteam","0" };		// Players are forced to first team in the team list
 cvar_t	allowmonsters={"mp_allowmonsters","0", FCVAR_SERVER };
 
 cvar_t  mp_chattime = {"mp_chattime","10", FCVAR_SERVER };

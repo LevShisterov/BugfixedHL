@@ -32,7 +32,7 @@
 #define	HIDEHUD_WEAPONS		( 1<<0 )
 #define	HIDEHUD_FLASHLIGHT	( 1<<1 )
 #define	HIDEHUD_ALL			( 1<<2 )
-#define 	HIDEHUD_HEALTH		( 1<<3 )
+#define HIDEHUD_HEALTH		( 1<<3 )
 
 #define	MAX_AMMO_TYPES	32		// ???
 #define MAX_AMMO_SLOTS  32		// not really slots
@@ -44,5 +44,10 @@
 
 
 #define WEAPON_SUIT			31
+
+#define MAX_PLAYERS			32
+#define MAX_PLAYER_NAME		32
+#define MAX_TEAMS			32
+#define MAX_TEAM_NAME		16
 
 #endif

@@ -61,8 +61,6 @@
 #define	SOUND_FLASHLIGHT_ON		"items/flashlight1.wav"
 #define	SOUND_FLASHLIGHT_OFF	"items/flashlight1.wav"
 
-#define TEAM_NAME_LENGTH	16
-
 typedef enum
 {
 	PLAYER_IDLE,
@@ -190,7 +188,7 @@ public:
 	int m_nCustomSprayFrames;// Custom clan logo frames for this player
 	float	m_flNextDecalTime;// next time this player can spray a decal
 
-	char m_szTeamName[TEAM_NAME_LENGTH];
+	char m_szTeamName[MAX_TEAM_NAME];
 
 	virtual void Spawn( void );
 	void Pain( void );
