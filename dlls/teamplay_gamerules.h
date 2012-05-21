@@ -16,10 +16,9 @@
 // teamplay_gamerules.h
 //
 
-#define MAX_TEAMNAME_LENGTH	16
-#define MAX_TEAMS			32
+#include "cdll_dll.h"
 
-#define TEAMPLAY_TEAMLISTLENGTH		MAX_TEAMS*MAX_TEAMNAME_LENGTH
+#define TEAMPLAY_TEAMLISTLENGTH		MAX_TEAMS * MAX_TEAM_NAME
 
 class CHalfLifeTeamplay : public CHalfLifeMultiplay
 {
@@ -47,7 +46,7 @@ public:
 	virtual void ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTeamName, BOOL bKill, BOOL bGib );
 
 private:
-	void RecountTeams( bool bResendInfo = FALSE );
+	void RecountTeams( void );
 	const char *TeamWithFewestPlayers( void );
 
 	BOOL m_DisableDeathMessages;

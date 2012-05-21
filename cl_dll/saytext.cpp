@@ -129,11 +129,11 @@ int CHudSayText :: Draw( float flTime )
 			if ( *g_szLineBuffer[i] == 2 && g_pflNameColors[i] )
 			{
 				// it's a saytext string
-				static char buf[MAX_PLAYER_NAME_LENGTH+32];
+				static char buf[MAX_PLAYER_NAME+32];
 
 				// draw the first x characters in the player color
-				strncpy( buf, g_szLineBuffer[i], min(g_iNameLengths[i], MAX_PLAYER_NAME_LENGTH+32) );
-				buf[ min(g_iNameLengths[i], MAX_PLAYER_NAME_LENGTH+31) ] = 0;
+				strncpy( buf, g_szLineBuffer[i], min(g_iNameLengths[i], MAX_PLAYER_NAME+32) );
+				buf[ min(g_iNameLengths[i], MAX_PLAYER_NAME+31) ] = 0;
 				gEngfuncs.pfnDrawSetTextColor( g_pflNameColors[i][0], g_pflNameColors[i][1], g_pflNameColors[i][2] );
 				int x = DrawConsoleString( LINE_START, y, buf );
 

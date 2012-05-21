@@ -134,14 +134,14 @@ void CHudStatusBar :: ParseStatusString( int line_num )
 						int indexval = m_iStatusValues[index];
 
 						// get the string to substitute in place of the %XX
-						char szRepString[MAX_PLAYER_NAME_LENGTH];
+						char szRepString[MAX_PLAYER_NAME];
 						switch ( valtype )
 						{
 						case 'p':  // player name
 							GetPlayerInfo( indexval, &g_PlayerInfoList[indexval] );
 							if ( g_PlayerInfoList[indexval].name != NULL )
 							{
-								strncpy( szRepString, g_PlayerInfoList[indexval].name, MAX_PLAYER_NAME_LENGTH );
+								strncpy( szRepString, g_PlayerInfoList[indexval].name, MAX_PLAYER_NAME );
 								m_pflNameColors[line_num] = GetClientColor( indexval );
 							}
 							else

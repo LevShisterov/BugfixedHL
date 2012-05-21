@@ -40,13 +40,6 @@ typedef struct {
 	int x, y;
 } POSITION;
 
-enum 
-{ 
-	MAX_PLAYERS = 64,
-	MAX_TEAMS = 64,
-	MAX_TEAM_NAME = 16,
-};
-
 typedef struct {
 	unsigned char r,g,b,a;
 } RGBA;
@@ -56,8 +49,6 @@ typedef struct cvar_s cvar_t;
 
 #define HUD_ACTIVE	1
 #define HUD_INTERMISSION 2
-
-#define MAX_PLAYER_NAME_LENGTH		32
 
 #define	MAX_MOTD_LENGTH				1536
 
