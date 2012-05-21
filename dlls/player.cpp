@@ -2496,9 +2496,9 @@ void CBasePlayer::PostThink()
 
 	// Handle Tank controlling
 	if ( m_pTank != NULL )
-	{ // if they've moved too far from the gun,  or selected a weapon, unuse the gun
+	{// if they've moved too far from the gun,  or selected a weapon, unuse the gun
 		if ( m_pTank->OnControls( pev ) && !pev->weaponmodel )
-		{  
+		{
 			m_pTank->Use( this, this, USE_SET, 2 );	// try fire the gun
 		}
 		else
@@ -2507,14 +2507,14 @@ void CBasePlayer::PostThink()
 		}
 	}
 
-// do weapon stuff
+	// do weapon stuff
 	ItemPostFrame( );
 
-// check to see if player landed hard enough to make a sound
-// falling farther than half of the maximum safe distance, but not as far a max safe distance will
-// play a bootscrape sound, and no damage will be inflicted. Fallling a distance shorter than half
-// of maximum safe distance will make no sound. Falling farther than max safe distance will play a 
-// fallpain sound, and damage will be inflicted based on how far the player fell
+	// check to see if player landed hard enough to make a sound
+	// falling farther than half of the maximum safe distance, but not as far a max safe distance will
+	// play a bootscrape sound, and no damage will be inflicted. Fallling a distance shorter than half
+	// of maximum safe distance will make no sound. Falling farther than max safe distance will play a 
+	// fallpain sound, and damage will be inflicted based on how far the player fell
 
 	if ( (FBitSet(pev->flags, FL_ONGROUND)) && (pev->health > 0) && m_flFallVelocity >= PLAYER_FALL_PUNCH_THRESHHOLD )
 	{
@@ -2550,10 +2550,10 @@ void CBasePlayer::PostThink()
 		{
 			SetAnimation( PLAYER_WALK );
 		}
-    }
+	}
 
 	if (FBitSet(pev->flags, FL_ONGROUND))
-	{		
+	{
 		if (m_flFallVelocity > 64 && !g_pGameRules->IsMultiplayer())
 		{
 			CSoundEnt::InsertSound ( bits_SOUND_PLAYER, pev->origin, m_flFallVelocity, 0.2 );
@@ -2583,7 +2583,7 @@ void CBasePlayer::PostThink()
 
 pt_end:
 #if defined( CLIENT_WEAPONS )
-		// Decay timers on weapons
+	// Decay timers on weapons
 	// go through all of the weapons and make a list of the ones to pack
 	for ( int i = 0 ; i < MAX_ITEM_TYPES ; i++ )
 	{
@@ -2613,11 +2613,10 @@ pt_end:
 					}
 
 					// Only decrement if not flagged as NO_DECREMENT
-//					if ( gun->m_flPumpTime != 1000 )
-				//	{
-				//		gun->m_flPumpTime	= max( gun->m_flPumpTime - gpGlobals->frametime, -0.001 );
-				//	}
-					
+					//if ( gun->m_flPumpTime != 1000 )
+					//{
+					//	gun->m_flPumpTime	= max( gun->m_flPumpTime - gpGlobals->frametime, -0.001 );
+					//}
 				}
 
 				pPlayerItem = pPlayerItem->m_pNext;

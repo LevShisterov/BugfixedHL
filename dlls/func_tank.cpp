@@ -393,7 +393,7 @@ void CFuncTank :: StopControl()
 		pev->nextthink = pev->ltime + 1.0;
 }
 
-// Called each frame by the player's ItemPostFrame
+// Called each frame by the player's PostThink
 void CFuncTank :: ControllerPostFrame( void )
 {
 	ASSERT(m_pController != NULL);
