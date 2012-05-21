@@ -48,7 +48,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\debughl/hl.tlb"
+				TypeLibraryName=".\Debughl/hl.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
