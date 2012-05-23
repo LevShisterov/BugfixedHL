@@ -751,14 +751,12 @@ void ScorePanel::FillGrid()
 				case COLUMN_NAME:
 					if ( m_iIsATeam[row] == TEAM_SPECTATORS )
 					{
-						sprintf( sz2, CHudTextMessage::BufferedLocaliseTextString( "#Spectators" ) );
+						sprintf( sz, CHudTextMessage::BufferedLocaliseTextString( "#Spectators" ) );
 					}
 					else
 					{
-						sprintf( sz2, gViewPort->GetTeamName(team_info->teamnumber) );
+						sprintf( sz, gViewPort->GetTeamName(team_info->teamnumber) );
 					}
-
-					strcpy(sz, sz2);
 
 					// Append the number of players
 					if ( m_iIsATeam[row] == TEAM_YES )

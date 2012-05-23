@@ -633,6 +633,9 @@ void TeamFortressViewport::Initialize( void )
 	for (int i = 0; i < 5; i++)
 	{
 		m_iValidClasses[i] = 0;
+	}
+	for (int i = 0; i < MAX_TEAMS + 1; i++)
+	{
 		strcpy(m_sTeamNames[i], "");
 	}
 
@@ -2133,20 +2136,25 @@ int TeamFortressViewport::MsgFunc_TeamNames(const char *pszName, int iSize, void
 	BEGIN_READ( pbuf, iSize );
 	
 	m_iNumberOfTeams = READ_BYTE();
+	if (m_iNumberOfTeams > MAX_TEAMS)
+		m_iNumberOfTeams = MAX_TEAMS;
 
-	for (int i = 0; i < m_iNumberOfTeams && i < MAX_TEAMS_IN_MENU; i++)
+	for (int i = 0; i < m_iNumberOfTeams; i++)
 	{
 		int teamNum = i + 1;
 
 		gHUD.m_TextMessage.LocaliseTextString( READ_STRING(), m_sTeamNames[teamNum], MAX_TEAM_NAME );
 
-		// Set the team name buttons
-		if (m_pTeamButtons[i])
-			m_pTeamButtons[i]->setText( m_sTeamNames[teamNum] );
+		if (i < MAX_TEAMS_IN_MENU)
+		{
+			// Set the team name buttons
+			if (m_pTeamButtons[i])
+				m_pTeamButtons[i]->setText( m_sTeamNames[teamNum] );
 
-		// Set the disguise buttons
-		if ( m_pDisguiseButtons[teamNum] )
-			m_pDisguiseButtons[teamNum]->setText( m_sTeamNames[teamNum] );
+			// Set the disguise buttons
+			if ( m_pDisguiseButtons[teamNum] )
+				m_pDisguiseButtons[teamNum]->setText( m_sTeamNames[teamNum] );
+		}
 	}
 
 	// Update the Team Menu

@@ -550,7 +550,7 @@ void CHalfLifeTeamplay::RecountTeams(void)
 		CBasePlayer *plr = (CBasePlayer*)UTIL_PlayerByIndex(i);
 		if (!plr) continue;
 
-			const char *pTeamName = plr->TeamID();
+		const char *pTeamName = plr->TeamID();
 		// Search in existing teams
 		int tm = GetTeamIndex(pTeamName);
 		if (tm < 0) // No team match found
@@ -558,9 +558,9 @@ void CHalfLifeTeamplay::RecountTeams(void)
 			if (!m_teamLimit)	// Server doesn't limit teams
 			{
 				// Add new team
-					tm = num_teams;
-					num_teams++;
-					team_scores[tm] = 0;
+				tm = num_teams;
+				num_teams++;
+				team_scores[tm] = 0;
 				if (_stricmp(team_names[tm], pTeamName)) teamListChanged = true;
 				strncpy(team_names[tm], pTeamName, MAX_TEAM_NAME);
 				team_names[tm][MAX_TEAM_NAME - 1] = 0;
@@ -584,6 +584,21 @@ void CHalfLifeTeamplay::RecountTeams(void)
 					WRITE_STRING( team_names[ i ] );
 				}
 			MESSAGE_END();
+
+			// loop through all clients and resend team index info
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(i);
+				if (!pPlayer) continue;
+
+				MESSAGE_BEGIN( MSG_ALL, gmsgScoreInfo );
+					WRITE_BYTE( i );
+					WRITE_SHORT( pPlayer->pev->frags );
+					WRITE_SHORT( pPlayer->m_iDeaths );
+					WRITE_SHORT( 0 );
+					WRITE_SHORT( g_pGameRules->GetTeamIndex( pPlayer->m_szTeamName ) + 1 );
+				MESSAGE_END();
+			}
 		}
 	}
 }
