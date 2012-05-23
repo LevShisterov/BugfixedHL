@@ -213,17 +213,30 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	const char *pcmd = CMD_ARGV(0);
 	const int cmdc = CMD_ARGC();
 
-	// We can get a raw string now, without the "say " prepended
 	if ( cmdc == 0 )
 		return;
 
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer* player = GetClassPtr((CBasePlayer *)pev);
 
-	// Not yet.
-	if ( player->m_flNextChatTime > gpGlobals->time )
-		 return;
+	// Flood check
+	if (player->m_flNextChatTime > gpGlobals->time)
+	{
+		if (player->m_iChatFlood >= CHAT_FLOOD)
+		{
+			player->m_flNextChatTime = gpGlobals->time + CHAT_INTERVAL + CHAT_PENALTY;
+			return;
+		}
+		player->m_iChatFlood++;
+	}
+	else if (player->m_iChatFlood)
+	{
+		player->m_iChatFlood--;
+	}
+	player->m_flNextChatTime = gpGlobals->time + CHAT_INTERVAL;
 
+
+	// We can get a raw string now, without the "say " prepended
 	if ( !_stricmp( pcmd, cpSay ) || !_stricmp( pcmd, cpSayTeam ) )
 	{
 		if ( cmdc > 1 )
@@ -297,8 +310,6 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	strcat( text, p );
 	strcat( text, "\n" );
 
-
-	player->m_flNextChatTime = gpGlobals->time + CHAT_INTERVAL;
 
 	// loop through all players
 	// Start with the first player.
