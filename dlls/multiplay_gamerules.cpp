@@ -114,10 +114,27 @@ CHalfLifeMultiplay :: CHalfLifeMultiplay()
 	}
 }
 
+//=========================================================
+// ClientCommand
+// the user has typed a command which is unrecognized by everything else;
+// this check to see if the gamerules knows anything about the command
+//=========================================================
 BOOL CHalfLifeMultiplay::ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
 {
 	if(g_VoiceGameMgr.ClientCommand(pPlayer, pcmd))
 		return TRUE;
+
+	if (FStrEq(pcmd, "menuselect"))
+	{
+		if (CMD_ARGC() < 2)
+			return TRUE;
+
+		int slot = atoi(CMD_ARGV(1));
+
+		// There is no menu usages in server dll.
+
+		return TRUE;
+	}
 
 	return CGameRules::ClientCommand(pPlayer, pcmd);
 }

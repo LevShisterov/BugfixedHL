@@ -26,7 +26,6 @@ class CHalfLifeTeamplay : public CHalfLifeMultiplay
 public:
 	CHalfLifeTeamplay();
 
-	virtual BOOL ClientCommand( CBasePlayer *pPlayer, const char *pcmd );
 	virtual void ClientUserInfoChanged( CBasePlayer *pPlayer, char *infobuffer );
 	virtual BOOL IsTeamplay( void );
 	virtual BOOL FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker );
