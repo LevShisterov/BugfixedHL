@@ -188,6 +188,7 @@ int gmsgStatusText = 0;
 int gmsgStatusValue = 0;
 
 int gmsgViewMode = 0;
+int gmsgVGUIMenu = 0;
 
 
 
@@ -237,6 +238,7 @@ void LinkUserMessages( void )
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3); 
 
 	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
+	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);		// Opens team selection menu with map briefing
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
