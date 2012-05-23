@@ -82,7 +82,10 @@ enum sbar_data
 	SBAR_END,
 };
 
-#define CHAT_INTERVAL 1.0f
+#define CHAT_FLOOD 3
+#define CHAT_INTERVAL 0.5f
+#define CHAT_PENALTY 2.0f
+#define FULLUPDATE_INTERVAL 5.0f
 
 class CBasePlayer : public CBaseMonster
 {
@@ -310,7 +313,7 @@ public:
 	float m_flAmmoStartCharge;
 	float m_flPlayAftershock;
 	float m_flNextAmmoBurn;// while charging, when to absorb another unit of player's ammo?
-	
+
 	//Player ID
 	void InitStatusBar( void );
 	void UpdateStatusBar( void );
@@ -319,9 +322,11 @@ public:
 	float m_flStatusBarDisappearDelay;
 	char m_SbarString0[ SBAR_STRING_SIZE ];
 	char m_SbarString1[ SBAR_STRING_SIZE ];
-	
+
+	int m_iChatFlood;
 	float m_flNextChatTime;
 	float m_flNextSpectatorCommand;
+	float m_flNextFullupdate[2];
 
 	BOOL m_bConnected;	// we set it in Spawn() so it will be TRUE only after player was spawned
 	BOOL IsConnected() { return m_bConnected; }

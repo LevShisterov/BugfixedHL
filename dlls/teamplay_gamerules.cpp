@@ -157,31 +157,6 @@ void CHalfLifeTeamplay :: Think ( void )
 	last_time  = time_remaining;
 }
 
-//=========================================================
-// ClientCommand
-// the user has typed a command which is unrecognized by everything else;
-// this check to see if the gamerules knows anything about the command
-//=========================================================
-BOOL CHalfLifeTeamplay :: ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
-{
-	if(g_VoiceGameMgr.ClientCommand(pPlayer, pcmd))
-		return TRUE;
-
-	if ( FStrEq( pcmd, "menuselect" ) )
-	{
-		if ( CMD_ARGC() < 2 )
-			return TRUE;
-
-		int slot = atoi( CMD_ARGV(1) );
-
-		// select the item from the current menu
-
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
 extern int gmsgGameMode;
 extern int gmsgSayText;
 extern int gmsgTeamInfo;
