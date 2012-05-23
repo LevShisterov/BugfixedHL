@@ -461,7 +461,7 @@ private:
 	int			m_iNumberOfTeams;
 	int			m_iBuildState;
 	int			m_iRandomPC;
-	char		m_sTeamNames[MAX_TEAMS_IN_MENU + 1][MAX_TEAM_NAME];
+	char		m_sTeamNames[MAX_TEAMS + 1][MAX_TEAM_NAME];
 
 	// Localisation strings
 	char		m_sDetpackStrings[3][MAX_BUTTON_SIZE];
@@ -511,7 +511,7 @@ public:
 	CCommandMenu *CreateSubMenu( CommandButton *pButton, CCommandMenu *pParentMenu, int iYOffset, int iXOffset = 0 );
 
 	// Data Handlers
-	int GetValidClasses(int iTeam) { return m_iValidClasses[iTeam]; };
+	int GetValidClasses(int iTeam) { return iTeam < 5 ? m_iValidClasses[iTeam] : -1; };
 	int GetNumberOfTeams() { return m_iNumberOfTeams; };
 	int GetIsFeigning() { return m_iIsFeigning; };
 	int GetIsSettingDetpack() { return m_iIsSettingDetpack; };

@@ -606,6 +606,21 @@ void CHalfLifeTeamplay::RecountTeams(void)
 					WRITE_STRING( team_names[ i ] );
 				}
 			MESSAGE_END();
+
+			// loop through all clients and resend team index info
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(i);
+				if (!pPlayer) continue;
+
+				MESSAGE_BEGIN( MSG_ALL, gmsgScoreInfo );
+					WRITE_BYTE( i );
+					WRITE_SHORT( pPlayer->pev->frags );
+					WRITE_SHORT( pPlayer->m_iDeaths );
+					WRITE_SHORT( 0 );
+					WRITE_SHORT( g_pGameRules->GetTeamIndex( pPlayer->m_szTeamName ) + 1 );
+				MESSAGE_END();
+			}
 		}
 	}
 }
