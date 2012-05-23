@@ -185,7 +185,9 @@ int gmsgGeigerRange = 0;
 int gmsgTeamNames = 0;
 
 int gmsgStatusText = 0;
-int gmsgStatusValue = 0; 
+int gmsgStatusValue = 0;
+
+int gmsgViewMode = 0;
 
 
 
@@ -234,6 +236,7 @@ void LinkUserMessages( void )
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3); 
 
+	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
@@ -3872,6 +3875,10 @@ void CBasePlayer :: UpdateClientData( void )
 		if ( !m_fGameHUDInitialized )
 		{
 			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
+			MESSAGE_END();
+
+			// Switch to first person mode
+			MESSAGE_BEGIN( MSG_ONE, gmsgViewMode, NULL, pev );
 			MESSAGE_END();
 
 			g_pGameRules->InitHUD( this );
