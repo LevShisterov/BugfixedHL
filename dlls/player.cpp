@@ -185,10 +185,12 @@ int gmsgGeigerRange = 0;
 int gmsgTeamNames = 0;
 
 int gmsgStatusText = 0;
-int gmsgStatusValue = 0; 
+int gmsgStatusValue = 0;
 
 int gmsgSpectator = 0;
 int gmsgAllowSpec = 0;
+
+int gmsgViewMode = 0;
 
 
 
@@ -239,6 +241,8 @@ void LinkUserMessages( void )
 
 	gmsgSpectator = REG_USER_MSG( "Spectator", 2 );	// sends observer status on entering and exiting observer mode (it is not used in client dll)
 	gmsgAllowSpec = REG_USER_MSG( "AllowSpec", 1 );	// sends allow_spectators value (this will enable Spectate command button in Team select panel)
+
+	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
@@ -3907,6 +3911,10 @@ void CBasePlayer :: UpdateClientData( void )
 		if ( !m_fGameHUDInitialized )
 		{
 			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
+			MESSAGE_END();
+
+			// Switch to first person mode
+			MESSAGE_BEGIN( MSG_ONE, gmsgViewMode, NULL, pev );
 			MESSAGE_END();
 
 			g_pGameRules->InitHUD( this );
