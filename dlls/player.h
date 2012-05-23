@@ -84,6 +84,7 @@ enum sbar_data
 };
 
 #define CHAT_INTERVAL 1.0f
+#define FULLUPDATE_INTERVAL 5.0f
 
 class CBasePlayer : public CBaseMonster
 {
@@ -309,7 +310,8 @@ public:
 	char m_SbarString1[ SBAR_STRING_SIZE ];
 	
 	float m_flNextChatTime;
-	
+
+	float m_flNextFullupdate[2];
 };
 
 #define AUTOAIM_2DEGREES  0.0348994967025

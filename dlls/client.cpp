@@ -400,7 +400,13 @@ void ClientCommand( edict_t *pEntity )
 	}
 	else if ( FStrEq(pcmd, "fullupdate" ) )
 	{
-		GetClassPtr((CBasePlayer *)pev)->ForceClientDllUpdate(); 
+		CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)pev);
+		if (pPlayer->m_flNextFullupdate[0] < gpGlobals->time)
+		{
+			pPlayer->ForceClientDllUpdate();
+		}
+		pPlayer->m_flNextFullupdate[0] = pPlayer->m_flNextFullupdate[1];
+		pPlayer->m_flNextFullupdate[1] = gpGlobals->time + FULLUPDATE_INTERVAL;
 	}
 	else if ( FStrEq(pcmd, "give" ) )
 	{
@@ -410,7 +416,6 @@ void ClientCommand( edict_t *pEntity )
 			GetClassPtr((CBasePlayer *)pev)->GiveNamedItem( STRING(iszItem) );
 		}
 	}
-
 	else if ( FStrEq(pcmd, "drop" ) )
 	{
 		// player is dropping an item. 
