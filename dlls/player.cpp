@@ -191,6 +191,7 @@ int gmsgSpectator = 0;
 int gmsgAllowSpec = 0;
 
 int gmsgViewMode = 0;
+int gmsgVGUIMenu = 0;
 
 
 
@@ -243,6 +244,7 @@ void LinkUserMessages( void )
 	gmsgAllowSpec = REG_USER_MSG( "AllowSpec", 1 );	// sends allow_spectators value (this will enable Spectate command button in Team select panel)
 
 	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
+	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);		// Opens team selection menu with map briefing
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
