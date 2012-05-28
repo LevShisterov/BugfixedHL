@@ -481,7 +481,9 @@ void GameDLLInit( void )
 
 	CVAR_REGISTER (&mp_chattime);
 
-// REGISTER CVARS FOR SKILL LEVEL STUFF
+
+	// REGISTER CVARS FOR SKILL LEVEL STUFF
+
 	// Agrunt
 	CVAR_REGISTER ( &sk_agrunt_health1 );// {"sk_agrunt_health1","0"};
 	CVAR_REGISTER ( &sk_agrunt_health2 );// {"sk_agrunt_health2","0"};
@@ -860,7 +862,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER ( &sk_monster_leg2 );
 	CVAR_REGISTER ( &sk_monster_leg3 );
 
-// player damage adjusters
+	// player damage adjusters
 	CVAR_REGISTER ( &sk_player_head1 );
 	CVAR_REGISTER ( &sk_player_head2 );
 	CVAR_REGISTER ( &sk_player_head3 );
@@ -880,8 +882,61 @@ void GameDLLInit( void )
 	CVAR_REGISTER ( &sk_player_leg1 );
 	CVAR_REGISTER ( &sk_player_leg2 );
 	CVAR_REGISTER ( &sk_player_leg3 );
-// END REGISTER CVARS FOR SKILL LEVEL STUFF
+	// END REGISTER CVARS FOR SKILL LEVEL STUFF
 
 	SERVER_COMMAND( "exec skill.cfg\n" );
-}
 
+	// Execute server startup config file for deathmatch only.
+	// Dunno how to get deathmatch at this step yet (gpGlobals isn't initialised), so will execute only for dedicated server.
+	//if (gpGlobals->deathmatch)
+	int dedicated = IS_DEDICATED_SERVER();
+	if (dedicated)
+	{
+		char szCommand[256], buffer[256], *startupCfgFile, *serverType;
+		if (dedicated)
+		{
+			// dedicated server
+			startupCfgFile = (char *)CVAR_GET_STRING("servercfgfile");
+			serverType = "dedicated";
+		}
+		else
+		{
+			// listen server
+			startupCfgFile = (char *)CVAR_GET_STRING("lservercfgfile");
+			serverType = "listen";
+		}
+
+		if (startupCfgFile && startupCfgFile[0])
+		{
+			int len = strlen(startupCfgFile);
+			if (len > sizeof(szCommand) - 14)	// exec...
+			{
+				ALERT(at_console, "Too long path to server config file!\n");
+			}
+			else
+			{
+				int i;
+				for (i = len - 1; i >= 0; i--)
+				{
+					if (startupCfgFile[i] == '/' || startupCfgFile[i] == '\\')
+						break;
+				}
+				if (i >= 0)
+				{
+					for (int j = 0; j <= i; j++)
+					{
+						buffer[j] = startupCfgFile[j];
+					}
+					buffer[i + 1] = 0;
+					sprintf(szCommand, "exec %sstartup_%s\n", buffer, startupCfgFile + i + 1);
+				}
+				else
+				{
+					sprintf(szCommand, "exec %s\n", startupCfgFile);
+				}
+				ALERT(at_console, "Executing %s server startup config file\n", serverType);
+				SERVER_COMMAND(szCommand);
+			}
+		}
+	}
+}
