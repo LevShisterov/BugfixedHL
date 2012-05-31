@@ -628,15 +628,15 @@ void TeamFortressViewport::Initialize( void )
 	g_iPlayerClass = 0;
 	g_iTeamNumber = 0;
 
-	strcpy(m_sMapName, "");
-	strcpy(m_szServerName, "");
+	m_sMapName[0] = 0;
+	m_szServerName[0] = 0;
 	for (int i = 0; i < 5; i++)
 	{
 		m_iValidClasses[i] = 0;
 	}
 	for (int i = 0; i < MAX_TEAMS + 1; i++)
 	{
-		strcpy(m_sTeamNames[i], "");
+		m_sTeamNames[i][0] = 0;
 	}
 
 	App::getInstance()->setCursorOveride( App::getInstance()->getScheme()->getCursor(Scheme::scu_none) );
