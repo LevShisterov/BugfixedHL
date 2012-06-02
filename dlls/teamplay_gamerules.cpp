@@ -242,9 +242,7 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 	}
 	UTIL_SayText( text, pPlayer );
 
-	ChangePlayerTeam( pPlayer, pPlayer->m_szTeamName, FALSE, FALSE );
-
-	if (m_teamLimit)	// Teams are static, send them one to each client
+	if (m_teamLimit)	// Teams are static, send them once to each client
 	{
 		// Send down the team names
 		MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pPlayer->edict() );
@@ -255,6 +253,8 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 			}
 		MESSAGE_END();
 	}
+
+	ChangePlayerTeam( pPlayer, pPlayer->m_szTeamName, FALSE, FALSE );
 
 	// loop through all active players and send their team info to the new client
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
