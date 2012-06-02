@@ -124,6 +124,15 @@ int __MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf )
 	return gHUD.MsgFunc_GameMode( pszName, iSize, pbuf );
 }
 
+void __CmdFunc_About(void)
+{
+	ConsolePrint("Fixed and improved HLSDK client.dll.\n");
+	ConsolePrint("File version: ");
+	ConsolePrint(APP_VERSION);
+	ConsolePrint(".\n");
+	ConsolePrint("Look http://aghl.ru/forum for more info on this dll.\n");
+}
+
 // TFFree Command Menu
 void __CmdFunc_OpenCommandMenu(void)
 {
@@ -275,6 +284,8 @@ void CHud :: Init( void )
 	HOOK_MESSAGE( ViewMode );
 	HOOK_MESSAGE( SetFOV );
 	HOOK_MESSAGE( Concuss );
+
+	HOOK_COMMAND( "about", About );
 
 	// TFFree CommandMenu
 	HOOK_COMMAND( "+commandmenu", OpenCommandMenu );

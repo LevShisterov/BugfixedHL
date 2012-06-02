@@ -16,16 +16,11 @@
 #include "eiface.h"
 #include "util.h"
 #include "game.h"
-#include "appversion.h"
 
 // Version cvar
 // You can remove it, but remember that this will lower amout of people getting knowing about that HLSDK release.
 // And thus reducing good comments, suggestion and bugfixes.
-#ifdef APP_VERSION_SPECIALBUILD
-char *ver = APP_VERSION_STRD " " APP_VERSION_SPECIALBUILD;
-#else
-char *ver = APP_VERSION_STRD;
-#endif
+char *ver = APP_VERSION;
 cvar_t	hlds_version = {"aghl.ru",ver, FCVAR_SERVER };
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
