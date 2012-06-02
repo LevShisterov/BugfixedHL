@@ -132,7 +132,7 @@ void __CmdFunc_About(void)
 	ConsolePrint("File version: ");
 	ConsolePrint(ver);
 	ConsolePrint(".\n");
-	ConsolePrint("Look http://aghl.ru/forum for more info on this dll.\n");
+	ConsolePrint("Visit http://aghl.ru/forum for more info on this dll.\n");
 }
 
 // TFFree Command Menu
