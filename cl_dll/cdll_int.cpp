@@ -22,6 +22,7 @@
 #include "cl_util.h"
 #include "netadr.h"
 #include "vgui_schememanager.h"
+#include "GameStudioModelRenderer.h"
 
 extern "C"
 {
@@ -168,9 +169,8 @@ so the HUD can reinitialize itself.
 int DLLEXPORT HUD_VidInit( void )
 {
 	gHUD.VidInit();
-
 	VGui_Startup();
-
+	g_StudioRenderer.InitOnConnect();
 	return 1;
 }
 

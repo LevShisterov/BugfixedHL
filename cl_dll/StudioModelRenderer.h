@@ -11,6 +11,9 @@
 #pragma once
 #endif
 
+#include "com_model.h"
+#include "studio.h"
+
 /*
 ====================
 CStudioModelRenderer
@@ -34,7 +37,12 @@ public:
 
 public:
 	// Local interfaces
-	//
+
+	// Returns player model for rendering
+	virtual model_t *GetPlayerModel(int playerIndex);
+
+	// Sets remap colors for current player
+	virtual void SetPlayerRemapColors(int playerIndex);
 
 	// Look up animation data for sequence
 	virtual mstudioanim_t *StudioGetAnim ( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc );
