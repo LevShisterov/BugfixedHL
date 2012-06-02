@@ -304,6 +304,10 @@ void CHud :: Init( void )
 	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );		// controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round
 	CVAR_CREATE( "zoom_sensitivity_ratio", "1.2", 0 );
+	CVAR_CREATE( "cl_forceemenymodels", "", FCVAR_ARCHIVE );
+	CVAR_CREATE( "cl_forceemenycolors", "", FCVAR_ARCHIVE );
+	CVAR_CREATE( "cl_forceteammatesmodel", "", FCVAR_ARCHIVE );
+	CVAR_CREATE( "cl_forceteammatescolors", "", FCVAR_ARCHIVE );
 
 	default_fov = CVAR_CREATE( "default_fov", "90", 0 );
 	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );

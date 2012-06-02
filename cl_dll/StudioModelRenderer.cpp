@@ -34,6 +34,7 @@ engine_studio_api_t IEngineStudio;
 
 /////////////////////
 // Implementation of CStudioModelRenderer.h
+/////////////////////
 
 /*
 ====================
@@ -1337,6 +1338,42 @@ void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer )
 
 /*
 ====================
+GetPlayerModel
+
+====================
+*/
+model_t *CStudioModelRenderer::GetPlayerModel(int playerIndex)
+{
+	return IEngineStudio.SetupPlayerModel(playerIndex);
+}
+
+/*
+====================
+SetPlayerRemapColors
+
+====================
+*/
+void CStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
+{
+	if (!m_pPlayerInfo)
+	{
+		m_nTopColor = 0;
+		m_nBottomColor = 0;
+	}
+	else
+	{
+		m_nTopColor = m_pPlayerInfo->topcolor;
+		m_nBottomColor = m_pPlayerInfo->bottomcolor;
+		m_nTopColor = clamp(m_nTopColor, 0, 254);
+		m_nBottomColor = clamp(m_nBottomColor, 0, 254);
+	}
+
+	// Set remap colors
+	IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
+}
+
+/*
+====================
 StudioDrawPlayer
 
 ====================
@@ -1362,7 +1399,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 	if (m_nPlayerIndex < 0 || m_nPlayerIndex >= gEngfuncs.GetMaxClients())
 		return 0;
 
-	m_pRenderModel = IEngineStudio.SetupPlayerModel( m_nPlayerIndex );
+	m_pRenderModel = GetPlayerModel( m_nPlayerIndex );
 	if (m_pRenderModel == NULL)
 		return 0;
 
@@ -1458,19 +1495,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 
 		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
 
-		// get remap colors
-		m_nTopColor = m_pPlayerInfo->topcolor;
-		m_nBottomColor = m_pPlayerInfo->bottomcolor;
-		if (m_nTopColor < 0)
-			m_nTopColor = 0;
-		if (m_nTopColor > 360)
-			m_nTopColor = 360;
-		if (m_nBottomColor < 0)
-			m_nBottomColor = 0;
-		if (m_nBottomColor > 360)
-			m_nBottomColor = 360;
-
-		IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
+		SetPlayerRemapColors(m_nPlayerIndex);
 
 		StudioRenderModel( );
 		m_pPlayerInfo = NULL;
