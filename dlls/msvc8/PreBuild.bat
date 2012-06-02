@@ -185,8 +185,10 @@ echo.>>"%srcdir%\appversion.h"
 IF NOT "%version_specialbuild%" == "" (
 	echo #define APP_VERSION_FLAGS VS_FF_SPECIALBUILD>>"%srcdir%\appversion.h"
 	echo #define APP_VERSION_SPECIALBUILD "%version_specialbuild%">>"%srcdir%\appversion.h"
+	echo #define APP_VERSION APP_VERSION_STRD " " APP_VERSION_SPECIALBUILD>>"%srcdir%\appversion.h"
 ) ELSE (
 	echo #define APP_VERSION_FLAGS 0x0L>>"%srcdir%\appversion.h"
+	echo #define APP_VERSION APP_VERSION_STRD>>"%srcdir%\appversion.h"
 )
 echo.>>"%srcdir%\appversion.h"
 

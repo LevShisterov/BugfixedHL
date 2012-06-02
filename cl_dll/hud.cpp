@@ -31,6 +31,7 @@
 #include "demo_api.h"
 #include "vgui_scorepanel.h"
 
+#include "appversion.h"
 
 
 class CHLVoiceStatusHelper : public IVoiceStatusHelper
@@ -126,9 +127,10 @@ int __MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf )
 
 void __CmdFunc_About(void)
 {
+	char *ver = APP_VERSION;
 	ConsolePrint("Fixed and improved HLSDK client.dll.\n");
 	ConsolePrint("File version: ");
-	ConsolePrint(APP_VERSION);
+	ConsolePrint(ver);
 	ConsolePrint(".\n");
 	ConsolePrint("Look http://aghl.ru/forum for more info on this dll.\n");
 }

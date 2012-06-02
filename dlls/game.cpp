@@ -17,6 +17,8 @@
 #include "util.h"
 #include "game.h"
 
+#include "appversion.h"
+
 // Version cvar
 // You can remove it, but remember that this will lower amout of people getting knowing about that HLSDK release.
 // And thus reducing good comments, suggestion and bugfixes.

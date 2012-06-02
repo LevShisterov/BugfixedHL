@@ -50,12 +50,4 @@
 #define MAX_TEAMS			32
 #define MAX_TEAM_NAME		16
 
-#include "appversion.h"
-
-#ifdef APP_VERSION_SPECIALBUILD
-#define APP_VERSION APP_VERSION_STRD " " APP_VERSION_SPECIALBUILD
-#else
-#define APP_VERSION APP_VERSION_STRD;
-#endif
-
 #endif
