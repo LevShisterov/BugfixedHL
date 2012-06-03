@@ -359,27 +359,33 @@ void CGameStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 
 		if (!m_iLocalPlayerIndex)
 			m_iLocalPlayerIndex = gEngfuncs.GetLocalPlayer()->index;
+
+		// Return actual colors for local player
 		bool set = false;
-		// Return teammates override colors or actual colors for local player teammates if this is a teamplay
-		// We will not check for gHUD.m_Teamplay because customized sever dll send us "teamplay 1" to enable teams in scoreboard
-		if (AreTeammates(playerIndex + 1, m_iLocalPlayerIndex))
+		if (m_iLocalPlayerIndex - 1 != playerIndex)
 		{
-			if (cl_forceteammatescolors->string[0] != 0)
+			// Return teammates override colors or actual colors for local player teammates if this is a teamplay
+			// We will not check for gHUD.m_Teamplay because customized sever dll send us "teamplay 1" to enable teams in scoreboard
+			if (AreTeammates(playerIndex + 1, m_iLocalPlayerIndex))
 			{
-				m_nTopColor = m_iTeammatesTopColor;
-				m_nBottomColor = m_iTeammatesBottomColor;
-				set = true;
+				if (cl_forceteammatescolors->string[0] != 0)
+				{
+					m_nTopColor = m_iTeammatesTopColor;
+					m_nBottomColor = m_iTeammatesBottomColor;
+					set = true;
+				}
+			}
+			else
+			{
+				if (cl_forceemenycolors->string[0] != 0)
+				{
+					m_nTopColor = m_iEnemyTopColor;
+					m_nBottomColor = m_iEnemyBottomColor;
+					set = true;
+				}
 			}
 		}
-		else
-		{
-			if (cl_forceemenycolors->string[0] != 0)
-			{
-				m_nTopColor = m_iEnemyTopColor;
-				m_nBottomColor = m_iEnemyBottomColor;
-				set = true;
-			}
-		}
+
 		if (!set)
 		{
 			m_nTopColor = m_pPlayerInfo->topcolor;
