@@ -78,7 +78,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib wsock32.lib ../../utils/vgui/lib/win32_vc6/vgui.lib ../dinput/dinput8.lib ../dinput/dxguid.lib"
+				AdditionalDependencies="psapi.lib winmm.lib wsock32.lib ../../utils/vgui/lib/win32_vc6/vgui.lib ../dinput/dinput8.lib ../dinput/dxguid.lib"
 				OutputFile="$(OutDir)\client.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib wsock32.lib ../../utils/vgui/lib/win32_vc6/vgui.lib ../dinput/dinput8.lib ../dinput/dxguid.lib"
+				AdditionalDependencies="psapi.lib winmm.lib wsock32.lib ../../utils/vgui/lib/win32_vc6/vgui.lib ../dinput/dinput8.lib ../dinput/dxguid.lib"
 				OutputFile="$(OutDir)\client.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

@@ -34,6 +34,9 @@ extern "C"
 #include "vgui_int.h"
 #include "interface.h"
 
+#include "windows.h"
+#include "psapi.h"
+
 #define DLLEXPORT __declspec( dllexport )
 
 
@@ -141,14 +144,117 @@ void DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server )
 	PM_Move( ppmove, server );
 }
 
+// Vectored Exceptions Handler
+LONG NTAPI VectoredExceptionsHandler(PEXCEPTION_POINTERS pExceptionInfo)
+{
+	long exceptionCode = pExceptionInfo->ExceptionRecord->ExceptionCode;
+	long exceptionAddress = (long)pExceptionInfo->ExceptionRecord->ExceptionAddress;
+
+	if ((exceptionCode & 0xF0000000L) == 0xC0000000L && exceptionAddress != 0L)
+	{
+		// Some bad hardware exception happen.
+		char buffer[1024];
+		long moduleBase, moduleSize;
+
+		HANDLE hProcess = GetCurrentProcess();
+		MODULEINFO moduleInfo;
+
+		// Get modules info
+		HMODULE hMods[1024];
+		DWORD cbNeeded;
+		EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded);
+		int count = cbNeeded / sizeof(HMODULE);
+
+		// Check if exception is in own modules
+		bool own = false;
+		for (int i = 0; i < count; i++)
+		{
+			GetModuleInformation(hProcess, hMods[i], &moduleInfo, sizeof(moduleInfo));
+			moduleBase = (long)moduleInfo.lpBaseOfDll;
+			moduleSize = (long)moduleInfo.SizeOfImage;
+			if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
+			{
+				own = true;
+				break;
+			}
+		}
+		if (!own)
+			return EXCEPTION_CONTINUE_SEARCH;
+
+		FILE *file = fopen("client.dll.log", "a");
+
+		fputs("------------------------------------------------------------\n", file);
+		sprintf(buffer, "Exception 0x%08X at address 0x%08X.\n", exceptionCode, exceptionAddress);
+		fputs(buffer, file);
+
+		// Dump modules info
+		fputs("Modules:\n", file);
+		fputs("  Base     Size     Path (Exception Offset)\n", file);
+		for (int i = 0; i < count; i++)
+		{
+			GetModuleInformation(hProcess, hMods[i], &moduleInfo, sizeof(moduleInfo));
+			moduleBase = (long)moduleInfo.lpBaseOfDll;
+			moduleSize = (long)moduleInfo.SizeOfImage;
+			// Get the full path to the module's file.
+			TCHAR szModName[MAX_PATH];
+			if (GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName)/sizeof(TCHAR)))
+			{
+				if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
+					sprintf(buffer, "=>%08X %08X %s  <==  %08X\n", moduleBase, moduleSize, szModName, exceptionAddress - moduleBase);
+				else
+					sprintf(buffer, "  %08X %08X %s\n", moduleBase, moduleSize, szModName);
+			}
+			else
+			{
+				if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
+					sprintf(buffer, "=>%08X %08X  <==  %08X\n", moduleBase, moduleSize, exceptionAddress - moduleBase);
+				else
+					sprintf(buffer, "  %08X %08X\n", moduleBase, moduleSize);
+			}
+			fputs(buffer, file);
+		}
+
+		fclose(file);
+
+		// Lets look if it is in our dll...
+		HMODULE hModuleDll = GetModuleHandle("client.dll");
+		GetModuleInformation(hProcess, hModuleDll, &moduleInfo, sizeof(moduleInfo));
+		moduleBase = (long)moduleInfo.lpBaseOfDll;
+		moduleSize = (long)moduleInfo.SizeOfImage;
+		if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
+		{
+			sprintf(buffer, "Exception in client.dll at offset 0x%08X.\nPlease report to http://aghl.ru/forum.", exceptionAddress - moduleBase);
+			MessageBox(GetActiveWindow(), buffer, "Error!", MB_OK | MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TOPMOST);
+		}
+	}
+
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+PVOID hVehHandler = NULL;
+
+// DLL entry point
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+	if (fdwReason == DLL_PROCESS_ATTACH)
+	{
+		hVehHandler = AddVectoredExceptionHandler(1, VectoredExceptionsHandler);
+		//int *i = NULL;
+		//*i = 0;
+	}
+	else if (fdwReason == DLL_PROCESS_DETACH)
+	{
+		RemoveVectoredExceptionHandler(hVehHandler);
+	}
+	return TRUE;
+}
+
 int DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 {
-	gEngfuncs = *pEnginefuncs;
-
 	if (iVersion != CLDLL_INTERFACE_VERSION)
 		return 0;
 
-	memcpy(&gEngfuncs, pEnginefuncs, sizeof(cl_enginefunc_t));
+	gEngfuncs = *pEnginefuncs;
 
 	EV_HookEvents();
 
