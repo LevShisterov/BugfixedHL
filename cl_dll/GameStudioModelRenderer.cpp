@@ -254,7 +254,8 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 
 	// Check if local player changed the model
 	GetPlayerInfo(m_iLocalPlayerIndex, &g_PlayerInfoList[m_iLocalPlayerIndex]);
-	if (stricmp(m_szPlayerActualModel[m_iLocalPlayerIndex - 1], g_PlayerInfoList[m_iLocalPlayerIndex].model))
+	if (g_PlayerInfoList[m_iLocalPlayerIndex].model != NULL &&
+		stricmp(m_szPlayerActualModel[m_iLocalPlayerIndex - 1], g_PlayerInfoList[m_iLocalPlayerIndex].model))
 	{
 		// Clear out stale mappings
 		int maxClients = gEngfuncs.GetMaxClients();
@@ -287,6 +288,8 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 
 	// Get player model name
 	GetPlayerInfo(playerIndex + 1, &g_PlayerInfoList[playerIndex + 1]);
+	if (g_PlayerInfoList[playerIndex + 1].model == NULL)
+		return actualModel; // Fallback
 	strncpy(actualModelName, g_PlayerInfoList[playerIndex + 1].model, MAX_TEAM_NAME - 1);
 	actualModelName[MAX_TEAM_NAME - 1] = 0;
 
