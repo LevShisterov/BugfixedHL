@@ -144,15 +144,20 @@ void DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server )
 	PM_Move( ppmove, server );
 }
 
+
+PVOID hVehHandler = NULL;
+
 // Vectored Exceptions Handler
 LONG NTAPI VectoredExceptionsHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
 	long exceptionCode = pExceptionInfo->ExceptionRecord->ExceptionCode;
 	long exceptionAddress = (long)pExceptionInfo->ExceptionRecord->ExceptionAddress;
 
-	if ((exceptionCode & 0xF0000000L) == 0xC0000000L && exceptionAddress != 0L)
+	if (exceptionCode == 0xE06D7363)	// SEH
+		return EXCEPTION_CONTINUE_SEARCH;
+
+	if ((exceptionCode & 0xF0000000L) == 0xC0000000L)	// We will handle all fatal unexpected exceptions, like STATUS_ACCESS_VIOLATION
 	{
-		// Some bad hardware exception happen.
 		char buffer[1024];
 		long moduleBase, moduleSize;
 
@@ -165,73 +170,61 @@ LONG NTAPI VectoredExceptionsHandler(PEXCEPTION_POINTERS pExceptionInfo)
 		EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded);
 		int count = cbNeeded / sizeof(HMODULE);
 
-		// Check if exception is in own modules
-		bool own = false;
-		for (int i = 0; i < count; i++)
-		{
-			GetModuleInformation(hProcess, hMods[i], &moduleInfo, sizeof(moduleInfo));
-			moduleBase = (long)moduleInfo.lpBaseOfDll;
-			moduleSize = (long)moduleInfo.SizeOfImage;
-			if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
-			{
-				own = true;
-				break;
-			}
-		}
-		if (!own)
-			return EXCEPTION_CONTINUE_SEARCH;
-
+		// Write exception info to log
 		FILE *file = fopen("client.dll.log", "a");
-
-		fputs("------------------------------------------------------------\n", file);
-		sprintf(buffer, "Exception 0x%08X at address 0x%08X.\n", exceptionCode, exceptionAddress);
-		fputs(buffer, file);
-
-		// Dump modules info
-		fputs("Modules:\n", file);
-		fputs("  Base     Size     Path (Exception Offset)\n", file);
-		for (int i = 0; i < count; i++)
+		if (file)
 		{
-			GetModuleInformation(hProcess, hMods[i], &moduleInfo, sizeof(moduleInfo));
-			moduleBase = (long)moduleInfo.lpBaseOfDll;
-			moduleSize = (long)moduleInfo.SizeOfImage;
-			// Get the full path to the module's file.
-			TCHAR szModName[MAX_PATH];
-			if (GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName)/sizeof(TCHAR)))
-			{
-				if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
-					sprintf(buffer, "=>%08X %08X %s  <==  %08X\n", moduleBase, moduleSize, szModName, exceptionAddress - moduleBase);
-				else
-					sprintf(buffer, "  %08X %08X %s\n", moduleBase, moduleSize, szModName);
-			}
-			else
-			{
-				if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
-					sprintf(buffer, "=>%08X %08X  <==  %08X\n", moduleBase, moduleSize, exceptionAddress - moduleBase);
-				else
-					sprintf(buffer, "  %08X %08X\n", moduleBase, moduleSize);
-			}
+			fputs("------------------------------------------------------------\n", file);
+			sprintf(buffer, "Exception 0x%08X at address 0x%08X.\n", exceptionCode, exceptionAddress);
 			fputs(buffer, file);
+
+			// Dump modules info
+			fputs("Modules:\n", file);
+			fputs("  Base     Size     Path (Exception Offset)\n", file);
+			for (int i = 0; i < count; i++)
+			{
+				GetModuleInformation(hProcess, hMods[i], &moduleInfo, sizeof(moduleInfo));
+				moduleBase = (long)moduleInfo.lpBaseOfDll;
+				moduleSize = (long)moduleInfo.SizeOfImage;
+				// Get the full path to the module's file.
+				TCHAR szModName[MAX_PATH];
+				if (GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName)/sizeof(TCHAR)))
+				{
+					if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
+						sprintf(buffer, "=>%08X %08X %s  <==  %08X\n", moduleBase, moduleSize, szModName, exceptionAddress - moduleBase);
+					else
+						sprintf(buffer, "  %08X %08X %s\n", moduleBase, moduleSize, szModName);
+				}
+				else
+				{
+					if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
+						sprintf(buffer, "=>%08X %08X  <==  %08X\n", moduleBase, moduleSize, exceptionAddress - moduleBase);
+					else
+						sprintf(buffer, "  %08X %08X\n", moduleBase, moduleSize);
+				}
+				fputs(buffer, file);
+			}
+
+			fclose(file);
 		}
 
-		fclose(file);
-
-		// Lets look if it is in our dll...
+		// Lets look if it is in our dll and show a message if it is...
 		HMODULE hModuleDll = GetModuleHandle("client.dll");
 		GetModuleInformation(hProcess, hModuleDll, &moduleInfo, sizeof(moduleInfo));
 		moduleBase = (long)moduleInfo.lpBaseOfDll;
 		moduleSize = (long)moduleInfo.SizeOfImage;
 		if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
 		{
+			// Show message
 			sprintf(buffer, "Exception in client.dll at offset 0x%08X.\nPlease report to http://aghl.ru/forum.", exceptionAddress - moduleBase);
 			MessageBox(GetActiveWindow(), buffer, "Error!", MB_OK | MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TOPMOST);
 		}
+
+		RemoveVectoredExceptionHandler(hVehHandler);	// Application will die anyway, so futher exceptions are not interesting to us
 	}
 
 	return EXCEPTION_CONTINUE_SEARCH;
 }
-
-PVOID hVehHandler = NULL;
 
 // DLL entry point
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -239,8 +232,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
 		hVehHandler = AddVectoredExceptionHandler(1, VectoredExceptionsHandler);
-		//int *i = NULL;
-		//*i = 0;
 	}
 	else if (fdwReason == DLL_PROCESS_DETACH)
 	{
