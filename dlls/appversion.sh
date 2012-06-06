@@ -59,9 +59,9 @@
 		if [ "$modifications" != "" ]; then
 			echo -n '#define APP_VERSION_SPECIALBUILD ' >> appversion.h
 			echo $modifications >> appversion.h
-			echo '#define APP_VERSION APP_VERSION_STRD " " APP_VERSION_SPECIALBUILD' > appversion.h
+			echo '#define APP_VERSION APP_VERSION_STRD " " APP_VERSION_SPECIALBUILD' >> appversion.h
 		else
-			echo '#define APP_VERSION APP_VERSION_STRD' > appversion.h
+			echo '#define APP_VERSION APP_VERSION_STRD' >> appversion.h
 		fi
 		echo '' >> appversion.h
 
