@@ -21,8 +21,8 @@ CListBox::CListBox() : Panel(0, 0, 0, 0),
 
 	m_ItemsPanel.setParent(this);
 	m_ItemsPanel.setBgColor(0,0,0,255);
- 
-	m_Slider.setRangeWindow(50);
+
+	m_Slider.setRangeWindow(-1);
 	m_Slider.setRangeWindowEnabled(true);
 
 	m_ScrollBar.setParent(this);
@@ -72,11 +72,9 @@ void CListBox::AddItem(Panel* panel)
 
 	pItem->m_pPrev = m_Items.m_pPrev;
 	pItem->m_pNext = &m_Items;
-	pItem->m_pNext->m_pPrev = pItem->m_pPrev->m_pNext = pItem;	
+	pItem->m_pNext->m_pPrev = pItem->m_pPrev->m_pNext = pItem;
 
 	m_ScrollBar.setRange(0, GetScrollMax());
-	m_Slider.setRangeWindow(50);
-	m_Slider.setRangeWindowEnabled(true);
 
 	InternalLayout();
 }
@@ -108,8 +106,7 @@ void CListBox::SetScrollPos(int pos)
 	if(maxItems < 0)
 		return;
 
-	m_ItemOffset = (pos < 0) ? 0 : ((pos > maxItems) ? maxItems : pos);
-	InternalLayout();
+	m_ScrollBar.setValue(pos);
 }
 
 void CListBox::setPos(int x, int y)
@@ -145,6 +142,7 @@ void CListBox::InternalLayout()
 	int curItem = 0;
 	int curY = 0;
 	int maxItem = GetScrollMax();
+	int visibleItems = 0;
 	for(LBItem *pItem=m_Items.m_pNext; pItem != &m_Items; pItem=pItem->m_pNext)
 	{
 		if(curItem < m_ItemOffset)
@@ -152,10 +150,11 @@ void CListBox::InternalLayout()
 			pItem->m_pPanel->setVisible(false);
 			bNeedScrollbar = true;
 		}
-		else if (curItem >= maxItem)
+		else if (curY >= tall)
 		{
 			// item is past the end of the items we care about
 			pItem->m_pPanel->setVisible(false);
+			bNeedScrollbar = true;
 		}
 		else
 		{
@@ -167,18 +166,18 @@ void CListBox::InternalLayout()
 			// Don't change the item's height but change its width to fit the listbox.
 			pItem->m_pPanel->setBounds(0, curY, wide, itemHeight);
 
-			curY += itemHeight;
+			// Count items that visible more for then a half
+			if (curY + itemHeight / 2 <= tall)
+				visibleItems++;
 
-			if (curY > tall)
-			{
-				bNeedScrollbar = true;
-			}
+			curY += itemHeight;
 		}
 
-		++curItem;
+		curItem++;
 	}
 
 	m_ScrollBar.setVisible(bNeedScrollbar);
+	m_Slider.setRangeWindow(visibleItems);
 
 	repaint();
 }
@@ -203,5 +202,3 @@ int	CListBox::GetScrollMax()
 
 	return m_iScrollMax;
 }
-
-

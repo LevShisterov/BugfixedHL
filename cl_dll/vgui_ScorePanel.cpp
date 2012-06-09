@@ -506,7 +506,7 @@ void ScorePanel::SortPlayers( int iTeam, char *team )
 		m_iRows++;
 	}
 
-	if (team)
+	if (!iTeam || bCreatedTeam)
 	{
 		m_iIsATeam[m_iRows++] = TEAM_BLANK;
 	}
@@ -935,19 +935,24 @@ void ScorePanel::mousePressed(MouseCode code, Panel* panel)
 
 void ScorePanel::cursorMoved(int x, int y, Panel *panel)
 {
-	if (GetClientVoiceMgr()->IsInSquelchMode())
+	if (GetClientVoiceMgr()->IsInSquelchMode() && this->isWithin(x, y))
 	{
 		// look for which cell the mouse is currently over
 		for (int i = 0; i < NUM_ROWS; i++)
 		{
 			int row, col;
-			if (m_PlayerGrids[i].getCellAtPoint(x, y, row, col))
+			if (m_PlayerGrids[i].isVisible() && m_PlayerGrids[i].getCellAtPoint(x, y, row, col))
 			{
 				MouseOverCell(i, col);
 				return;
 			}
 		}
 	}
+}
+
+void ScorePanel::mouseWheeled(int delta, Panel* panel)
+{
+	m_PlayerList.SetScrollPos(m_PlayerList.GetScrollPos() + delta);
 }
 
 //-----------------------------------------------------------------------------

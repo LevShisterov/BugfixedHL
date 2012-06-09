@@ -304,6 +304,7 @@ public:
 
 	virtual void mousePressed(MouseCode code, Panel* panel);
 	virtual void cursorMoved(int x, int y, Panel *panel);
+	virtual void mouseWheeled(int delta, Panel* panel);
 
 	friend CLabelHeader;
 };

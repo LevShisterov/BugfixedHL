@@ -2083,7 +2083,6 @@ int	TeamFortressViewport::KeyInput( int down, int keynum, const char *pszCurrent
 				return 0;
 			}
 		}
-
 	}
 
 	// if we're in a command menu, try hit one of it's buttons
@@ -2105,6 +2104,21 @@ int	TeamFortressViewport::KeyInput( int down, int keynum, const char *pszCurrent
 				HideCommandMenu();
 			}
 
+			return 0;
+		}
+	}
+
+	// Scrolling for scoreboard
+	if (down && IsScoreBoardVisible())
+	{
+		if (keynum == 239)
+		{
+			m_pScoreBoard->mouseWheeled(+3, m_pScoreBoard);
+			return 0;
+		}
+		else if (keynum == 240)
+		{
+			m_pScoreBoard->mouseWheeled(-3, m_pScoreBoard);
 			return 0;
 		}
 	}
