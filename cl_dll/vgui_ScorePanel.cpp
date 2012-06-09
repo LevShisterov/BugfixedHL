@@ -295,6 +295,7 @@ void ScorePanel::Initialize( void )
 	m_iNumTeams = 0;
 	memset( g_PlayerExtraInfo, 0, sizeof g_PlayerExtraInfo );
 	memset( g_TeamInfo, 0, sizeof g_TeamInfo );
+	m_PlayerList.SetScrollPos(0);
 }
 
 bool HACK_GetPlayerUniqueID( int iPlayer, char playerID[16] )

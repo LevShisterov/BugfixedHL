@@ -150,7 +150,7 @@ void CListBox::InternalLayout()
 			pItem->m_pPanel->setVisible(false);
 			bNeedScrollbar = true;
 		}
-		else if (curY >= tall)
+		else if (curY >= tall && curItem <= maxItem)
 		{
 			// item is past the end of the items we care about
 			pItem->m_pPanel->setVisible(false);
