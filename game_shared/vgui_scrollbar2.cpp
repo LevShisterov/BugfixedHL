@@ -125,7 +125,7 @@ ScrollBar2::ScrollBar2(int x,int y,int wide,int tall,bool vertical) : Panel(x,y,
 	setButtonPressedScrollValue(15);
 
 	validate();
- }
+}
 
 void ScrollBar2::setSize(int wide,int tall)
 {
@@ -259,7 +259,6 @@ void ScrollBar2::doButtonPressed(int buttonIndex)
 	{
 		_slider->setValue(_slider->getValue()+_buttonPressedScrollValue);
 	}
-
 }
 
 void ScrollBar2::setButtonPressedScrollValue(int value)
@@ -290,7 +289,7 @@ void ScrollBar2::validate()
 				if(_button[i]->isVisible())
 				{
 					if(_slider->isVertical())
-					{					
+					{
 						buttonOffset+=_button[i]->getTall();
 					}
 					else
