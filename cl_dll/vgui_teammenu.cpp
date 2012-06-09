@@ -69,7 +69,7 @@ CTeamMenuPanel::CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,i
 	pSchemes->getBgColor( hTitleScheme, r, g, b, a );
 	pLabel->setBgColor( r, g, b, a );
 	pLabel->setContentAlignment( vgui::Label::a_west );
-	pLabel->setText(gHUD.m_TextMessage.BufferedLocaliseTextString("#Title_SelectYourTeam"));
+	pLabel->setText(gHUD.m_TextMessage.BufferedLocaliseTextString("Select Your Team"));
 
 	// Create the Info Window
 	m_pTeamWindow  = new CTransparentPanel( 255, TEAMMENU_WINDOW_X, TEAMMENU_WINDOW_Y, TEAMMENU_WINDOW_SIZE_X, TEAMMENU_WINDOW_SIZE_Y );
@@ -101,7 +101,7 @@ CTeamMenuPanel::CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,i
 	m_pBriefing->setBgColor( r, g, b, a );
 
 	m_pBriefing->setText( gHUD.m_TextMessage.BufferedLocaliseTextString("#Map_Description_not_available") );
-	
+
 	// Team Menu buttons
 	for (int i = 1; i <= MAX_TEAMS_IN_MENU + 1; i++)
 	{
@@ -122,7 +122,7 @@ CTeamMenuPanel::CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,i
 				m_pButtons[i]->setBoundKey( '0' + i );
 			else
 				m_pButtons[i]->setBoundKey( '0' );
-			m_pButtons[i]->setText( gHUD.m_TextMessage.BufferedLocaliseTextString("#Team_AutoAssign") );
+			m_pButtons[i]->setText( gHUD.m_TextMessage.BufferedLocaliseTextString("Auto Assign") );
 			m_pButtons[i]->setVisible( true );
 		}
 
@@ -148,7 +148,7 @@ CTeamMenuPanel::CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,i
 	m_pCancelButton->addActionSignal( new CMenuHandler_TextWindow(HIDE_TEXTWINDOW) );
 
 	// Create the Spectate button
-	m_pSpectateButton = new SpectateButton( CHudTextMessage::BufferedLocaliseTextString( "#Menu_Spectate" ), TEAMMENU_TOPLEFT_BUTTON_X, 0, TEAMMENU_BUTTON_SIZE_X, TEAMMENU_BUTTON_SIZE_Y, true);
+	m_pSpectateButton = new SpectateButton( CHudTextMessage::BufferedLocaliseTextString( "Spectate" ), TEAMMENU_TOPLEFT_BUTTON_X, 0, TEAMMENU_BUTTON_SIZE_X, TEAMMENU_BUTTON_SIZE_Y, true);
 	m_pSpectateButton->setParent( this );
 	m_pSpectateButton->addActionSignal( new CMenuHandler_StringCommand( "spectate", true ) );
 	if (MAX_TEAMS_IN_MENU + 2 < 10)

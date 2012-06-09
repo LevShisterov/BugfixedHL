@@ -957,12 +957,12 @@ CommandButton *TeamFortressViewport::CreateCustomButton( char *pButtonText, char
 
 		// Auto Assign button
 		sprintf(sz, "jointeam %d", MAX_TEAMS_IN_MENU + 1);
-		m_pTeamButtons[MAX_TEAMS_IN_MENU] = new TeamButton(MAX_TEAMS_IN_MENU + 1, gHUD.m_TextMessage.BufferedLocaliseTextString( "#Team_AutoAssign" ), 0, BUTTON_SIZE_Y, CMENU_SIZE_X, BUTTON_SIZE_Y);
+		m_pTeamButtons[MAX_TEAMS_IN_MENU] = new TeamButton(MAX_TEAMS_IN_MENU + 1, gHUD.m_TextMessage.BufferedLocaliseTextString( "Auto Assign" ), 0, BUTTON_SIZE_Y, CMENU_SIZE_X, BUTTON_SIZE_Y);
 		m_pTeamButtons[MAX_TEAMS_IN_MENU]->addActionSignal(new CMenuHandler_StringCommand( sz ));
 		pMenu->AddButton( m_pTeamButtons[MAX_TEAMS_IN_MENU] );
 
 		// Spectate button
-		m_pTeamButtons[MAX_TEAMS_IN_MENU + 1] = new SpectateButton( CHudTextMessage::BufferedLocaliseTextString( "#Menu_Spectate" ), 0, BUTTON_SIZE_Y, CMENU_SIZE_X, BUTTON_SIZE_Y, false);
+		m_pTeamButtons[MAX_TEAMS_IN_MENU + 1] = new SpectateButton( CHudTextMessage::BufferedLocaliseTextString( "Spectate" ), 0, BUTTON_SIZE_Y, CMENU_SIZE_X, BUTTON_SIZE_Y, false);
 		m_pTeamButtons[MAX_TEAMS_IN_MENU + 1]->addActionSignal(new CMenuHandler_StringCommand( "spectate" ));
 		pMenu->AddButton( m_pTeamButtons[MAX_TEAMS_IN_MENU + 1] );
 	}
