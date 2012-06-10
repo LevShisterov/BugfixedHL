@@ -459,6 +459,16 @@ void CHudMessage::MessageAdd( const char *pName, float time )
 			tempMessage = &g_pCustomMessage;
 		}
 
+		// Filter out MiniAG timer
+		if (gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_MINI && (
+			((tempMessage->y - 0.01) < 0.0001 && (tempMessage->x - 0.5) < 0.0001) ||	// Original MiniAG coordinates
+			((tempMessage->y - 0.02) < 0.0001 && (tempMessage->x + 1) < 0.0001)			// Russian Crossfire MiniAG coordinates
+			))
+		{
+			// Additional checks on text in the message...
+			return;
+		}
+
 		for ( j = 0; j < maxHUDMessages; j++ )
 		{
 			if (!m_pMessages[j]) continue;

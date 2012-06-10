@@ -43,6 +43,7 @@ int CHudTimer::VidInit(void)
 {
 	m_iNextSyncTime = 0;
 	m_iEndtime = 0;
+	m_bAgVersion = SV_AG_UNKNOWN;
 
 	return 1;
 };
@@ -74,6 +75,29 @@ int CHudTimer::SyncTimer(float fTime)
 					float endtime = atof(value) + (int)(fTime - status.latency + 0.5);
 					if (abs(m_iEndtime - endtime) > 1.5)
 						m_iEndtime = endtime;
+				}
+				if (m_bAgVersion == SV_AG_UNKNOWN)
+				{
+					value = NetGetRuleValueFromBuffer(buffer, len, "sv_ag_version");
+					if (value != NULL && value[0])
+					{
+						if (!strcmp(value, "6.6mini") || !strcmp(value, "6.3mini"))
+						{
+							m_bAgVersion = SV_AG_MINI;
+						}
+						else if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
+						{
+							m_bAgVersion = SV_AG_FULL;
+						}
+						else
+						{
+							m_bAgVersion = SV_AG_NONE;
+						}
+					}
+					else
+					{
+						m_bAgVersion = SV_AG_NONE;
+					}
 				}
 			}
 
@@ -128,7 +152,7 @@ int CHudTimer::Draw(float fTime)
 		// Calculate time parts
 		if (drawTime <= 0) return 1;
 		div_t q;
-		if (drawTime > 86400)
+		if (drawTime >= 86400)
 		{
 			q = div(drawTime, 86400);
 			int d = q.quot;
@@ -139,7 +163,7 @@ int CHudTimer::Draw(float fTime)
 			int s = q.rem;
 			sprintf(text, "%ldd %ldh %02ldm %02lds", d, h, m, s);
 		}
-		else if (drawTime > 3600)
+		else if (drawTime >= 3600)
 		{
 			q = div(drawTime, 3600);
 			int h = q.quot;
@@ -148,7 +172,7 @@ int CHudTimer::Draw(float fTime)
 			int s = q.rem;
 			sprintf(text, "%ldh %02ldm %02lds", h, m, s);
 		}
-		else if (drawTime > 60)
+		else if (drawTime >= 60)
 		{
 			q = div(drawTime, 60);
 			int m = q.quot;

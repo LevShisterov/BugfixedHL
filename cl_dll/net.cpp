@@ -112,6 +112,7 @@ int NetSendReceiveUdp(unsigned long sin_addr, int sin_port, const char *sendbuf,
 		i++;
 	}
 	closesocket(SendSocket);
+	return -1;
 }
 
 char *NetGetRuleValueFromBuffer(const char *buffer, int len, const char *cvar)
@@ -136,4 +137,5 @@ char *NetGetRuleValueFromBuffer(const char *buffer, int len, const char *cvar)
 		}
 		current++;
 	}
+	return NULL;
 }
