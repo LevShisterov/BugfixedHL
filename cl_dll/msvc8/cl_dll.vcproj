@@ -794,6 +794,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\net.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\overview.cpp"
 				>
 				<FileConfiguration
@@ -2111,6 +2115,10 @@
 			</File>
 			<File
 				RelativePath="..\kbutton.h"
+				>
+			</File>
+			<File
+				RelativePath="..\net.h"
 				>
 			</File>
 			<File
