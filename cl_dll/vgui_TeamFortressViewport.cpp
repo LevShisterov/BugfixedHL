@@ -1925,7 +1925,7 @@ void TeamFortressViewport::UpdateHighlights()
 
 void TeamFortressViewport::GetAllPlayersInfo( void )
 {
-	for ( int i = 1; i < MAX_PLAYERS; i++ )
+	for ( int i = 1; i <= MAX_PLAYERS; i++ )
 	{
 		GetPlayerInfo( i, &g_PlayerInfoList[i] );
 
