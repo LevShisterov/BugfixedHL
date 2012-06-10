@@ -26,6 +26,7 @@
 #include "hud_servers.h"
 #include "vgui_int.h"
 #include "vgui_TeamFortressViewport.h"
+#include "GameStudioModelRenderer.h"
 
 #include "demo.h"
 #include "demo_api.h"
@@ -169,6 +170,11 @@ void __CmdFunc_ToggleServerBrowser( void )
 	}
 }
 
+void __CmdFunc_ForceModel(void)
+{
+	g_StudioRenderer.ForceModelCommand();
+}
+
 // TFFree Command Menu Message Handlers
 int __MsgFunc_ValClass(const char *pszName, int iSize, void *pbuf)
 {
@@ -285,6 +291,7 @@ void CHud :: Init( void )
 	HOOK_COMMAND( "ForceCloseCommandMenu", ForceCloseCommandMenu );
 	HOOK_COMMAND( "special", InputPlayerSpecial );
 	HOOK_COMMAND( "togglebrowser", ToggleServerBrowser );
+	HOOK_COMMAND( "forcemodel", ForceModel );
 
 	HOOK_MESSAGE( ValClass );
 	HOOK_MESSAGE( TeamNames );

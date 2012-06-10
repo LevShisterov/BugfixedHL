@@ -79,6 +79,7 @@ void CGameStudioModelRenderer::InitOnConnect(void)
 	memset(m_szEnemyModels, 0, sizeof(m_szEnemyModels));
 	memset(m_szPlayerActualModel, 0, sizeof(m_szPlayerActualModel));
 	memset(m_szPlayerRemapModel, 0, sizeof(m_szPlayerRemapModel));
+	memset(m_rgbPlayerRemapModelForced, 0, sizeof(m_rgbPlayerRemapModelForced));
 
 	m_iEnemyTopColor = 0;
 	m_iEnemyBottomColor = 0;
@@ -252,6 +253,10 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 	if (m_iLocalPlayerIndex - 1 == playerIndex)
 		return actualModel;
 
+	// Return forced model
+	if (m_rgbPlayerRemapModelForced[playerIndex])
+		return m_rgpPlayerRemapModel[playerIndex];
+
 	// Check if local player changed the model
 	GetPlayerInfo(m_iLocalPlayerIndex, &g_PlayerInfoList[m_iLocalPlayerIndex]);
 	if (g_PlayerInfoList[m_iLocalPlayerIndex].model != NULL &&
@@ -400,6 +405,81 @@ void CGameStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 
 	// Set remap colors
 	IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
+}
+
+///
+/// Sets player remapped model via command.
+///
+void CGameStudioModelRenderer::ForceModelCommand(void)
+{
+	if (gEngfuncs.Cmd_Argc() <= 1)
+	{
+		gEngfuncs.Con_Printf( "usage:  forcemodel \"slot number or player name\" [\"model name\"]\n" );
+		return;
+	}
+
+	model_t *m_pModel = NULL;
+	char *modelName = gEngfuncs.Cmd_Argv(2);
+	if (modelName && modelName[0])
+	{
+		char path[256];
+		sprintf(path, "models/player/%s/%s.mdl", gEngfuncs.Cmd_Argv(2), gEngfuncs.Cmd_Argv(2));
+		m_pModel = IEngineStudio.Mod_ForName(path, 0);
+		if (m_pModel == NULL)
+		{
+			return;
+		}
+	}
+
+	int slot = atoi(gEngfuncs.Cmd_Argv(1));
+	if (slot)
+	{
+		int playerIndex = slot - 1;
+		m_szPlayerRemapModel[playerIndex][0] = 0;
+		if (m_pModel)
+		{
+			m_rgpPlayerRemapModel[playerIndex] = m_pModel;
+			m_rgbPlayerRemapModelForced[playerIndex] = true;
+		}
+		else
+		{
+			m_rgpPlayerRemapModel[playerIndex] = NULL;
+			m_rgbPlayerRemapModelForced[playerIndex] = false;
+		}
+	}
+	else
+	{
+		char *name = gEngfuncs.Cmd_Argv(1);
+		_strlwr(name);
+		if (!m_iLocalPlayerIndex)
+			m_iLocalPlayerIndex = gEngfuncs.GetLocalPlayer()->index;
+		// Find a players by a name
+		char plrName[MAX_PLAYER_NAME_LENGTH];
+		int maxClients = gEngfuncs.GetMaxClients();
+		for (int i = 0; i < maxClients; i++)
+		{
+			if (i == m_iLocalPlayerIndex - 1) continue;
+			GetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
+			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
+			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME_LENGTH - 1);
+			plrName[MAX_PLAYER_NAME_LENGTH - 1] = 0;
+			_strlwr(plrName);
+			if (!strstr(plrName, name))continue;
+
+			int playerIndex = i;
+			m_szPlayerRemapModel[playerIndex][0] = 0;
+			if (m_pModel)
+			{
+				m_rgpPlayerRemapModel[playerIndex] = m_pModel;
+				m_rgbPlayerRemapModelForced[playerIndex] = true;
+			}
+			else
+			{
+				m_rgpPlayerRemapModel[playerIndex] = NULL;
+				m_rgbPlayerRemapModelForced[playerIndex] = false;
+			}
+		}
+	}
 }
 
 ////////////////////////////////////

@@ -34,6 +34,9 @@ public:
 	// Sets remap colors for current player
 	virtual void SetPlayerRemapColors(int playerIndex);
 
+	// Sets remap colors for current player
+	virtual void ForceModelCommand(void);
+
 private:
 	// List of allowed enemy models
 	cvar_t	*cl_forceemenymodels;
@@ -55,6 +58,7 @@ private:
 	char m_szPlayerActualModel[MAX_PLAYERS][MAX_TEAM_NAME];
 	char m_szPlayerRemapModel[MAX_PLAYERS][MAX_TEAM_NAME];
 	model_t *m_rgpPlayerRemapModel[MAX_PLAYERS];
+	bool m_rgbPlayerRemapModelForced[MAX_PLAYERS];
 	int m_iEnemyTopColor;
 	int m_iEnemyBottomColor;
 	int m_iTeammatesTopColor;
