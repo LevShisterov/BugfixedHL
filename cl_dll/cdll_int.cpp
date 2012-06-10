@@ -36,6 +36,7 @@ extern "C"
 
 #include "windows.h"
 #include "psapi.h"
+#include "dbghelp.h"
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -171,7 +172,7 @@ LONG NTAPI VectoredExceptionsHandler(PEXCEPTION_POINTERS pExceptionInfo)
 		int count = cbNeeded / sizeof(HMODULE);
 
 		// Write exception info to log
-		FILE *file = fopen("client.dll.log", "a");
+		FILE *file = fopen("crash.log", "a");
 		if (file)
 		{
 			fputs("------------------------------------------------------------\n", file);
@@ -208,19 +209,35 @@ LONG NTAPI VectoredExceptionsHandler(PEXCEPTION_POINTERS pExceptionInfo)
 			fclose(file);
 		}
 
-		// Lets look if it is in our dll and show a message if it is...
+		// Create mini-dump
+		HANDLE hMiniDumpFile = CreateFile("crash.dmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+		if (hMiniDumpFile != INVALID_HANDLE_VALUE)
+		{
+			MINIDUMP_EXCEPTION_INFORMATION eInfo;
+			eInfo.ThreadId = GetCurrentThreadId();
+			eInfo.ExceptionPointers = pExceptionInfo;
+			eInfo.ClientPointers = FALSE;
+			MiniDumpWriteDump(hProcess, GetCurrentProcessId(), hMiniDumpFile, MiniDumpNormal, &eInfo, NULL, NULL);
+			CloseHandle(hMiniDumpFile);
+		}
+
+		// Display a message
 		HMODULE hModuleDll = GetModuleHandle("client.dll");
 		GetModuleInformation(hProcess, hModuleDll, &moduleInfo, sizeof(moduleInfo));
 		moduleBase = (long)moduleInfo.lpBaseOfDll;
 		moduleSize = (long)moduleInfo.SizeOfImage;
 		if (moduleBase <= exceptionAddress && exceptionAddress <= (moduleBase + moduleSize))
 		{
-			// Show message
-			sprintf(buffer, "Exception in client.dll at offset 0x%08X.\nPlease report to http://aghl.ru/forum.", exceptionAddress - moduleBase);
-			MessageBox(GetActiveWindow(), buffer, "Error!", MB_OK | MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TOPMOST);
+			sprintf(buffer, "Exception in client.dll at offset 0x%08X.\n\nCrash dump and log files were created in game directory.\nPlease report them to http://aghl.ru/forum.", exceptionAddress - moduleBase);
 		}
+		else
+		{
+			sprintf(buffer, "Exception in the game.\n\nCrash dump and log files were created in game directory.\nPlease report them to http://aghl.ru/forum.");
+		}
+		MessageBox(GetActiveWindow(), buffer, "Error!", MB_OK | MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TOPMOST);
 
-		RemoveVectoredExceptionHandler(hVehHandler);	// Application will die anyway, so futher exceptions are not interesting to us
+		// Application will die anyway, so futher exceptions are not interesting to us
+		RemoveVectoredExceptionHandler(hVehHandler);
 	}
 
 	return EXCEPTION_CONTINUE_SEARCH;
