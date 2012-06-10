@@ -502,6 +502,28 @@ private:
 //
 //-----------------------------------------------------
 //
+
+class CHudTimer: public CHudBase
+{
+public:
+	int Init( void );
+	int VidInit( void );
+	int Draw(float flTime);
+
+private:
+
+	int SyncTimer(float fTime);
+
+	float	m_iNextSyncTime;
+	float	m_iTimelimit;
+	float	m_iEndtime;
+
+	struct cvar_s *m_HUD_timer;
+};
+
+//
+//-----------------------------------------------------
+//
 #define MAX_SPRITE_NAME_LENGTH	24
 
 class CHudStatusIcons: public CHudBase
@@ -596,8 +618,6 @@ public:
 	cvar_t	*m_pCvarShowLoss;
 	cvar_t	*m_pCvarShowSteamId;
 
-	int		m_iTimelimit;
-
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );
 	int DrawHudString(int x, int y, const char *szString, int r, int g, int b );
@@ -631,21 +651,22 @@ public:
 	
 	int GetSpriteIndex( const char *SpriteName );	// gets a sprite index, for use in the m_rghSprites[] array
 
-	CHudAmmo		m_Ammo;
-	CHudHealth		m_Health;
+	CHudAmmo			m_Ammo;
+	CHudHealth			m_Health;
 	CHudSpectator		m_Spectator;
-	CHudGeiger		m_Geiger;
-	CHudBattery		m_Battery;
-	CHudTrain		m_Train;
-	CHudFlashlight	m_Flash;
-	CHudMessage		m_Message;
-	CHudStatusBar   m_StatusBar;
-	CHudDeathNotice m_DeathNotice;
-	CHudSayText		m_SayText;
-	CHudMenu		m_Menu;
+	CHudGeiger			m_Geiger;
+	CHudBattery			m_Battery;
+	CHudTrain			m_Train;
+	CHudFlashlight		m_Flash;
+	CHudMessage			m_Message;
+	CHudStatusBar		m_StatusBar;
+	CHudDeathNotice		m_DeathNotice;
+	CHudSayText			m_SayText;
+	CHudMenu			m_Menu;
 	CHudAmmoSecondary	m_AmmoSecondary;
-	CHudTextMessage m_TextMessage;
-	CHudStatusIcons m_StatusIcons;
+	CHudTextMessage		m_TextMessage;
+	CHudStatusIcons		m_StatusIcons;
+	CHudTimer			m_Timer;
 
 	void Init( void );
 	void VidInit( void );

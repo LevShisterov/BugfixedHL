@@ -662,6 +662,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\hud_timer.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\hud_update.cpp"
 				>
 				<FileConfiguration

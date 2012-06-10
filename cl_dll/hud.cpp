@@ -31,13 +31,7 @@
 #include "demo.h"
 #include "demo_api.h"
 #include "vgui_scorepanel.h"
-
 #include "appversion.h"
-
-#include "net_api.h"
-#include "net.h"
-
-#define NET_API gEngfuncs.pNetAPI
 
 
 class CHLVoiceStatusHelper : public IVoiceStatusHelper
@@ -381,6 +375,7 @@ void CHud :: Init( void )
 	m_AmmoSecondary.Init();
 	m_TextMessage.Init();
 	m_StatusIcons.Init();
+	m_Timer.Init();
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
@@ -440,35 +435,6 @@ int CHud :: GetSpriteIndex( const char *SpriteName )
 
 void CHud :: VidInit( void )
 {
-	// Make sure networking system has started.
-	NET_API->InitNetworking();
-	// Get net status
-	net_status_t status;
-	NET_API->Status(&status);
-	if (status.connected)
-	{
-		if (status.remote_address.type != NA_LOOPBACK)
-		{
-			// Retrieve mp_timelimit from the server
-			char buffer[2048];
-			int len = NetSendReceiveUdp(*((unsigned int*)status.remote_address.ip), status.remote_address.port, "\xFF\xFF\xFF\xFFV\xFF\xFF\xFF\xFF", 9, buffer, sizeof(buffer));
-			if (len > 0)
-			{
-				char *value = NetGetRuleValueFromBuffer(buffer, len, "mp_timelimit");
-				if (value != NULL && value[0])
-				{
-					int timelimit = atoi(value);
-					m_iTimelimit = timelimit;
-				}
-			}
-		}
-		else
-		{
-			// Get timer setting directly from the cvar
-			m_iTimelimit = CVAR_GET_FLOAT("mp_timelimit");
-		}
-	}
-
 	m_scrinfo.iSize = sizeof(m_scrinfo);
 	GetScreenInfo(&m_scrinfo);
 
@@ -575,6 +541,7 @@ void CHud :: VidInit( void )
 	m_AmmoSecondary.VidInit();
 	m_TextMessage.VidInit();
 	m_StatusIcons.VidInit();
+	m_Timer.VidInit();
 	GetClientVoiceMgr()->VidInit();
 }
 
