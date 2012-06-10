@@ -503,6 +503,28 @@ private:
 //
 //-----------------------------------------------------
 //
+
+class CHudTimer: public CHudBase
+{
+public:
+	int Init( void );
+	int VidInit( void );
+	int Draw(float flTime);
+
+private:
+
+	int SyncTimer(float fTime);
+
+	float	m_iNextSyncTime;
+	float	m_iTimelimit;
+	float	m_iEndtime;
+
+	struct cvar_s *m_HUD_timer;
+};
+
+//
+//-----------------------------------------------------
+//
 #define MAX_SPRITE_NAME_LENGTH	24
 
 class CHudStatusIcons: public CHudBase
@@ -591,8 +613,6 @@ public:
 	cvar_t	*m_pCvarShowLoss;
 	cvar_t	*m_pCvarShowSteamId;
 
-	int		m_iTimelimit;
-
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );
 	int DrawHudString(int x, int y, const char *szString, int r, int g, int b );
@@ -639,6 +659,7 @@ public:
 	CHudAmmoSecondary	m_AmmoSecondary;
 	CHudTextMessage		m_TextMessage;
 	CHudStatusIcons		m_StatusIcons;
+	CHudTimer			m_Timer;
 
 	void Init( void );
 	void VidInit( void );
