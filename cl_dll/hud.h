@@ -510,12 +510,22 @@ public:
 	int VidInit( void );
 	int Draw(float flTime);
 
+	enum {
+		SV_AG_NONE = -1,
+		SV_AG_UNKNOWN = 0,
+		SV_AG_MINI = 1,
+		SV_AG_FULL = 2,
+	};
+
+	int GetAgVersion(void) { return m_bAgVersion; }
+
 private:
 
 	int SyncTimer(float fTime);
 
 	float	m_iNextSyncTime;
 	float	m_iEndtime;
+	int		m_bAgVersion;
 
 	struct cvar_s *m_HUD_timer;
 };
