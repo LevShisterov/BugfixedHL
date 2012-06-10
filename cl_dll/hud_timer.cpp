@@ -22,7 +22,7 @@
 
 #define NET_API gEngfuncs.pNetAPI
 
-#define TIMER_Y 0.015
+#define TIMER_Y 0.02
 #define TIMER_R 255
 #define TIMER_G 160
 #define TIMER_B 0
@@ -42,7 +42,6 @@ int CHudTimer::Init(void)
 int CHudTimer::VidInit(void)
 {
 	m_iNextSyncTime = 0;
-	m_iTimelimit = 0;
 	m_iEndtime = 0;
 
 	return 1;
@@ -67,24 +66,28 @@ int CHudTimer::SyncTimer(float fTime)
 				char *value = NetGetRuleValueFromBuffer(buffer, len, "mp_timelimit");
 				if (value != NULL && value[0])
 				{
-					m_iTimelimit = atof(value);
+					m_iEndtime = atof(value) * 60;
 				}
 				value = NetGetRuleValueFromBuffer(buffer, len, "mp_timeleft");
 				if (value != NULL && value[0])
 				{
-					m_iEndtime = atof(value) + fTime + status.latency;
+					float endtime = atof(value) + (int)(fTime - status.latency + 0.5);
+					if (abs(m_iEndtime - endtime) > 1.5)
+						m_iEndtime = endtime;
 				}
 			}
 
-			m_iNextSyncTime = fTime + 120;
+			m_iNextSyncTime = fTime + 30;
 		}
 		else
 		{
 			// Get timer settings directly from cvars
-			m_iTimelimit = CVAR_GET_FLOAT("mp_timelimit");
-			m_iEndtime = CVAR_GET_FLOAT("mp_timeleft") + fTime;
+			m_iEndtime = CVAR_GET_FLOAT("mp_timelimit");
+			float endtime = CVAR_GET_FLOAT("mp_timeleft") + fTime;
+			if (abs(m_iEndtime - endtime) > 1.5)
+				m_iEndtime = endtime;
 
-			m_iNextSyncTime = fTime + 10;
+			m_iNextSyncTime = fTime + 5;
 		}
 	}
 
@@ -93,7 +96,7 @@ int CHudTimer::SyncTimer(float fTime)
 
 int CHudTimer::Draw(float fTime)
 {
-	if (m_HUD_timer->value <= 0) return 1;
+	if (m_HUD_timer->value <= 0 || m_HUD_timer->value > 3) return 1;
 
 	char text[64];
 	int r = TIMER_R, g = TIMER_G, b = TIMER_B;
@@ -104,13 +107,12 @@ int CHudTimer::Draw(float fTime)
 		if (m_iNextSyncTime <= fTime)
 			SyncTimer(fTime);
 
-		//float timeleft = (int)(m_iTimelimit * 60 - fTime);
-		float timeleft = (int)(m_iEndtime - fTime);
+		float timeleft = (int)(m_iEndtime - fTime) + 1;
 		drawTime = timeleft;
 	}
 	else if (m_HUD_timer->value == 2)	// time passed
 	{
-		drawTime = fTime;
+		drawTime = (int)fTime;
 	}
 	else if (m_HUD_timer->value == 3)	// local PC time
 	{
@@ -118,7 +120,7 @@ int CHudTimer::Draw(float fTime)
 		struct tm *timeinfo;
 		time(&rawtime);
 		timeinfo = localtime(&rawtime);
-		sprintf(text, "Local Time: %ld:%02ld:%02ld", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+		sprintf(text, "Clock %ld:%02ld:%02ld", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 	}
 
 	if (m_HUD_timer->value == 1 || m_HUD_timer->value == 2)

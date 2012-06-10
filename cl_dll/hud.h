@@ -516,7 +516,6 @@ private:
 	int SyncTimer(float fTime);
 
 	float	m_iNextSyncTime;
-	float	m_iTimelimit;
 	float	m_iEndtime;
 
 	struct cvar_s *m_HUD_timer;
