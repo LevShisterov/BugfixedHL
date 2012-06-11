@@ -375,41 +375,51 @@ int CHudMessage::Draw( float fTime )
 
 	for ( i = 0; i < maxHUDMessages; i++ )
 	{
-		if ( m_pMessages[i] )
+		if (!m_pMessages[i]) continue;
+
+		pMessage = m_pMessages[i];
+
+		// Filter out MiniAG timer
+		if (gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_MINI && (
+			((pMessage->y - 0.01) < 0.0001 && (pMessage->x - 0.5) < 0.0001) ||	// Original MiniAG coordinates
+			((pMessage->y - 0.02) < 0.0001 && (pMessage->x + 1) < 0.0001)		// Russian Crossfire MiniAG coordinates
+			))
 		{
-			pMessage = m_pMessages[i];
+			// TODO: Additional checks on text in the message...
+			m_pMessages[i] = NULL;
+			continue;
+		}
 
-			// This is when the message is over
-			switch( pMessage->effect )
-			{
-			case 0:
-			case 1:
-				endTime = m_startTime[i] + pMessage->fadein + pMessage->fadeout + pMessage->holdtime;
-				break;
-			
-			// Fade in is per character in scanning messages
-			case 2:
-				endTime = m_startTime[i] + (pMessage->fadein * strlen( pMessage->pMessage )) + pMessage->fadeout + pMessage->holdtime;
-				break;
-			}
+		// This is when the message is over
+		switch( pMessage->effect )
+		{
+		case 0:
+		case 1:
+			endTime = m_startTime[i] + pMessage->fadein + pMessage->fadeout + pMessage->holdtime;
+			break;
+		
+		// Fade in is per character in scanning messages
+		case 2:
+			endTime = m_startTime[i] + (pMessage->fadein * strlen( pMessage->pMessage )) + pMessage->fadeout + pMessage->holdtime;
+			break;
+		}
 
-			if ( fTime <= endTime )
-			{
-				float messageTime = fTime - m_startTime[i];
+		if ( fTime <= endTime )
+		{
+			float messageTime = fTime - m_startTime[i];
 
-				// Draw the message
-				// effect 0 is fade in/fade out
-				// effect 1 is flickery credits
-				// effect 2 is write out (training room)
-				MessageDrawScan( pMessage, messageTime );
+			// Draw the message
+			// effect 0 is fade in/fade out
+			// effect 1 is flickery credits
+			// effect 2 is write out (training room)
+			MessageDrawScan( pMessage, messageTime );
 
-				drawn++;
-			}
-			else
-			{
-				// The message is over
-				m_pMessages[i] = NULL;
-			}
+			drawn++;
+		}
+		else
+		{
+			// The message is over
+			m_pMessages[i] = NULL;
 		}
 	}
 
@@ -465,7 +475,7 @@ void CHudMessage::MessageAdd( const char *pName, float time )
 			((tempMessage->y - 0.02) < 0.0001 && (tempMessage->x + 1) < 0.0001)			// Russian Crossfire MiniAG coordinates
 			))
 		{
-			// Additional checks on text in the message...
+			// TODO: Additional checks on text in the message...
 			return;
 		}
 
