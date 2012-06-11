@@ -59,11 +59,24 @@ int CHudAmmoSecondary :: Draw(float flTime)
 		return 1;
 
 	// draw secondary ammo icons above normal ammo readout
-	int a, x, y, r, g, b, AmmoWidth;
-	UnpackRGB( r, g, b, RGB_YELLOWISH );
-	a = (int) max( MIN_ALPHA, m_fFade );
-	if (m_fFade > 0)
-		m_fFade -= (gHUD.m_flTimeDelta * 20);  // slowly lower alpha to fade out icons
+	int x, y, r, g, b, AmmoWidth;
+	float a;
+
+	if (gHUD.m_pCvarDim->value == 0)
+		a = MIN_ALPHA + ALPHA_AMMO_MAX;
+	else if (m_fFade > 0)
+	{
+		// slowly lower alpha to fade out icons
+		m_fFade -= (gHUD.m_flTimeDelta * 20);
+		if (m_fFade <= 0)
+			m_fFade = 0;
+		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_AMMO_FLASH;
+	}
+	else
+		a = MIN_ALPHA;
+
+	a *= gHUD.GetHudTransparency();
+	gHUD.GetHudColor(0, 0, r, g, b);
 	ScaleColors( r, g, b, a );
 
 	AmmoWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;
@@ -151,7 +164,7 @@ int CHudAmmoSecondary :: MsgFunc_SecAmmoVal( const char *pszName, int iSize, voi
 	}
 
 	// make the icons light up
-	m_fFade = 200.0f;
+	m_fFade = FADE_TIME;
 
 	return 1;
 }

@@ -33,6 +33,10 @@
 #define DHN_2DIGITS		2
 #define DHN_3DIGITS		4
 #define MIN_ALPHA		100
+#define ALPHA_AMMO_FLASH	 100
+#define ALPHA_AMMO_MAX		 128
+#define ALPHA_POINTS_FLASH	 128
+#define ALPHA_POINTS_MAX	 155
 
 #define HUDELEM_ACTIVE	1
 
@@ -608,6 +612,11 @@ private:
 	int						m_iConcussionEffect;
 	CharWidths				m_CharWidths;
 
+	cvar_t	*m_pCvarColor;
+	cvar_t	*m_pCvarColor1;
+	cvar_t	*m_pCvarColor2;
+	cvar_t	*m_pCvarColor3;
+
 public:
 
 	HLHSPRITE				m_hsprCursor;
@@ -623,6 +632,7 @@ public:
 	int		m_iRes;
 	cvar_t  *m_pCvarStealMouse;
 	cvar_t	*m_pCvarDraw;
+	cvar_t	*m_pCvarDim;
 	cvar_t	*m_pCvarShowLoss;
 	cvar_t	*m_pCvarShowSteamId;
 
@@ -634,6 +644,8 @@ public:
 	int GetNumWidth(int iNumber, int iFlags);
 	int GetHudCharWidth(int c);
 	int CalculateCharWidth(int c);
+	void GetHudColor( int hudPart, int value, int &r, int &g, int &b );
+	float GetHudTransparency();
 
 private:
 	// the memory for these arrays are allocated in the first call to CHud::VidInit(), when the hud.txt and associated sprites are loaded.
