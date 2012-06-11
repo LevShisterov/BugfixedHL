@@ -182,6 +182,11 @@ void __CmdFunc_ForceModel(void)
 	g_StudioRenderer.ForceModelCommand();
 }
 
+void __CmdFunc_ForceColors(void)
+{
+	g_StudioRenderer.ForceColorsCommand();
+}
+
 // TFFree Command Menu Message Handlers
 int __MsgFunc_ValClass(const char *pszName, int iSize, void *pbuf)
 {
@@ -301,6 +306,7 @@ void CHud :: Init( void )
 	HOOK_COMMAND( "special", InputPlayerSpecial );
 	HOOK_COMMAND( "togglebrowser", ToggleServerBrowser );
 	HOOK_COMMAND( "forcemodel", ForceModel );
+	HOOK_COMMAND( "forcecolors", ForceColors );
 
 	HOOK_MESSAGE( ValClass );
 	HOOK_MESSAGE( TeamNames );
