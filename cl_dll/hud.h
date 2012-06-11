@@ -55,7 +55,7 @@ typedef struct cvar_s cvar_t;
 #define HUD_INTERMISSION	2
 
 #define MAX_HUD_STRING			80
-#define	MAX_MOTD_LENGTH			1536
+#define MAX_MOTD_LENGTH			1536
 
 #define ADJUST_MENU		-5	// space correction between text lines in hud menu in pixels
 #define ADJUST_MESSAGE	0	// space correction between text lines in hud messages in pixels
