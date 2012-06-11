@@ -157,7 +157,9 @@ LONG NTAPI VectoredExceptionsHandler(PEXCEPTION_POINTERS pExceptionInfo)
 	if (exceptionCode == 0xE06D7363)	// SEH
 		return EXCEPTION_CONTINUE_SEARCH;
 
-	if ((exceptionCode & 0xF0000000L) == 0xC0000000L)	// We will handle all fatal unexpected exceptions, like STATUS_ACCESS_VIOLATION
+	// We will handle all fatal unexpected exceptions, like STATUS_ACCESS_VIOLATION
+	// But skip DLL Not Found exception, which happen on old non-steam when steam is running
+	if ((exceptionCode & 0xF0000000L) == 0xC0000000L && exceptionCode != 0xC0000139)
 	{
 		char buffer[1024];
 		long moduleBase, moduleSize;
