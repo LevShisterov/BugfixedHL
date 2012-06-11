@@ -95,17 +95,13 @@ int CHudTimer::SyncTimer(float fTime)
 					value = NetGetRuleValueFromBuffer(buffer, len, "sv_ag_version");
 					if (value != NULL && value[0])
 					{
-						if (!strcmp(value, "6.6mini") || !strcmp(value, "6.3mini"))
-						{
-							m_bAgVersion = SV_AG_MINI;
-						}
-						else if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
+						if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
 						{
 							m_bAgVersion = SV_AG_FULL;
 						}
-						else
+						else // We will assume its miniAG server, which will be true in almost all cases
 						{
-							m_bAgVersion = SV_AG_NONE;
+							m_bAgVersion = SV_AG_MINI;
 						}
 					}
 					else
