@@ -700,8 +700,8 @@ public:
 	void SecondaryAttack( void );
 	void WeaponIdle( void );
 
+	void ItemPostFrame( void );
 	void UpdateSpot( void );
-	BOOL ShouldWeaponIdle( void ) { return TRUE; };
 
 	CLaserSpot *m_pSpot;
 	int m_fSpotActive;
@@ -718,7 +718,7 @@ public:
 
 private:
 	unsigned short m_usRpg;
-
+	BOOL m_bHolstered;
 };
 
 class CRpgRocket : public CGrenade

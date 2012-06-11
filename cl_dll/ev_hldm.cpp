@@ -1313,13 +1313,13 @@ void EV_FireCrossbow( event_args_t *args )
 //	    RPG START 
 //======================
 enum rpg_e {
-	RPG_IDLE = 0,
-	RPG_FIDGET,
+	RPG_IDLE = 0,	// loaded
+	RPG_FIDGET,		// loaded
 	RPG_RELOAD,		// to reload
 	RPG_FIRE2,		// to empty
-	RPG_HOLSTER1,	// loaded
-	RPG_DRAW1,		// loaded
-	RPG_HOLSTER2,	// unloaded
+	RPG_HOLSTER,	// loaded
+	RPG_DRAW,		// loaded
+	RPG_HOLSTER_UL,	// unloaded
 	RPG_DRAW_UL,	// unloaded
 	RPG_IDLE_UL,	// unloaded idle
 	RPG_FIDGET_UL,	// unloaded fidget

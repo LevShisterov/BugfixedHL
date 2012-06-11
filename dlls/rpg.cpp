@@ -27,13 +27,13 @@
 
 
 enum rpg_e {
-	RPG_IDLE = 0,
-	RPG_FIDGET,
+	RPG_IDLE = 0,	// loaded
+	RPG_FIDGET,		// loaded
 	RPG_RELOAD,		// to reload
 	RPG_FIRE2,		// to empty
-	RPG_HOLSTER1,	// loaded
-	RPG_DRAW1,		// loaded
-	RPG_HOLSTER2,	// unloaded
+	RPG_HOLSTER,	// loaded
+	RPG_DRAW,		// loaded
+	RPG_HOLSTER_UL,	// unloaded
 	RPG_DRAW_UL,	// unloaded
 	RPG_IDLE_UL,	// unloaded idle
 	RPG_FIDGET_UL,	// unloaded fidget
@@ -284,9 +284,7 @@ void CRpgRocket :: FollowThink( void  )
 
 void CRpg::Reload( void )
 {
-	int iResult;
-
-	if ( m_iClip == 1 )
+	if ( m_iClip > 0 )
 	{
 		// don't bother with any of this if don't need to reload.
 		return;
@@ -301,11 +299,6 @@ void CRpg::Reload( void )
 	// or
 	// b) player is totally out of ammo and has nothing to switch to, and should be allowed to
 	//    shine the designator around
-	//
-	// Set the next attack time into the future so that WeaponIdle will get called more often
-	// than reload, allowing the RPG LTD to be updated
-	
-	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
 
 	if ( m_cActiveRockets && m_fSpotActive )
 	{
@@ -322,12 +315,8 @@ void CRpg::Reload( void )
 	}
 #endif
 
-	if ( m_iClip == 0 )
-		iResult = DefaultReload( RPG_MAX_CLIP, RPG_RELOAD, 2 );
-	
-	if ( iResult )
+	if ( DefaultReload( RPG_MAX_CLIP, RPG_RELOAD, 2 ) )
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
-	
 }
 
 void CRpg::Spawn( )
@@ -405,12 +394,14 @@ int CRpg::AddToPlayer( CBasePlayer *pPlayer )
 
 BOOL CRpg::Deploy( )
 {
+	m_bHolstered = FALSE;
+
 	if ( m_iClip == 0 )
 	{
 		return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW_UL, "rpg" );
 	}
 
-	return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW1, "rpg" );
+	return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW, "rpg" );
 }
 
 
@@ -430,8 +421,11 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 	m_fInReload = FALSE;// cancel any reload in progress.
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
-	
-	SendWeaponAnim( RPG_HOLSTER1 );
+
+	if ( m_iClip == 0 )
+		SendWeaponAnim( RPG_HOLSTER );
+	else
+		SendWeaponAnim( RPG_HOLSTER_UL );
 
 #ifndef CLIENT_DLL
 	if (m_pSpot)
@@ -441,52 +435,52 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 	}
 #endif
 
+	m_bHolstered = TRUE;
 }
 
 
 
 void CRpg::PrimaryAttack()
 {
-	if ( m_iClip )
+	if ( !m_iClip )
 	{
-		m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
-		m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
+		PlayEmptySound( );
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.15;
+		return;
+	}
+
+	m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
+	m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
 
 #ifndef CLIENT_DLL
-		// player "shoot" animation
-		m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	// player "shoot" animation
+	m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
-		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
-		Vector vecSrc = m_pPlayer->GetGunPosition( ) + gpGlobals->v_forward * 16 + gpGlobals->v_right * 8 + gpGlobals->v_up * -8;
-		
-		CRpgRocket *pRocket = CRpgRocket::CreateRpgRocket( vecSrc, m_pPlayer->pev->v_angle, m_pPlayer, this );
+	UTIL_MakeVectors( m_pPlayer->pev->v_angle );
+	Vector vecSrc = m_pPlayer->GetGunPosition( ) + gpGlobals->v_forward * 16 + gpGlobals->v_right * 8 + gpGlobals->v_up * -8;
+	
+	CRpgRocket *pRocket = CRpgRocket::CreateRpgRocket( vecSrc, m_pPlayer->pev->v_angle, m_pPlayer, this );
 
-		UTIL_MakeVectors( m_pPlayer->pev->v_angle );// RpgRocket::Create stomps on globals, so remake.
-		pRocket->pev->velocity = pRocket->pev->velocity + gpGlobals->v_forward * DotProduct( m_pPlayer->pev->velocity, gpGlobals->v_forward );
+	UTIL_MakeVectors( m_pPlayer->pev->v_angle );// RpgRocket::Create stomps on globals, so remake.
+	pRocket->pev->velocity = pRocket->pev->velocity + gpGlobals->v_forward * DotProduct( m_pPlayer->pev->velocity, gpGlobals->v_forward );
 #endif
 
-		// firing RPG no longer turns on the designator. ALT fire is a toggle switch for the LTD.
-		// Ken signed up for this as a global change (sjb)
+	// firing RPG no longer turns on the designator. ALT fire is a toggle switch for the LTD.
+	// Ken signed up for this as a global change (sjb)
 
-		int flags;
+	int flags;
 #if defined( CLIENT_WEAPONS )
 	flags = FEV_NOTHOST;
 #else
 	flags = 0;
 #endif
 
-		PLAYBACK_EVENT( flags, m_pPlayer->edict(), m_usRpg );
+	PLAYBACK_EVENT( flags, m_pPlayer->edict(), m_usRpg );
 
-		m_iClip--; 
-				
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
-	}
-	else
-	{
-		PlayEmptySound( );
-	}
-	UpdateSpot( );
+	m_iClip--; 
+
+	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
 }
 
 
@@ -508,14 +502,12 @@ void CRpg::SecondaryAttack()
 
 void CRpg::WeaponIdle( void )
 {
-	UpdateSpot( );
-
 	ResetEmptySound( );
 
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
-	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
+	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] )	// very funny we doesn't have idle animation if we doesn't have more ammo, but I can't fix this because it will broke shared random
 	{
 		int iAnim;
 		float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );
@@ -525,8 +517,6 @@ void CRpg::WeaponIdle( void )
 				iAnim = RPG_IDLE_UL;
 			else
 				iAnim = RPG_IDLE;
-
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 90.0 / 15.0;
 		}
 		else
 		{
@@ -534,10 +524,9 @@ void CRpg::WeaponIdle( void )
 				iAnim = RPG_FIDGET_UL;
 			else
 				iAnim = RPG_FIDGET;
-
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3.0;
 		}
 
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 88.0 / 15.0;	// model contains 91 frame, but 88 is more close to animation cycle, dunno why yet
 		SendWeaponAnim( iAnim );
 	}
 	else
@@ -546,13 +535,18 @@ void CRpg::WeaponIdle( void )
 	}
 }
 
+void CRpg::ItemPostFrame( void )
+{
+	CBasePlayerWeapon::ItemPostFrame();
 
+	UpdateSpot();
+}
 
 void CRpg::UpdateSpot( void )
 {
 
 #ifndef CLIENT_DLL
-	if (m_fSpotActive)
+	if (m_fSpotActive && !m_bHolstered && !m_fInReload)
 	{
 		if (!m_pSpot)
 		{

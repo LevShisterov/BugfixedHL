@@ -60,7 +60,8 @@ extern char *sLocalisedClasses[];
 extern int iTeamColors[5][3];
 extern int iNumberOfTeamColors;
 
-#define MAX_SERVERNAME_LENGTH	32
+#define MAX_SERVERNAME_LENGTH	64
+#define MAX_TEAMS_IN_MENU		4
 
 // Command Menu positions 
 #define MAX_MENUS				80
@@ -74,7 +75,6 @@ extern int iNumberOfTeamColors;
 
 #define CMENU_TOP				(BUTTON_SIZE_Y * 4)
 
-#define MAX_TEAMNAME_SIZE		64
 #define MAX_BUTTON_SIZE			32
 
 // Map Briefing Window
@@ -444,8 +444,8 @@ private:
 	char	m_szMOTD[ MAX_MOTD_LENGTH ];
 
 	//  Command Menu Team buttons
-	CommandButton *m_pTeamButtons[6];
-	CommandButton *m_pDisguiseButtons[5];
+	CommandButton *m_pTeamButtons[MAX_TEAMS_IN_MENU + 2];
+	CommandButton *m_pDisguiseButtons[MAX_TEAMS_IN_MENU + 1];
 	BuildButton   *m_pBuildButtons[3];
 	BuildButton   *m_pBuildActiveButtons[3];
 
@@ -461,7 +461,7 @@ private:
 	int			m_iNumberOfTeams;
 	int			m_iBuildState;
 	int			m_iRandomPC;
-	char		m_sTeamNames[5][MAX_TEAMNAME_SIZE];
+	char		m_sTeamNames[MAX_TEAMS + 1][MAX_TEAM_NAME];
 
 	// Localisation strings
 	char		m_sDetpackStrings[3][MAX_BUTTON_SIZE];
@@ -511,7 +511,7 @@ public:
 	CCommandMenu *CreateSubMenu( CommandButton *pButton, CCommandMenu *pParentMenu, int iYOffset, int iXOffset = 0 );
 
 	// Data Handlers
-	int GetValidClasses(int iTeam) { return m_iValidClasses[iTeam]; };
+	int GetValidClasses(int iTeam) { return iTeam < 5 ? m_iValidClasses[iTeam] : -1; };
 	int GetNumberOfTeams() { return m_iNumberOfTeams; };
 	int GetIsFeigning() { return m_iIsFeigning; };
 	int GetIsSettingDetpack() { return m_iIsSettingDetpack; };

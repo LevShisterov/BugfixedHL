@@ -1573,8 +1573,9 @@ void PM_CatagorizePosition (void)
 			// Then we are not in water jump sequence
 			pmove->waterjumptime = 0;
 			// If we could make the move, drop us down that 1 pixel
-			if (pmove->waterlevel < 2 && !tr.startsolid && !tr.allsolid)
-				VectorCopy (tr.endpos, pmove->origin);
+			if ( pmove->iuser1 != OBS_ROAMING )	// Skip for roaming mode so observer will not stick to a floor
+				if (pmove->waterlevel < 2 && !tr.startsolid && !tr.allsolid)
+					VectorCopy (tr.endpos, pmove->origin);
 		}
 
 		// Standing on an entity other than the world

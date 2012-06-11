@@ -88,7 +88,7 @@ CMessageWindowPanel::CMessageWindowPanel( const char *szMOTD, const char *szTitl
 	m_pBackgroundPanel->getSize( iXSize,iYSize );
 
 	// Create the title
-	Label *pLabel = new Label( "", iXPos + MOTD_TITLE_X, iYPos + MOTD_TITLE_Y );
+	Label *pLabel = new Label( "", iXPos + MOTD_TITLE_X, iYPos + MOTD_TITLE_Y, iXSize - MOTD_TITLE_X * 2, MOTD_TITLE_Y + YRES(16));
 	pLabel->setParent( this );
 	pLabel->setFont( pSchemes->getFont(hTitleScheme) );
 	pLabel->setFont( Scheme::sf_primary1 );

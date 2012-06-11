@@ -457,15 +457,15 @@ void CGameStudioModelRenderer::ForceModelCommand(void)
 		if (!m_iLocalPlayerIndex)
 			m_iLocalPlayerIndex = gEngfuncs.GetLocalPlayer()->index;
 		// Find a players by a name
-		char plrName[MAX_PLAYER_NAME_LENGTH];
+		char plrName[MAX_PLAYER_NAME];
 		int maxClients = gEngfuncs.GetMaxClients();
 		for (int i = 0; i < maxClients; i++)
 		{
 			if (i == m_iLocalPlayerIndex - 1) continue;
 			GetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
 			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
-			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME_LENGTH - 1);
-			plrName[MAX_PLAYER_NAME_LENGTH - 1] = 0;
+			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME - 1);
+			plrName[MAX_PLAYER_NAME - 1] = 0;
 			_strlwr(plrName);
 			if (!strstr(plrName, name))continue;
 
@@ -513,15 +513,15 @@ void CGameStudioModelRenderer::ForceColorsCommand(void)
 		if (!m_iLocalPlayerIndex)
 			m_iLocalPlayerIndex = gEngfuncs.GetLocalPlayer()->index;
 		// Find a players by a name
-		char plrName[MAX_PLAYER_NAME_LENGTH];
+		char plrName[MAX_PLAYER_NAME];
 		int maxClients = gEngfuncs.GetMaxClients();
 		for (int i = 0; i < maxClients; i++)
 		{
 			if (i == m_iLocalPlayerIndex - 1) continue;
 			GetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
 			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
-			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME_LENGTH - 1);
-			plrName[MAX_PLAYER_NAME_LENGTH - 1] = 0;
+			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME - 1);
+			plrName[MAX_PLAYER_NAME - 1] = 0;
 			_strlwr(plrName);
 			if (!strstr(plrName, name))continue;
 

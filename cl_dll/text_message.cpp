@@ -46,15 +46,17 @@ int CHudTextMessage::Init(void)
 // the new value is pushed into dst_buffer
 char *CHudTextMessage::LocaliseTextString( const char *msg, char *dst_buffer, int buffer_size )
 {
+	int size = buffer_size;
 	char *dst = dst_buffer;
-	for ( char *src = (char*)msg; *src != 0 && buffer_size > 0; buffer_size-- )
+	for ( char *src = (char*)msg; *src != 0 && size > 1; )
 	{
 		if ( *src == '#' )
 		{
 			// cut msg name out of string
 			static char word_buf[255];
+			char *word_buff_end = word_buf + sizeof(word_buf) - 1;
 			char *wdst = word_buf, *word_start = src;
-			for ( ++src ; (*src >= 'A' && *src <= 'z') || (*src >= '0' && *src <= '9'); wdst++, src++ )
+			for ( ++src ; ((*src >= 'A' && *src <= 'z') || (*src >= '0' && *src <= '9')) && wdst < word_buff_end; wdst++, src++ )
 			{
 				*wdst = *src;
 			}
@@ -66,26 +68,24 @@ char *CHudTextMessage::LocaliseTextString( const char *msg, char *dst_buffer, in
 			{
 				src = word_start;
 				*dst = *src;
-				dst++, src++;
+				dst++, src++, size--;
 				continue;
 			}
 
-			// copy string into message over the msg name
-			for ( char *wsrc = (char*)clmsg->pMessage; *wsrc != 0; wsrc++, dst++ )
+			// copy string into message instead of msg name
+			for ( char *wsrc = (char*)clmsg->pMessage; *wsrc != 0 && size > 1; )
 			{
 				*dst = *wsrc;
+				dst++, wsrc++, size--;
 			}
-			*dst = 0;
 		}
 		else
 		{
 			*dst = *src;
-			dst++, src++;
-			*dst = 0;
+			dst++, src++, size--;
 		}
 	}
-
-	dst_buffer[buffer_size-1] = 0; // ensure null termination
+	*dst = 0; // terminate with null
 	return dst_buffer;
 }
 
