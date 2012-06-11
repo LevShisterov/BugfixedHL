@@ -9,23 +9,30 @@
 // implementation of CHudTimer class
 //
 
+#include <string.h>
+#include <stdio.h>
+#include <windows.h>
+#include <time.h>
+
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
 #include "net_api.h"
 #include "net.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <windows.h>
-#include <time.h>
-
 #define NET_API gEngfuncs.pNetAPI
 
-#define TIMER_Y 0.02
-#define TIMER_R 255
-#define TIMER_G 160
-#define TIMER_B 0
+#define TIMER_Y 0.04
+#define TIMERS_Y_OFFSET 0.04
+#define TIMER_DEF_R 255
+#define TIMER_DEF_G 160
+#define TIMER_DEF_B 0
+#define TIMER_RED_R 255
+#define TIMER_RED_G 16
+#define TIMER_RED_B 16
+#define CUSTOM_TIMER_R 0
+#define CUSTOM_TIMER_G 160
+#define CUSTOM_TIMER_B 0
 
 
 int CHudTimer::Init(void)
@@ -43,6 +50,8 @@ int CHudTimer::VidInit(void)
 {
 	m_iNextSyncTime = 0;
 	m_iEndtime = 0;
+	memset(m_iCustomTimes, 0, sizeof(m_iCustomTimes));
+	memset(m_bCustomTimerNeedSound, 0, sizeof(m_bCustomTimerNeedSound));
 	m_bAgVersion = SV_AG_UNKNOWN;
 
 	return 1;
@@ -126,80 +135,132 @@ int CHudTimer::SyncTimer(float fTime)
 	return 1;
 };
 
+void CHudTimer::CustomTimerCommand(void)
+{
+	if (gEngfuncs.Cmd_Argc() <= 1)
+	{
+		gEngfuncs.Con_Printf( "usage:  customtimer <interval in seconds> [<timer number 1|2>]\n" );
+		return;
+	}
+
+	// Get interval value
+	int interval;
+	char *intervalString = gEngfuncs.Cmd_Argv(1);
+	if (!intervalString || !intervalString[0]) return;
+	interval = atoi(intervalString);
+	if (interval < 0) return;
+	if (interval > 86400) interval = 86400;
+
+	// Get timer number
+	int number = 0;
+	char *numberString = gEngfuncs.Cmd_Argv(2);
+	if (numberString && numberString[0])
+	{
+		number = atoi(numberString) - 1;
+		if (number < 0 || number >= MAX_CUSTOM_TIMERS) return;
+	}
+
+	// Set custom timer
+	m_iCustomTimes[number] = gHUD.m_flTime + interval;
+	m_bCustomTimerNeedSound[number] = true;
+}
+
 int CHudTimer::Draw(float fTime)
 {
-	int hud_timer = (int)m_HUD_timer->value;
-	if (hud_timer < 1 || hud_timer > 3) return 1;
-
 	char text[64];
-	int r = TIMER_R, g = TIMER_G, b = TIMER_B;
-	float drawTime;
+	float timeleft;
+	int ypos = ScreenHeight * TIMER_Y;
 
-	if (hud_timer == 1)			// time left
-	{
-		if (m_iNextSyncTime <= fTime)
-			SyncTimer(fTime);
+	// Do sync
+	if (m_iNextSyncTime <= fTime) SyncTimer(fTime);
 
-		float timeleft = (int)(m_iEndtime - fTime) + 1;
-		drawTime = timeleft;
-	}
-	else if (hud_timer == 2)	// time passed
+	// Draw timer
+	int hud_timer = (int)m_HUD_timer->value;
+	switch(hud_timer)
 	{
-		drawTime = (int)fTime;
-	}
-	else if (hud_timer == 3)	// local PC time
-	{
+	case 1:	// time left
+		timeleft = (int)(m_iEndtime - fTime) + 1;
+		DrawTimerInternal(timeleft, ypos, true);
+		break;
+	case 2:	// time passed
+		DrawTimerInternal((int)fTime, ypos, false);
+		break;
+	case 3:	// local PC time
 		time_t rawtime;
 		struct tm *timeinfo;
 		time(&rawtime);
 		timeinfo = localtime(&rawtime);
 		sprintf(text, "Clock %ld:%02ld:%02ld", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+		// Output to screen
+		int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
+		TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, TIMER_DEF_R, TIMER_DEF_G, TIMER_DEF_B);
+		break;
 	}
 
-	if (hud_timer == 1 || hud_timer == 2)
+	// Draw custom timers
+	for (int i = 0; i < MAX_CUSTOM_TIMERS; i++)
 	{
-		// Calculate time parts
-		if (drawTime <= 0) return 1;
-		div_t q;
-		if (drawTime >= 86400)
+		if (m_iCustomTimes[i] > fTime)
 		{
-			q = div(drawTime, 86400);
-			int d = q.quot;
-			q = div(q.rem, 3600);
-			int h = q.quot;
-			q = div(q.rem, 60);
-			int m = q.quot;
-			int s = q.rem;
-			sprintf(text, "%ldd %ldh %02ldm %02lds", d, h, m, s);
+			timeleft = (int)(m_iCustomTimes[i] - fTime) + 1;
+			sprintf(text, "Timer %ld", (int)timeleft);
+			// Output to screen
+			ypos = ScreenHeight * (TIMER_Y + TIMERS_Y_OFFSET * (i + 1));
+			int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
+			TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, CUSTOM_TIMER_R, CUSTOM_TIMER_G, CUSTOM_TIMER_B);
 		}
-		else if (drawTime >= 3600)
+		else if (m_bCustomTimerNeedSound[i])
 		{
-			q = div(drawTime, 3600);
-			int h = q.quot;
-			q = div(q.rem, 60);
-			int m = q.quot;
-			int s = q.rem;
-			sprintf(text, "%ldh %02ldm %02lds", h, m, s);
+			m_bCustomTimerNeedSound[i] = false;
+			PlaySound("fvox/bell.wav", 1);
 		}
-		else if (drawTime >= 60)
-		{
-			q = div(drawTime, 60);
-			int m = q.quot;
-			int s = q.rem;
-			sprintf(text, "%ld:%02ld", m, s);
-		}
-		else
-		{
-			sprintf(text, "%ld", (int)drawTime);
-			if (hud_timer == 1)
-				r = 255, g = 16, b = 16;
-		}
+	}
+
+	return 1;
+}
+
+void CHudTimer::DrawTimerInternal(float time, float ypos, bool redOnLow)
+{
+	div_t q;
+	char text[64];
+	int r = TIMER_DEF_R, g = TIMER_DEF_G, b = TIMER_DEF_B;
+
+	// Calculate time parts and format into a text
+	if (time >= 86400)
+	{
+		q = div(time, 86400);
+		int d = q.quot;
+		q = div(q.rem, 3600);
+		int h = q.quot;
+		q = div(q.rem, 60);
+		int m = q.quot;
+		int s = q.rem;
+		sprintf(text, "%ldd %ldh %02ldm %02lds", d, h, m, s);
+	}
+	else if (time >= 3600)
+	{
+		q = div(time, 3600);
+		int h = q.quot;
+		q = div(q.rem, 60);
+		int m = q.quot;
+		int s = q.rem;
+		sprintf(text, "%ldh %02ldm %02lds", h, m, s);
+	}
+	else if (time >= 60)
+	{
+		q = div(time, 60);
+		int m = q.quot;
+		int s = q.rem;
+		sprintf(text, "%ld:%02ld", m, s);
+	}
+	else
+	{
+		sprintf(text, "%ld", (int)time);
+		if (redOnLow)
+			r = TIMER_RED_R, g = TIMER_RED_G, b = TIMER_RED_B;
 	}
 
 	// Output to screen
-	int ypos = ScreenHeight * TIMER_Y;
-	int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, r, g, b);
+	int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
 	TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, r, g, b);
-
-	return 1;
 }

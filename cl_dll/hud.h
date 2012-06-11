@@ -511,6 +511,8 @@ public:
 	int VidInit( void );
 	int Draw(float flTime);
 
+	void CustomTimerCommand(void);
+
 	enum {
 		SV_AG_NONE = -1,
 		SV_AG_UNKNOWN = 0,
@@ -522,10 +524,17 @@ public:
 
 private:
 
+	enum {
+		MAX_CUSTOM_TIMERS = 2,
+	};
+
 	int SyncTimer(float fTime);
+	void DrawTimerInternal(float time, float ypos, bool redOnLow);
 
 	float	m_iNextSyncTime;
 	float	m_iEndtime;
+	float	m_iCustomTimes[MAX_CUSTOM_TIMERS];
+	bool	m_bCustomTimerNeedSound[MAX_CUSTOM_TIMERS];
 	int		m_bAgVersion;
 
 	struct cvar_s *m_HUD_timer;

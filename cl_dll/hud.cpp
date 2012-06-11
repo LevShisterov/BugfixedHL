@@ -176,6 +176,11 @@ void __CmdFunc_ForceColors(void)
 	g_StudioRenderer.ForceColorsCommand();
 }
 
+void __CmdFunc_CustomTimer(void)
+{
+	gHUD.m_Timer.CustomTimerCommand();
+}
+
 // TFFree Command Menu Message Handlers
 int __MsgFunc_ValClass(const char *pszName, int iSize, void *pbuf)
 {
@@ -294,6 +299,7 @@ void CHud :: Init( void )
 	HOOK_COMMAND( "togglebrowser", ToggleServerBrowser );
 	HOOK_COMMAND( "forcemodel", ForceModel );
 	HOOK_COMMAND( "forcecolors", ForceColors );
+	HOOK_COMMAND( "customtimer", CustomTimer );
 
 	HOOK_MESSAGE( ValClass );
 	HOOK_MESSAGE( TeamNames );
