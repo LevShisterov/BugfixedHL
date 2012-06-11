@@ -1369,7 +1369,7 @@ void CStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 	}
 
 	// Set remap colors
-	IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
+	IEngineStudio.StudioSetRemapColors(m_nTopColor, m_nBottomColor);
 }
 
 /*

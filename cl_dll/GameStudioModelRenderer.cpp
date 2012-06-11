@@ -87,6 +87,8 @@ void CGameStudioModelRenderer::InitOnConnect(void)
 	m_iTeammatesBottomColor = 0;
 	memset(m_szEnemyColor, 0, sizeof(m_szEnemyColor));
 	memset(m_szTeammatesColor, 0, sizeof(m_szTeammatesColor));
+	memset(m_rgiPlayerRemapColors, 0, sizeof(m_rgiPlayerRemapColors));
+	memset(m_rgbPlayerRemapColorsForced, 0, sizeof(m_rgbPlayerRemapColorsForced));
 }
 
 ///
@@ -356,22 +358,22 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 ///
 void CGameStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 {
-	if (!m_pPlayerInfo)
+	// Set forced colors
+	if (m_rgbPlayerRemapColorsForced[playerIndex])
 	{
-		m_nTopColor = 0;
-		m_nBottomColor = 0;
+		m_nTopColor = m_rgiPlayerRemapColors[playerIndex][0];
+		m_nBottomColor = m_rgiPlayerRemapColors[playerIndex][1];
 	}
 	else
 	{
-		ParseColors();
-
-		if (!m_iLocalPlayerIndex)
-			m_iLocalPlayerIndex = gEngfuncs.GetLocalPlayer()->index;
-
-		// Return actual colors for local player
 		bool set = false;
+
+		// Pickup replacement colors for all, but local player
 		if (m_iLocalPlayerIndex - 1 != playerIndex)
 		{
+			// Ensure we have actual colors info
+			ParseColors();
+
 			// Return teammates override colors or actual colors for local player teammates if this is a teamplay
 			// We will not check for gHUD.m_Teamplay because customized sever dll send us "teamplay 1" to enable teams in scoreboard
 			if (AreTeammates(playerIndex + 1, m_iLocalPlayerIndex))
@@ -383,7 +385,7 @@ void CGameStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 					set = true;
 				}
 			}
-			else
+			else // Enemies
 			{
 				if (cl_forceemenycolors->string[0] != 0)
 				{
@@ -394,17 +396,26 @@ void CGameStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 			}
 		}
 
+		// For local player or player with not set ovverrides we will set own colors
 		if (!set)
 		{
-			m_nTopColor = m_pPlayerInfo->topcolor;
-			m_nBottomColor = m_pPlayerInfo->bottomcolor;
-			m_nTopColor = clamp(m_nTopColor, 0, 254);
-			m_nBottomColor = clamp(m_nBottomColor, 0, 254);
+			if (!m_pPlayerInfo)
+			{
+				m_nTopColor = 0;
+				m_nBottomColor = 0;
+			}
+			else
+			{
+				m_nTopColor = m_pPlayerInfo->topcolor;
+				m_nBottomColor = m_pPlayerInfo->bottomcolor;
+				m_nTopColor = clamp(m_nTopColor, 0, 254);
+				m_nBottomColor = clamp(m_nBottomColor, 0, 254);
+			}
 		}
 	}
 
 	// Set remap colors
-	IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
+	IEngineStudio.StudioSetRemapColors(m_nTopColor, m_nBottomColor);
 }
 
 ///
@@ -436,16 +447,8 @@ void CGameStudioModelRenderer::ForceModelCommand(void)
 	{
 		int playerIndex = slot - 1;
 		m_szPlayerRemapModel[playerIndex][0] = 0;
-		if (m_pModel)
-		{
-			m_rgpPlayerRemapModel[playerIndex] = m_pModel;
-			m_rgbPlayerRemapModelForced[playerIndex] = true;
-		}
-		else
-		{
-			m_rgpPlayerRemapModel[playerIndex] = NULL;
-			m_rgbPlayerRemapModelForced[playerIndex] = false;
-		}
+		m_rgpPlayerRemapModel[playerIndex] = m_pModel;
+		m_rgbPlayerRemapModelForced[playerIndex] = m_pModel != NULL;
 	}
 	else
 	{
@@ -468,16 +471,64 @@ void CGameStudioModelRenderer::ForceModelCommand(void)
 
 			int playerIndex = i;
 			m_szPlayerRemapModel[playerIndex][0] = 0;
-			if (m_pModel)
-			{
-				m_rgpPlayerRemapModel[playerIndex] = m_pModel;
-				m_rgbPlayerRemapModelForced[playerIndex] = true;
-			}
-			else
-			{
-				m_rgpPlayerRemapModel[playerIndex] = NULL;
-				m_rgbPlayerRemapModelForced[playerIndex] = false;
-			}
+			m_rgpPlayerRemapModel[playerIndex] = m_pModel;
+			m_rgbPlayerRemapModelForced[playerIndex] = m_pModel != NULL;
+		}
+	}
+}
+
+///
+/// Sets player remapped colors via command.
+///
+void CGameStudioModelRenderer::ForceColorsCommand(void)
+{
+	if (gEngfuncs.Cmd_Argc() <= 1)
+	{
+		gEngfuncs.Con_Printf( "usage:  forcecolors \"slot number or player name\" [\"top and bottom colors\"]\n" );
+		return;
+	}
+
+	int topColor = -1, bottomColor = -1;
+	char *colors = gEngfuncs.Cmd_Argv(2);
+	if (colors && colors[0])
+	{
+		char *bottom = strchr(m_szEnemyColor, ' ');
+
+		topColor = clamp(atoi(colors), 0, 254);
+		bottomColor = bottom != NULL ? clamp(atoi(bottom), 0, 254) : 0;
+	}
+
+	int slot = atoi(gEngfuncs.Cmd_Argv(1));
+	if (slot)
+	{
+		int playerIndex = slot - 1;
+		m_rgiPlayerRemapColors[playerIndex][0] = topColor;
+		m_rgiPlayerRemapColors[playerIndex][2] = bottomColor;
+		m_rgbPlayerRemapColorsForced[playerIndex] = topColor >= 0;
+	}
+	else
+	{
+		char *name = gEngfuncs.Cmd_Argv(1);
+		_strlwr(name);
+		if (!m_iLocalPlayerIndex)
+			m_iLocalPlayerIndex = gEngfuncs.GetLocalPlayer()->index;
+		// Find a players by a name
+		char plrName[MAX_PLAYER_NAME_LENGTH];
+		int maxClients = gEngfuncs.GetMaxClients();
+		for (int i = 0; i < maxClients; i++)
+		{
+			if (i == m_iLocalPlayerIndex - 1) continue;
+			GetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
+			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
+			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME_LENGTH - 1);
+			plrName[MAX_PLAYER_NAME_LENGTH - 1] = 0;
+			_strlwr(plrName);
+			if (!strstr(plrName, name))continue;
+
+			int playerIndex = i;
+			m_rgiPlayerRemapColors[playerIndex][0] = topColor;
+			m_rgiPlayerRemapColors[playerIndex][2] = bottomColor;
+			m_rgbPlayerRemapColorsForced[playerIndex] = topColor >= 0;
 		}
 	}
 }
