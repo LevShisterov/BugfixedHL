@@ -528,7 +528,7 @@ private:
 	};
 
 	int SyncTimer(float fTime);
-	void DrawTimerInternal(float time, float ypos, bool redOnLow);
+	void DrawTimerInternal(float time, float ypos, int r, int g, int b, bool redOnLow);
 
 	float	m_iNextSyncTime;
 	float	m_iEndtime;
