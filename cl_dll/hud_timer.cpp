@@ -24,9 +24,6 @@
 
 #define TIMER_Y 0.04
 #define TIMERS_Y_OFFSET 0.04
-#define TIMER_DEF_R 255
-#define TIMER_DEF_G 160
-#define TIMER_DEF_B 0
 #define TIMER_RED_R 255
 #define TIMER_RED_G 16
 #define TIMER_RED_B 16
@@ -171,8 +168,17 @@ int CHudTimer::Draw(float fTime)
 	float timeleft;
 	int ypos = ScreenHeight * TIMER_Y;
 
-	// Do sync
+	// Do sync. We do it always, so message hud can hide miniAG timer, and timer could work just as it is enabled
 	if (m_iNextSyncTime <= fTime) SyncTimer(fTime);
+
+	if (gHUD.m_iHideHUDDisplay & HIDEHUD_ALL)
+		return 1;
+
+	// Get the paint color
+	int r, g, b;
+	float a = 255 * gHUD.GetHudTransparency();
+	gHUD.GetHudColor(0, 0, r, g, b);
+	ScaleColors(r, g, b, a);
 
 	// Draw timer
 	int hud_timer = (int)m_HUD_timer->value;
@@ -180,10 +186,10 @@ int CHudTimer::Draw(float fTime)
 	{
 	case 1:	// time left
 		timeleft = (int)(m_iEndtime - fTime) + 1;
-		DrawTimerInternal(timeleft, ypos, true);
+		DrawTimerInternal(timeleft, ypos, r, g, b, true);
 		break;
 	case 2:	// time passed
-		DrawTimerInternal((int)fTime, ypos, false);
+		DrawTimerInternal((int)fTime, ypos, r, g, b, false);
 		break;
 	case 3:	// local PC time
 		time_t rawtime;
@@ -193,7 +199,7 @@ int CHudTimer::Draw(float fTime)
 		sprintf(text, "Clock %ld:%02ld:%02ld", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 		// Output to screen
 		int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
-		TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, TIMER_DEF_R, TIMER_DEF_G, TIMER_DEF_B);
+		TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, r, g, b);
 		break;
 	}
 
@@ -207,7 +213,10 @@ int CHudTimer::Draw(float fTime)
 			// Output to screen
 			ypos = ScreenHeight * (TIMER_Y + TIMERS_Y_OFFSET * (i + 1));
 			int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
-			TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, CUSTOM_TIMER_R, CUSTOM_TIMER_G, CUSTOM_TIMER_B);
+			float a = 255 * gHUD.GetHudTransparency();
+			r = CUSTOM_TIMER_R, g = CUSTOM_TIMER_G, b = CUSTOM_TIMER_B;
+			ScaleColors(r, g, b, a);
+			TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, r, g, b);
 		}
 		else if (m_bCustomTimerNeedSound[i])
 		{
@@ -219,11 +228,10 @@ int CHudTimer::Draw(float fTime)
 	return 1;
 }
 
-void CHudTimer::DrawTimerInternal(float time, float ypos, bool redOnLow)
+void CHudTimer::DrawTimerInternal(float time, float ypos, int r, int g, int b, bool redOnLow)
 {
 	div_t q;
 	char text[64];
-	int r = TIMER_DEF_R, g = TIMER_DEF_G, b = TIMER_DEF_B;
 
 	// Calculate time parts and format into a text
 	if (time >= 86400)
@@ -257,7 +265,11 @@ void CHudTimer::DrawTimerInternal(float time, float ypos, bool redOnLow)
 	{
 		sprintf(text, "%ld", (int)time);
 		if (redOnLow)
+		{
+			float a = 255 * gHUD.GetHudTransparency();
 			r = TIMER_RED_R, g = TIMER_RED_G, b = TIMER_RED_B;
+			ScaleColors(r, g, b, a);
+		}
 	}
 
 	// Output to screen
