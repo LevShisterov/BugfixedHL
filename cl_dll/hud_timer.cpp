@@ -186,7 +186,8 @@ int CHudTimer::Draw(float fTime)
 	{
 	case 1:	// time left
 		timeleft = (int)(m_iEndtime - fTime) + 1;
-		DrawTimerInternal(timeleft, ypos, r, g, b, true);
+		if (timeleft > 0)
+			DrawTimerInternal(timeleft, ypos, r, g, b, true);
 		break;
 	case 2:	// time passed
 		DrawTimerInternal((int)fTime, ypos, r, g, b, false);
