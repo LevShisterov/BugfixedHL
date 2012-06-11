@@ -69,12 +69,20 @@ int CHudTimer::SyncTimer(float fTime)
 				{
 					m_iEndtime = atof(value) * 60;
 				}
+				else
+				{
+					m_iEndtime = 0;
+				}
 				value = NetGetRuleValueFromBuffer(buffer, len, "mp_timeleft");
 				if (value != NULL && value[0])
 				{
-					float endtime = atof(value) + (int)(fTime - status.latency + 0.5);
-					if (abs(m_iEndtime - endtime) > 1.5)
-						m_iEndtime = endtime;
+					float timeleft = atof(value);
+					if (timeleft > 0)
+					{
+						float endtime = timeleft + (int)(fTime - status.latency + 0.5);
+						if (abs(m_iEndtime - endtime) > 1.5)
+							m_iEndtime = endtime;
+					}
 				}
 				if (m_bAgVersion == SV_AG_UNKNOWN)
 				{
@@ -120,13 +128,14 @@ int CHudTimer::SyncTimer(float fTime)
 
 int CHudTimer::Draw(float fTime)
 {
-	if (m_HUD_timer->value <= 0 || m_HUD_timer->value > 3) return 1;
+	int hud_timer = (int)m_HUD_timer->value;
+	if (hud_timer < 1 || hud_timer > 3) return 1;
 
 	char text[64];
 	int r = TIMER_R, g = TIMER_G, b = TIMER_B;
 	float drawTime;
 
-	if (m_HUD_timer->value == 1)	// time left
+	if (hud_timer == 1)			// time left
 	{
 		if (m_iNextSyncTime <= fTime)
 			SyncTimer(fTime);
@@ -134,11 +143,11 @@ int CHudTimer::Draw(float fTime)
 		float timeleft = (int)(m_iEndtime - fTime) + 1;
 		drawTime = timeleft;
 	}
-	else if (m_HUD_timer->value == 2)	// time passed
+	else if (hud_timer == 2)	// time passed
 	{
 		drawTime = (int)fTime;
 	}
-	else if (m_HUD_timer->value == 3)	// local PC time
+	else if (hud_timer == 3)	// local PC time
 	{
 		time_t rawtime;
 		struct tm *timeinfo;
@@ -147,7 +156,7 @@ int CHudTimer::Draw(float fTime)
 		sprintf(text, "Clock %ld:%02ld:%02ld", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 	}
 
-	if (m_HUD_timer->value == 1 || m_HUD_timer->value == 2)
+	if (hud_timer == 1 || hud_timer == 2)
 	{
 		// Calculate time parts
 		if (drawTime <= 0) return 1;
@@ -182,7 +191,8 @@ int CHudTimer::Draw(float fTime)
 		else
 		{
 			sprintf(text, "%ld", (int)drawTime);
-			r = 255, g = 16, b = 16;
+			if (hud_timer == 1)
+				r = 255, g = 16, b = 16;
 		}
 	}
 
