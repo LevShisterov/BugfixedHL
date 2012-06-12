@@ -9,6 +9,7 @@
 #include "net.h"
 #include <windows.h>
 #include <winsock.h>
+#include <time.h>
 
 
 bool g_bInitialised = false;
@@ -65,7 +66,11 @@ int NetSendReceiveUdp(unsigned long sin_addr, int sin_port, const char *sendbuf,
 	RecvAddr.sin_addr.s_addr = sin_addr;
 	RecvAddr.sin_port = sin_port;
 
+	// Send request
 	sendto(SendSocket, sendbuf, len, 0, (struct sockaddr *) &RecvAddr, sizeof(struct sockaddr_in));
+
+	time_t timeout;
+	timeout = time(NULL) + 3;
 
 	// Receive response
 	int res;
@@ -75,8 +80,7 @@ int NetSendReceiveUdp(unsigned long sin_addr, int sin_port, const char *sendbuf,
 	fd_set rfd;
 	fd_set efd;
 	struct timeval tv;
-	int i = 0;
-	while (i < 3)
+	while (true)
 	{
 		// Do select on socket
 		FD_ZERO(&rfd);
@@ -90,26 +94,32 @@ int NetSendReceiveUdp(unsigned long sin_addr, int sin_port, const char *sendbuf,
 		// Check for error on socket
 		if (res == SOCKET_ERROR || FD_ISSET(SendSocket, &efd))
 		{
-			closesocket(SendSocket);
-			return -1;
+			break;
 		}
-		int fromaddrlen = sizeof(struct sockaddr_in);
-		res = recvfrom(SendSocket, recvbuf, size, 0, (struct sockaddr *) &fromaddr, &fromaddrlen);
-		if (res == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
+		time_t current;
+		current = time(NULL);
+		if (res == 0)
 		{
-			closesocket(SendSocket);
-			return -1;
-		}
-		if (RecvAddr.sin_addr.s_addr != fromaddr.sin_addr.s_addr || RecvAddr.sin_port != fromaddr.sin_port)
-		{
+			if (current >= timeout) break;
 			continue;
 		}
-		if (res >= 0)
+		// Get what we received
+		int fromaddrlen = sizeof(struct sockaddr_in);
+		res = recvfrom(SendSocket, recvbuf, size, 0, (struct sockaddr *) &fromaddr, &fromaddrlen);
+		// Check for error on socket
+		if (res == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
+		{
+			break;
+		}
+		// Check address from which data came
+		if (res >= 0 &&
+			RecvAddr.sin_addr.s_addr == fromaddr.sin_addr.s_addr &&
+			RecvAddr.sin_port == fromaddr.sin_port)
 		{
 			closesocket(SendSocket);
 			return res;
 		}
-		i++;
+		if (current >= timeout) break;
 	}
 	closesocket(SendSocket);
 	return -1;
