@@ -117,9 +117,13 @@ int CHudTimer::SyncTimer(float fTime)
 		{
 			// Get timer settings directly from cvars
 			m_iEndtime = CVAR_GET_FLOAT("mp_timelimit");
-			float endtime = CVAR_GET_FLOAT("mp_timeleft") + fTime;
-			if (abs(m_iEndtime - endtime) > 1.5)
-				m_iEndtime = endtime;
+			float timeleft = CVAR_GET_FLOAT("mp_timeleft");
+			if (timeleft > 0)
+			{
+				float endtime = timeleft + fTime;
+				if (abs(m_iEndtime - endtime) > 1.5)
+					m_iEndtime = endtime;
+			}
 
 			m_iNextSyncTime = fTime + 5;
 		}
