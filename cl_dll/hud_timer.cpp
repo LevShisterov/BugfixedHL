@@ -9,8 +9,6 @@
 // implementation of CHudTimer class
 //
 
-#include <string.h>
-#include <stdio.h>
 #include <windows.h>
 #include <time.h>
 

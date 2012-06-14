@@ -31,6 +31,13 @@ void BEGIN_READ( void *buf, int size )
 	gpBuf = (byte*)buf;
 }
 
+void BEGIN_READ( void *buf, int size, int readpos )
+{
+	giRead = readpos;
+	giBadRead = 0;
+	giSize = size;
+	gpBuf = (byte*)buf;
+}
 
 int READ_CHAR( void )
 {

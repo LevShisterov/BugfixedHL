@@ -33,15 +33,18 @@ extern "C"
 #include "hud_servers.h"
 #include "vgui_int.h"
 #include "interface.h"
+#include "memory.h"
+#include "parsemsg.h"
 
-#include "windows.h"
-#include "psapi.h"
-#include "dbghelp.h"
+#include <windows.h>
+#include <psapi.h>
+#include <dbghelp.h>
 
 #define DLLEXPORT __declspec( dllexport )
 
 
 cl_enginefunc_t gEngfuncs;
+cl_enginemessages_t pEngineMessages;
 CHud gHUD;
 int g_iMaxSlot;	// There are 5 (0-4) slots by default and they can extend to 6. This will be used to draw additional weapon bucket(s) on a hud.
 TeamFortressViewport *gViewPort = NULL;
@@ -143,6 +146,15 @@ char DLLEXPORT HUD_PlayerMoveTexture( char *name )
 void DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server )
 {
 	PM_Move( ppmove, server );
+}
+
+
+void SvcPrint(void)
+{
+	BEGIN_READ( *g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos );
+	char *str = READ_STRING();
+
+	pEngineMessages.pfnSvcPrint();
 }
 
 
@@ -251,9 +263,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
 		hVehHandler = AddVectoredExceptionHandler(1, VectoredExceptionsHandler);
+		memset(&pEngineMessages, 0, sizeof(cl_enginemessages_t));
+		pEngineMessages.pfnSvcPrint = SvcPrint;
+		HookSvcMessages(&pEngineMessages);
 	}
 	else if (fdwReason == DLL_PROCESS_DETACH)
 	{
+		UnHookSvcMessages(&pEngineMessages);
 		RemoveVectoredExceptionHandler(hVehHandler);
 	}
 	return TRUE;

@@ -19,6 +19,7 @@
 #define ASSERT( x )
 
 void BEGIN_READ( void *buf, int size );
+void BEGIN_READ( void *buf, int size, int readpos );
 int READ_CHAR( void );
 int READ_BYTE( void );
 int READ_SHORT( void );
@@ -29,12 +30,3 @@ char* READ_STRING( void );
 float READ_COORD( void );
 float READ_ANGLE( void );
 float READ_HIRESANGLE( void );
-
-
-
-
-
-
-
-
-

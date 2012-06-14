@@ -736,6 +736,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\dlls\memory.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\menu.cpp"
 				>
 				<FileConfiguration
@@ -2097,6 +2101,10 @@
 			</File>
 			<File
 				RelativePath="..\kbutton.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\dlls\memory.h"
 				>
 			</File>
 			<File
