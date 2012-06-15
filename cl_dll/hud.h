@@ -113,6 +113,7 @@ public:
 	int MsgFunc_ItemPickup( const char *pszName, int iSize, void *pbuf );
 	int MsgFunc_HideWeapon( const char *pszName, int iSize, void *pbuf );
 
+	int GetMaxSlot(void) { return m_iMaxSlot; }
 	void SlotInput( int iSlot );
 	void _cdecl UserCmd_Slot1( void );
 	void _cdecl UserCmd_Slot2( void );
@@ -129,12 +130,12 @@ public:
 	void _cdecl UserCmd_PrevWeapon( void );
 
 private:
-	float m_fFade;
-	RGBA  m_rgba;
-	WEAPON *m_pWeapon;
-	int	m_HUD_bucket0;
-	int m_HUD_selection;
-
+	float	m_fFade;
+	RGBA	m_rgba;
+	WEAPON	*m_pWeapon;
+	int		m_HUD_bucket0;
+	int		m_HUD_selection;
+	int		m_iMaxSlot;	// There are 5 (0-4) slots by default and they can extend to 6. This will be used to draw additional weapon bucket(s) on a hud.
 };
 
 //
@@ -510,6 +511,7 @@ public:
 	int VidInit( void );
 	int Draw(float flTime);
 
+	void DoReSync(void) { m_iNextSyncTime = 0; }
 	void CustomTimerCommand(void);
 
 	enum {
@@ -724,7 +726,6 @@ public:
 class TeamFortressViewport;
 
 extern CHud gHUD;
-extern int g_iMaxSlot;
 extern TeamFortressViewport *gViewPort;
 
 extern int g_iPlayerClass;

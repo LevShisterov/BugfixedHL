@@ -23,14 +23,13 @@ static int giSize;
 static int giRead;
 static int giBadRead;
 
-void BEGIN_READ( void *buf, int size )
+void BEGIN_READ( void *buf, int size, int readpos = 0 )
 {
-	giRead = 0;
+	giRead = readpos;
 	giBadRead = 0;
 	giSize = size;
 	gpBuf = (byte*)buf;
 }
-
 
 int READ_CHAR( void )
 {

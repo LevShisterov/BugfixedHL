@@ -314,7 +314,7 @@ void CHudAmmo::Reset(void)
 
 	//	VidInit();
 
-	g_iMaxSlot = 4;
+	m_iMaxSlot = 4;
 }
 
 int CHudAmmo::VidInit(void)
@@ -428,7 +428,7 @@ void WeaponsResource :: SelectSlot( int iSlot, int fAdvance, int iDirection )
 		return;
 	}
 
-	if ( iSlot > g_iMaxSlot )
+	if ( iSlot > gHUD.m_Ammo.GetMaxSlot() )
 		return;
 
 	if ( gHUD.m_fPlayerDead || gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL ) )
@@ -668,7 +668,7 @@ int CHudAmmo::MsgFunc_WeaponList(const char *pszName, int iSize, void *pbuf )
 
 	gWR.AddWeapon( &Weapon );
 
-	if (Weapon.iSlot > g_iMaxSlot && Weapon.iSlot < MAX_WEAPON_SLOTS) g_iMaxSlot = Weapon.iSlot;
+	if (Weapon.iSlot > m_iMaxSlot && Weapon.iSlot < MAX_WEAPON_SLOTS) m_iMaxSlot = Weapon.iSlot;
 
 	return 1;
 
@@ -1063,7 +1063,7 @@ int CHudAmmo::DrawWList(float flTime)
 	}
 
 	// Draw top line
-	for ( i = 0; i <= g_iMaxSlot; i++ )
+	for ( i = 0; i <= m_iMaxSlot; i++ )
 	{
 		int iWidth;
 
@@ -1099,7 +1099,7 @@ int CHudAmmo::DrawWList(float flTime)
 	x = 10;
 
 	// Draw all of the buckets
-	for (i = 0; i <= g_iMaxSlot; i++)
+	for (i = 0; i <= m_iMaxSlot; i++)
 	{
 		y = giBucketHeight + 10;
 
