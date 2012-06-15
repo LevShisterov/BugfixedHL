@@ -23,15 +23,7 @@ static int giSize;
 static int giRead;
 static int giBadRead;
 
-void BEGIN_READ( void *buf, int size )
-{
-	giRead = 0;
-	giBadRead = 0;
-	giSize = size;
-	gpBuf = (byte*)buf;
-}
-
-void BEGIN_READ( void *buf, int size, int readpos )
+void BEGIN_READ( void *buf, int size, int readpos = 0 )
 {
 	giRead = readpos;
 	giBadRead = 0;

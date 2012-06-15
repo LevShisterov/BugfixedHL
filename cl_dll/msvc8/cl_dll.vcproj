@@ -1010,6 +1010,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\svc_messages.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\text_message.cpp"
 				>
 				<FileConfiguration
@@ -2149,6 +2153,10 @@
 			</File>
 			<File
 				RelativePath="..\StudioModelRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\svc_messages.h"
 				>
 			</File>
 			<File
