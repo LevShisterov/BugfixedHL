@@ -162,18 +162,19 @@ void FindSvcMessagesTable(void)
 	if (!svc_disconnect) return;
 
 	// Form pattern to search for engine messages functions table
-	char data4[12 * 3];
-	*((uint32_t*)data4 + 0) = svc_bad;
-	*((uint32_t*)data4 + 2) = 1;
-	*((uint32_t*)data4 + 3) = svc_nop;
-	*((uint32_t*)data4 + 5) = 2;
-	*((uint32_t*)data4 + 6) = svc_disconnect;
-	*((uint32_t*)data4 + 8) = 3;
-	const char mask4[] = "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF" "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF" "\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF";
+	char data4[12 * 3 + 4];
+	*((uint32_t*)data4 + 0) = 0;
+	*((uint32_t*)data4 + 1) = svc_bad;
+	*((uint32_t*)data4 + 3) = 1;
+	*((uint32_t*)data4 + 4) = svc_nop;
+	*((uint32_t*)data4 + 6) = 2;
+	*((uint32_t*)data4 + 7) = svc_disconnect;
+	*((uint32_t*)data4 + 9) = 3;
+	const char mask4[] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00" "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00" "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00" "\xFF\xFF\xFF\xFF";
 	// We search backward first - it should be there and near
 	g_pSvcMessagesTable = MemoryFindBackward(svc_bad, g_EngineModuleBase, (unsigned char*)data4, (unsigned char*)mask4, sizeof(data4) - 1);
-	if (g_pSvcMessagesTable) return;
-	g_pSvcMessagesTable = MemoryFindForward(svc_bad, g_EngineModuleEnd, (unsigned char*)data4, (unsigned char*)mask4, sizeof(data4) - 1);
+	if (!g_pSvcMessagesTable)
+		g_pSvcMessagesTable = MemoryFindForward(svc_bad, g_EngineModuleEnd, (unsigned char*)data4, (unsigned char*)mask4, sizeof(data4) - 1);
 }
 void FindEngineMessagesBufferVariables(void)
 {
@@ -209,7 +210,7 @@ bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
 	{
 		if (((uint32_t *)pEngineMessages)[i] == NULL) continue;
 		size_t funcAddr = ((uint32_t *)pEngineMessages)[i];
-		size_t addr = g_pSvcMessagesTable + (i * 3 + 1) * 4;
+		size_t addr = g_pSvcMessagesTable + i * 12 + 8;
 		size_t oldAddr = HookDWord((size_t*)addr, funcAddr);
 		((uint32_t *)pEngineMessages)[i] = oldAddr;
 	}
