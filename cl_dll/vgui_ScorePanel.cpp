@@ -30,10 +30,11 @@
 #include "..\game_shared\vgui_loadtga.h"
 #include "vgui_SpectatorPanel.h"
 
-hud_player_info_t	 g_PlayerInfoList[MAX_PLAYERS+1];	   // player info from the engine
-extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS+1];   // additional player info sent directly to the client dll
-team_info_t			 g_TeamInfo[MAX_TEAMS+1];
-int					 g_IsSpectator[MAX_PLAYERS+1];
+hud_player_info_t	g_PlayerInfoList[MAX_PLAYERS + 1];	// player info from the engine
+extra_player_info_t	g_PlayerExtraInfo[MAX_PLAYERS + 1];	// additional player info sent directly to the client dll
+team_info_t			g_TeamInfo[MAX_TEAMS + 1];
+int					g_IsSpectator[MAX_PLAYERS + 1];
+char				g_PlayerSteamId[MAX_PLAYERS + 1][MAX_STEAMID + 1];
 
 int HUD_IsGame( const char *game );
 int EV_TFC_IsAllyTeam( int iTeam1, int iTeam2 );
@@ -56,8 +57,8 @@ public:
 SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 {
 	{NULL,			20,			Label::a_east},		// tracker
-	{NULL,			150,		Label::a_east},		// name
-	{"SteamID",		62,			Label::a_west},		// SteamID
+	{NULL,			144,		Label::a_east},		// name
+	{"SteamID",		68,			Label::a_west},		// SteamID
 	{"Score",		45,			Label::a_east},
 	{"Deaths",		45,			Label::a_east},
 	{"Ping/Loss",	50,			Label::a_east},
@@ -239,7 +240,7 @@ void ScorePanel::Configure(void)
 {
 	int newConfiguration = 0;
 	bool drawLoss = gHUD.m_pCvarShowLoss->value ? true : false;
-	bool drawSteamId = false;//gHUD.m_pCvarShowSteamId->value ? true : false;	// Not yet implemented
+	bool drawSteamId = gHUD.m_pCvarShowSteamId->value ? true : false;
 	if (drawLoss) newConfiguration |= DRAW_LOSS;
 	if (drawSteamId) newConfiguration |= DRAW_STEAMID;
 
@@ -293,9 +294,25 @@ void ScorePanel::Initialize( void )
 	m_fLastKillTime = 0;
 	m_iPlayerNum = 0;
 	m_iNumTeams = 0;
-	memset( g_PlayerExtraInfo, 0, sizeof g_PlayerExtraInfo );
-	memset( g_TeamInfo, 0, sizeof g_TeamInfo );
+	memset(g_PlayerExtraInfo, 0, sizeof(g_PlayerExtraInfo));
+	memset(g_TeamInfo, 0, sizeof(g_TeamInfo));
+	memset(g_PlayerSteamId, 0, sizeof(g_PlayerSteamId));
 	m_PlayerList.SetScrollPos(0);
+	m_iStatusRequestState = STATUS_REQUEST_IDLE;
+	m_fStatusRequestNextTime = 0;
+	SendStatusRequest();
+}
+
+void ScorePanel::SendStatusRequest(void)
+{
+	if (m_fStatusRequestNextTime >= gHUD.m_flTime + 1.1)
+		m_fStatusRequestNextTime = 0; // time was reset: changelevel, etc...
+	if (m_iStatusRequestState != STATUS_REQUEST_IDLE ||
+		m_fStatusRequestNextTime >= gHUD.m_flTime)
+		return;
+	m_fStatusRequestNextTime = gHUD.m_flTime + 1.0;
+	m_iStatusRequestState = STATUS_REQUEST_SENT;
+	ServerCmd("status");
 }
 
 bool HACK_GetPlayerUniqueID( int iPlayer, char playerID[16] )
@@ -318,6 +335,18 @@ void ScorePanel::Update()
 
 	m_iRows = 0;
 	gViewPort->GetAllPlayersInfo();
+
+	// Check SteamIds
+	for (int i = 1; i < MAX_PLAYERS; i++)
+	{
+		if (g_PlayerInfoList[i].name != NULL &&
+			g_PlayerInfoList[i].name[0] &&
+			g_PlayerSteamId[i][0] == 0)
+		{
+			SendStatusRequest();
+			break;
+		}
+	}
 
 	// Clear out sorts
 	for (int i = 0; i < NUM_ROWS; i++)
@@ -643,7 +672,7 @@ void ScorePanel::FillGrid()
 			}
 			pLabel->setSize(pLabel->getWide(), rowheight);
 			pLabel->setBgColor(0, 0, 0, 255);
-			
+
 			char sz[128];
 			hud_player_info_t *pl_info = NULL;
 			team_info_t *team_info = NULL;
@@ -740,11 +769,9 @@ void ScorePanel::FillGrid()
 			}
 
 			// Fill out with the correct data
-			strcpy(sz, "");
+			sz[0] = 0;
 			if ( m_iIsATeam[row] )
 			{
-				char sz2[128];
-
 				switch (col)
 				{
 				case COLUMN_TRACKER:
@@ -762,6 +789,7 @@ void ScorePanel::FillGrid()
 					// Append the number of players
 					if ( m_iIsATeam[row] == TEAM_YES )
 					{
+						char sz2[128];
 						if (team_info->players == 1)
 						{
 							sprintf(sz2, "(%d %s)", team_info->players, CHudTextMessage::BufferedLocaliseTextString( "#Player" ) );
@@ -807,14 +835,11 @@ void ScorePanel::FillGrid()
 				case COLUMN_TRACKER:
 					break;
 				case COLUMN_NAME:
-					sprintf(sz, "%s  ", pl_info->name);
+					sprintf(sz, "%s", pl_info->name);
 					break;
 				case COLUMN_STEAMID:
-					// Not yet implemented
-					//if (gHUD.m_pCvarShowSteamId->value)
-					//{
-					//	sprintf(sz, "%s", "0:0:123456789");
-					//}
+					if (gHUD.m_pCvarShowSteamId->value)
+						sprintf(sz, "%s", g_PlayerSteamId[m_iSortedRows[row]]);
 					break;
 				case COLUMN_KILLS:
 					sprintf(sz, "%d", g_PlayerExtraInfo[ m_iSortedRows[row] ].frags);

@@ -32,6 +32,13 @@
 #define NUM_COLUMNS		8
 #define NUM_ROWS		(MAX_PLAYERS + (MAX_SCOREBOARD_TEAMS * 2))
 
+enum
+{
+	STATUS_REQUEST_IDLE = 0,
+	STATUS_REQUEST_SENT = 1,
+	STATUS_REQUEST_PROCESSING = 2,
+};
+
 using namespace vgui;
 
 class CTextImage2 : public Image
@@ -264,6 +271,8 @@ private:
 	CommandButton				*m_pCloseButton;
 	CLabelHeader*	GetPlayerEntry(int x, int y)	{return &m_PlayerEntries[x][y];}
 
+	float			m_fStatusRequestNextTime;
+
 public:
 	
 	int				m_iNumTeams;
@@ -277,6 +286,7 @@ public:
 	int				m_iLastKilledBy;
 	float			m_fLastKillTime;
 
+	int				m_iStatusRequestState;
 
 public:
 
@@ -296,6 +306,8 @@ public:
 	void Initialize( void );
 
 	void Open( void );
+
+	void SendStatusRequest(void);
 
 	void MouseOverCell(int row, int col);
 
