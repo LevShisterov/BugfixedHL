@@ -16,9 +16,10 @@
 
 size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
 size_t g_pSvcMessagesTable = 0;
-void **g_EngineBuf;
-int *g_EngineBufSize;
-int *g_EngineReadPos;
+void **g_EngineBuf = 0;
+int *g_EngineBufSize = 0;
+int *g_EngineReadPos = 0;
+UserMessage **g_pUserMessages = 0;
 
 
 bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleSize)
@@ -195,6 +196,16 @@ void FindEngineMessagesBufferVariables(void)
 	//g_EngineBufSize == (int *)*(size_t *)(((uint8_t *)addr3) + 2);
 	g_EngineReadPos = (int *)*(size_t *)(((uint8_t *)addr3) + 8);
 }
+void FindUserMessagesEntry(void)
+{
+	// Find and get engine messages buffer variables
+	const char data1[] = "\x81\xFB\x00\x01\x00\x00\x0F\x8D\x1B\x01\x00\x00\x8B\x35\x74\xFF\x6C\x03\x85\xF6\x74\x0B";
+	const char mask1[] = "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF";
+	size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, (unsigned char*)data1, (unsigned char*)mask1, sizeof(data1) - 1);
+	if (!addr1) return;
+
+	g_pUserMessages = (UserMessage **)*(size_t *)(((uint8_t *)addr1) + 14);
+}
 
 // Hooks requested functions
 bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
@@ -204,6 +215,9 @@ bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
 
 	if (!g_EngineBufSize || !g_EngineModuleSize || !g_EngineModuleEnd) FindEngineMessagesBufferVariables();
 	if (!g_EngineBufSize || !g_EngineModuleSize || !g_EngineModuleEnd) return false;
+
+	if (!g_pUserMessages) FindUserMessagesEntry();
+	if (!g_pUserMessages) return false;
 
 	int len = sizeof(cl_enginemessages_t) / 4;
 	for (int i = 0; i < len; i++)
