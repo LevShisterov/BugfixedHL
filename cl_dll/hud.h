@@ -56,6 +56,7 @@ typedef struct cvar_s cvar_t;
 
 #define MAX_HUD_STRING			80
 #define MAX_MOTD_LENGTH			1536
+#define MAX_STEAMID				32	// 0:0:4294967295, STEAM_ID_PENDING
 
 #define ADJUST_MENU		-5	// space correction between text lines in hud menu in pixels
 #define ADJUST_MESSAGE	0	// space correction between text lines in hud messages in pixels
@@ -317,10 +318,11 @@ struct team_info_t
 	int teamnumber;
 };
 
-extern hud_player_info_t	g_PlayerInfoList[MAX_PLAYERS+1];	   // player info from the engine
-extern extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS+1];   // additional player info sent directly to the client dll
-extern team_info_t			g_TeamInfo[MAX_TEAMS+1];
-extern int					g_IsSpectator[MAX_PLAYERS+1];
+extern hud_player_info_t	g_PlayerInfoList[MAX_PLAYERS + 1];		// player info from the engine
+extern extra_player_info_t	g_PlayerExtraInfo[MAX_PLAYERS + 1];		// additional player info sent directly to the client dll
+extern team_info_t			g_TeamInfo[MAX_TEAMS + 1];
+extern int					g_IsSpectator[MAX_PLAYERS + 1];
+extern char					g_PlayerSteamId[MAX_PLAYERS + 1][MAX_STEAMID + 1];
 
 
 //
@@ -511,7 +513,7 @@ public:
 	int VidInit( void );
 	int Draw(float flTime);
 
-	void DoReSync(void) { m_iNextSyncTime = 0; }
+	void DoResync(void) { m_iNextSyncTime = 0; }
 	void CustomTimerCommand(void);
 
 	enum {
