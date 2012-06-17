@@ -541,7 +541,8 @@ private:
 	int		m_bAgVersion;
 	char	m_szNextmap[64];
 
-	struct cvar_s *m_HUD_timer;
+	cvar_t *m_pCvarHudTimer;
+	cvar_t *m_pCvarHudNextmap;
 };
 
 //
