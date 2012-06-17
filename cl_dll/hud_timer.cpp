@@ -36,7 +36,8 @@ int CHudTimer::Init(void)
 
 	m_iFlags |= HUD_ACTIVE;
 
-	m_HUD_timer = gEngfuncs.pfnRegisterVariable("hud_timer", "1", FCVAR_ARCHIVE);
+	m_pCvarHudTimer = gEngfuncs.pfnRegisterVariable("hud_timer", "1", FCVAR_ARCHIVE);
+	m_pCvarHudNextmap = gEngfuncs.pfnRegisterVariable("hud_nextmap", "1", FCVAR_ARCHIVE);
 
 	return 1;
 };
@@ -185,7 +186,7 @@ int CHudTimer::Draw(float fTime)
 
 	// Draw timer
 	timeleft = (int)(m_iEndtime - fTime) + 1;
-	int hud_timer = (int)m_HUD_timer->value;
+	int hud_timer = (int)m_pCvarHudTimer->value;
 	switch(hud_timer)
 	{
 	case 1:	// time left
@@ -208,7 +209,7 @@ int CHudTimer::Draw(float fTime)
 	}
 
 	// Draw next map
-	if (timeleft > 35 && timeleft < 60 && m_szNextmap[0])
+	if (m_pCvarHudNextmap->value && timeleft > 35 && timeleft < 60 && m_szNextmap[0])
 	{
 		sprintf(text, "Nextmap is %s", m_szNextmap);
 		ypos = ScreenHeight * (TIMER_Y + TIMER_Y_NEXT_OFFSET);

@@ -13,6 +13,9 @@
 #include <psapi.h>
 
 #include "memory.h"
+#include "wrect.h"
+#include "cl_dll.h"
+#include "cvardef.h"
 
 #define MAX_PATTERN 64
 
@@ -22,6 +25,7 @@ size_t g_FpsBugPlace = 0;
 uint8_t g_FpsBugPlaceBackup[16];
 double *g_flFrameTime;
 double g_flFrameTimeReminder = 0;
+cvar_t *m_pCvarEngineFixFpsBug = 0;
 
 void **g_EngineBuf = 0;
 int *g_EngineBufSize = 0;
@@ -316,11 +320,14 @@ bool UnHookSvcMessages(cl_enginemessages_t *pEngineMessages)
 
 void __stdcall FpsBugFix(int a1, int64_t *a2)
 {
-	g_flFrameTimeReminder += *g_flFrameTime * 1000 - a1;
-	if (g_flFrameTimeReminder > 1.0)
+	if (!m_pCvarEngineFixFpsBug || m_pCvarEngineFixFpsBug->value)
 	{
-		g_flFrameTimeReminder--;
-		a1++;
+		g_flFrameTimeReminder += *g_flFrameTime * 1000 - a1;
+		if (g_flFrameTimeReminder > 1.0)
+		{
+			g_flFrameTimeReminder--;
+			a1++;
+		}
 	}
 	*a2 = a1;
 	*((double *)(a2 + 1)) = a1;
@@ -360,3 +367,8 @@ bool UnPatchEngine(void)
 
 	return true;
 }
+
+void MemoryPatcherInit(void)
+{
+	m_pCvarEngineFixFpsBug = gEngfuncs.pfnRegisterVariable("engine_fix_fpsbug", "1", FCVAR_ARCHIVE);
+};

@@ -108,6 +108,7 @@ bool HookSvcMessages(cl_enginemessages_t *pEngineMessages);
 bool UnHookSvcMessages(cl_enginemessages_t *pEngineMessages);
 bool PatchEngine(void);
 bool UnPatchEngine(void);
+void MemoryPatcherInit(void);
 
 
 extern void **g_EngineBuf;
