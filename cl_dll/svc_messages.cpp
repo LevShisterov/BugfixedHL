@@ -28,7 +28,8 @@ void SvcPrint(void)
 	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
 	char *str = READ_STRING();
 
-	if (!strncmp(str, "\"mp_timelimit\" changed to \"", 27))
+	if (!strncmp(str, "\"mp_timelimit\" changed to \"", 27) ||
+		!strncmp(str, "\"amx_nextmap\" changed to \"", 26))
 	{
 		gHUD.m_Timer.DoResync();
 	}
