@@ -20,10 +20,11 @@
 #include "vgui_ScorePanel.h"
 
 cl_enginemessages_t pEngineMessages;
-bool processingUserRow = false;
 
 void SvcPrint(void)
 {
+	static bool processingUserRow = false;
+
 	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
 	char *str = READ_STRING();
 

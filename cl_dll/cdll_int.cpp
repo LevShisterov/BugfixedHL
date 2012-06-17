@@ -38,6 +38,7 @@ extern "C"
 #include "vgui_int.h"
 #include "interface.h"
 #include "svc_messages.h"
+#include "memory.h"
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -252,11 +253,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		if (hVehHandler == NULL)
 			hVehHandler = AddVectoredExceptionHandler(1, VectoredExceptionsHandler);
 
+		PatchEngine();
 		HookSvcMessages();
 	}
 	else if (fdwReason == DLL_PROCESS_DETACH)
 	{
 		UnHookSvcMessages();
+		UnPatchEngine();
 
 		if (hVehHandler != NULL)
 		{
