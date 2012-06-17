@@ -21,7 +21,7 @@
 #define NET_API gEngfuncs.pNetAPI
 
 #define TIMER_Y 0.04
-#define TIMERS_Y_OFFSET 0.04
+#define TIMER_Y_NEXT_OFFSET 0.04
 #define TIMER_RED_R 255
 #define TIMER_RED_G 16
 #define TIMER_RED_B 16
@@ -69,7 +69,7 @@ int CHudTimer::SyncTimer(float fTime)
 			if (len > 0)
 			{
 				char *value = NetGetRuleValueFromBuffer(buffer, len, "mp_timelimit");
-				if (value != NULL && value[0])
+				if (value && value[0])
 				{
 					m_iEndtime = atof(value) * 60;
 				}
@@ -78,7 +78,7 @@ int CHudTimer::SyncTimer(float fTime)
 					m_iEndtime = 0;
 				}
 				value = NetGetRuleValueFromBuffer(buffer, len, "mp_timeleft");
-				if (value != NULL && value[0])
+				if (value && value[0])
 				{
 					float timeleft = atof(value);
 					if (timeleft > 0)
@@ -91,7 +91,7 @@ int CHudTimer::SyncTimer(float fTime)
 				if (m_bAgVersion == SV_AG_UNKNOWN)
 				{
 					value = NetGetRuleValueFromBuffer(buffer, len, "sv_ag_version");
-					if (value != NULL && value[0])
+					if (value && value[0])
 					{
 						if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
 						{
@@ -106,6 +106,11 @@ int CHudTimer::SyncTimer(float fTime)
 					{
 						m_bAgVersion = SV_AG_NONE;
 					}
+				}
+				value = NetGetRuleValueFromBuffer(buffer, len, "amx_nextmap");
+				if (value && value[0])
+				{
+					strcpy(m_szNextmap, value);
 				}
 			}
 
@@ -179,11 +184,11 @@ int CHudTimer::Draw(float fTime)
 	ScaleColors(r, g, b, a);
 
 	// Draw timer
+	timeleft = (int)(m_iEndtime - fTime) + 1;
 	int hud_timer = (int)m_HUD_timer->value;
 	switch(hud_timer)
 	{
 	case 1:	// time left
-		timeleft = (int)(m_iEndtime - fTime) + 1;
 		if (timeleft > 0)
 			DrawTimerInternal(timeleft, ypos, r, g, b, true);
 		break;
@@ -202,6 +207,18 @@ int CHudTimer::Draw(float fTime)
 		break;
 	}
 
+	// Draw next map
+	if (timeleft > 35 && timeleft < 60 && m_szNextmap[0])
+	{
+		sprintf(text, "Nextmap is %s", m_szNextmap);
+		ypos = ScreenHeight * (TIMER_Y + TIMER_Y_NEXT_OFFSET);
+		int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
+		float a = (timeleft > 40 ? 255.0 : 255.0 / 5 * (timeleft - 35)) * gHUD.GetHudTransparency();
+		gHUD.GetHudColor(0, 0, r, g, b);
+		ScaleColors(r, g, b, a);
+		TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, r, g, b);
+	}
+
 	// Draw custom timers
 	for (int i = 0; i < MAX_CUSTOM_TIMERS; i++)
 	{
@@ -210,7 +227,7 @@ int CHudTimer::Draw(float fTime)
 			timeleft = (int)(m_iCustomTimes[i] - fTime) + 1;
 			sprintf(text, "Timer %ld", (int)timeleft);
 			// Output to screen
-			ypos = ScreenHeight * (TIMER_Y + TIMERS_Y_OFFSET * (i + 1));
+			ypos = ScreenHeight * (TIMER_Y + TIMER_Y_NEXT_OFFSET * (i + 2));
 			int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
 			float a = 255 * gHUD.GetHudTransparency();
 			r = CUSTOM_TIMER_R, g = CUSTOM_TIMER_G, b = CUSTOM_TIMER_B;

@@ -539,6 +539,7 @@ private:
 	float	m_iCustomTimes[MAX_CUSTOM_TIMERS];
 	bool	m_bCustomTimerNeedSound[MAX_CUSTOM_TIMERS];
 	int		m_bAgVersion;
+	char	m_szNextmap[64];
 
 	struct cvar_s *m_HUD_timer;
 };
