@@ -19,7 +19,7 @@
 size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
 size_t g_SvcMessagesTable = 0;
 size_t g_FpsBugPlace = 0;
-uint8_t g_FpsBugPlaceBackup[256];
+uint8_t g_FpsBugPlaceBackup[16];
 double *g_flFrameTime;
 double g_flFrameTimeReminder = 0;
 
@@ -195,10 +195,27 @@ uint32_t HookDWord(size_t *origAddr, uint32_t newDWord)
 {
 	DWORD oldProtect;
 	uint32_t origDWord = *origAddr;
-	VirtualProtect(origAddr, 8, PAGE_EXECUTE_READWRITE, &oldProtect);
+	VirtualProtect(origAddr, 4, PAGE_EXECUTE_READWRITE, &oldProtect);
 	*origAddr = newDWord;
-	VirtualProtect(origAddr, 8, oldProtect, &oldProtect);
+	VirtualProtect(origAddr, 4, oldProtect, &oldProtect);
 	return origDWord;
+}
+
+void ExchangeMemoryBytes(size_t *origAddr, size_t *dataAddr, uint32_t size)
+{
+	DWORD oldProtect;
+	VirtualProtect(origAddr, size, PAGE_EXECUTE_READWRITE, &oldProtect);
+	unsigned char data[MAX_PATTERN];
+	int32_t iSize = size;
+	while (iSize > 0)
+	{
+		size_t s = iSize <= MAX_PATTERN ? iSize : MAX_PATTERN;
+		memcpy(data, origAddr, s);
+		memcpy((void *)origAddr, (void *)dataAddr, s);
+		memcpy((void *)dataAddr, data, s);
+		iSize -= MAX_PATTERN;
+	}
+	VirtualProtect(origAddr, size, oldProtect, &oldProtect);
 }
 
 void FindSvcMessagesTable(void)
@@ -323,16 +340,12 @@ bool PatchEngine(void)
 	g_FpsBugPlace = addr1;
 	g_flFrameTime = (double *)*(size_t *)(((uint8_t *)addr1) + 2);
 
-	// Backup engine block
-	memcpy(g_FpsBugPlaceBackup, (void *)(g_FpsBugPlace + 20), 12);
-
 	// Patch FPS bug
 	const char data2[] = "8D542424 52 50 E8FFFFFFFF 90";
-	unsigned char data3[MAX_PATTERN];
-	ConvertHexString(data2, data3, sizeof(data3));
+	ConvertHexString(data2, g_FpsBugPlaceBackup, sizeof(g_FpsBugPlaceBackup));
 	size_t offset = (size_t)FpsBugFix - (g_FpsBugPlace + 20 + 11);
-	*(size_t*)(&(data3[7])) = offset;
-	memcpy((void *)(g_FpsBugPlace + 20), data3, 12);
+	*(size_t*)(&(g_FpsBugPlaceBackup[7])) = offset;
+	ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
 
 	return true;
 }
@@ -342,8 +355,8 @@ bool UnPatchEngine(void)
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
 	if (!g_EngineModuleBase) return false;
 
-	// Restore engine block
-	memcpy((void *)(g_FpsBugPlace + 20), g_FpsBugPlaceBackup, 12);
+	// Restore FPS engine block
+	ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
 
 	return true;
 }
