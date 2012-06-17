@@ -54,11 +54,9 @@ void SvcPrint(void)
 							char *steamidend = strchr(steamid, ' ');
 							if (steamidend != NULL)
 								*steamidend = 0;
-							char *colon = strchr(steamid, ':');
-							if (!strncmp(steamid, "STEAM_", 6) &&
-								(colon = strchr(steamid + 6, ':')) != NULL &&
-								strchr(colon + 1, ':') != NULL) // lazy test for steamId
-								strncpy(g_PlayerSteamId[slot], steamid + 6, MAX_STEAMID); // normal steamId - omit "STEAM_" start string
+							if (!strncmp(steamid, "STEAM_", 6) ||
+								!strncmp(steamid, "VALVE_", 6))
+								strncpy(g_PlayerSteamId[slot], steamid + 6, MAX_STEAMID); // cutout "STEAM_" or "VALVE_" start of the string
 							else
 								strncpy(g_PlayerSteamId[slot], steamid, MAX_STEAMID);
 							g_PlayerSteamId[slot][MAX_STEAMID] = 0;
@@ -104,10 +102,39 @@ void SvcPrint(void)
 	pEngineMessages.pfnSvcPrint();
 }
 
+void SvcNewUserMsg(void)
+{
+	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
+	int id = READ_BYTE();
+	int len = READ_BYTE();
+	char name[16];
+	uint32_t value = READ_LONG();
+	memcpy(name, &(value), 4);
+	value = READ_LONG();
+	memcpy(name + 4, &(value), 4);
+	value = READ_LONG();
+	memcpy(name + 8, &(value), 4);
+	value = READ_LONG();
+	memcpy(name + 12, &(value), 4);
+	name[15] = 0;
+
+	pEngineMessages.pfnSvcNewUserMsg();
+
+	// Fix engine bug that leads to duplicate user message ids in user messages chain
+	UserMessage *current = *g_pUserMessages;
+	while (current != 0)
+	{
+		if (current->messageId == id && strcmp(current->messageName, name))
+			current->messageId = 0;
+		current = current->nextMessage;
+	}
+}
+
 bool HookSvcMessages(void)
 {
 	memset(&pEngineMessages, 0, sizeof(cl_enginemessages_t));
 	pEngineMessages.pfnSvcPrint = SvcPrint;
+	pEngineMessages.pfnSvcNewUserMsg = SvcNewUserMsg;
 	return HookSvcMessages(&pEngineMessages);
 }
 

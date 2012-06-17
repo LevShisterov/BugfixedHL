@@ -27,10 +27,6 @@ typedef unsigned char uint8_t;
 #endif
 
 
-extern void **g_EngineBuf;
-extern int *g_EngineBufSize;
-extern int *g_EngineReadPos;
-
 typedef struct cl_enginemessages_s
 {
 	void	(*pfnSvcBad)				(void);
@@ -94,8 +90,22 @@ typedef struct cl_enginemessages_s
 	void	(*pfnSvcSendCvarValue2)		(void);
 } cl_enginemessages_t;
 
+struct UserMessage
+{
+	int messageId;
+	int messageLen;
+	char messageName[16];
+	UserMessage *nextMessage;
+};
+
 
 bool HookSvcMessages(cl_enginemessages_t *pEngineMessages);
 bool UnHookSvcMessages(cl_enginemessages_t *pEngineMessages);
+
+
+extern void **g_EngineBuf;
+extern int *g_EngineBufSize;
+extern int *g_EngineReadPos;
+extern UserMessage **g_pUserMessages;
 
 #endif MEMORY_H
