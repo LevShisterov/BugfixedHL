@@ -209,12 +209,14 @@ int CHudTimer::Draw(float fTime)
 	}
 
 	// Draw next map
-	if (m_pCvarHudNextmap->value && timeleft >= 37 && timeleft < 60 && m_szNextmap[0])
+	int hud_nextmap = (int)m_pCvarHudNextmap->value;
+	if (m_szNextmap[0] && timeleft < 60 &&
+		(hud_nextmap > 1 || (hud_nextmap = 1 && timeleft >= 37)))
 	{
 		sprintf(text, "Nextmap is %s", m_szNextmap);
 		ypos = ScreenHeight * (TIMER_Y + TIMER_Y_NEXT_OFFSET);
 		int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
-		float a = (timeleft >= 40 ? 255.0 : 255.0 / 3 * ((m_iEndtime - fTime) + 1 - 37)) * gHUD.GetHudTransparency();
+		float a = (timeleft >= 40 || hud_nextmap > 1 ? 255.0 : 255.0 / 3 * ((m_iEndtime - fTime) + 1 - 37)) * gHUD.GetHudTransparency();
 		gHUD.GetHudColor(0, 0, r, g, b);
 		ScaleColors(r, g, b, a);
 		TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, r, g, b);
