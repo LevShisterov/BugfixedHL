@@ -124,9 +124,12 @@ void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct 
 	dst->movetype				= src->movetype;
 	dst->sequence				= src->sequence;
 	dst->animtime				= src->animtime;
-	
-	dst->solid					= src->solid;
-	
+
+	if (src->health <= 0 && src->solid != SOLID_NOT)
+		dst->solid				= SOLID_NOT;
+	else
+		dst->solid				= src->solid;
+
 	dst->rendermode				= src->rendermode;
 	dst->renderamt				= src->renderamt;	
 	dst->rendercolor.r			= src->rendercolor.r;
