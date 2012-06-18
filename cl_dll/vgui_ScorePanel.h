@@ -285,6 +285,7 @@ public:
 	bool			m_bHasBeenSorted[MAX_PLAYERS];
 	int				m_iLastKilledBy;
 	float			m_fLastKillTime;
+	int				m_iKillerRow;
 
 	int				m_iStatusRequestState;
 

@@ -747,10 +747,9 @@ void ScorePanel::FillGrid()
 										iTeamColors[ g_PlayerExtraInfo[ m_iSortedRows[row] ].teamnumber % iNumberOfTeamColors ][2],
 										196 );
 				}
-				else if ( m_iSortedRows[row] == m_iLastKilledBy && m_fLastKillTime && m_fLastKillTime > gHUD.m_flTime )
+				else if ( m_iSortedRows[row] == m_iLastKilledBy )
 				{
-					// Killer's name
-					pLabel->setBgColor( 255,0,0, 255 - (int)(15.0 * (m_fLastKillTime - gHUD.m_flTime)) );
+					m_iKillerRow = row;
 				}
 			}
 
@@ -1025,6 +1024,13 @@ void CLabelHeader::paintBackground()
 	if (gViewPort->GetScoreBoard()->m_iHighlightRow == _row)
 	{
 		setBgColor(134, 91, 19, 0);
+	}
+	else if (gViewPort->GetScoreBoard()->m_iKillerRow == _row &&
+		gViewPort->GetScoreBoard()->m_fLastKillTime &&
+		gViewPort->GetScoreBoard()->m_fLastKillTime > gHUD.m_flTime)
+	{
+		// Killer's name
+		setBgColor( 255,0,0, 255 - (int)(15.0 * (gViewPort->GetScoreBoard()->m_fLastKillTime - gHUD.m_flTime)) );
 	}
 
 	Panel::paintBackground();
