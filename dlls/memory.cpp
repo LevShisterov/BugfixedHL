@@ -58,9 +58,10 @@ size_t ConvertHexString(const char* srcHexString, unsigned char *outBuffer, size
 {
 	unsigned char *in = (unsigned char *)srcHexString;
 	unsigned char *out = outBuffer;
+	unsigned char *end = outBuffer + bufferSize;
 	bool low = false;
 	uint8_t byte = 0;
-	while (*in)
+	while (*in && out < end)
 	{
 		if (*in >= '0' && *in <= '9') { byte |= *in - '0'; }
 		else if (*in >= 'A' && *in <= 'F') { byte |= *in - 'A' + 10; }
@@ -333,39 +334,40 @@ void __stdcall FpsBugFix(int a1, int64_t *a2)
 	*((double *)(a2 + 1)) = a1;
 }
 
-bool PatchEngine(void)
+void PatchEngine(void)
 {
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
-	if (!g_EngineModuleBase) return false;
+	if (!g_EngineModuleBase) return;
 
 	// Find place where FPS bug happen
 	const char data1[] = "DD052834FA03 DC0DE8986603 83C408 E8D87A1000 89442424DB442424 DD5C242C DD05";
 	const char mask1[] = "FFFF00000000 FFFF00000000 FFFFFF FF00000000 FFFFFFFFFFFFFFFF FFFFFFFF FFFF";
 	size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
-	if (!addr1) return false;
+	if (addr1)
+	{
+		g_FpsBugPlace = addr1;
+		g_flFrameTime = (double *)*(size_t *)(((uint8_t *)addr1) + 2);
 
-	g_FpsBugPlace = addr1;
-	g_flFrameTime = (double *)*(size_t *)(((uint8_t *)addr1) + 2);
-
-	// Patch FPS bug
-	const char data2[] = "8D542424 52 50 E8FFFFFFFF 90";
-	ConvertHexString(data2, g_FpsBugPlaceBackup, sizeof(g_FpsBugPlaceBackup));
-	size_t offset = (size_t)FpsBugFix - (g_FpsBugPlace + 20 + 11);
-	*(size_t*)(&(g_FpsBugPlaceBackup[7])) = offset;
-	ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
-
-	return true;
+		// Patch FPS bug: hook correcting function there
+		const char data2[] = "8D542424 52 50 E8FFFFFFFF 90";
+		ConvertHexString(data2, g_FpsBugPlaceBackup, sizeof(g_FpsBugPlaceBackup));
+		size_t offset = (size_t)FpsBugFix - (g_FpsBugPlace + 20 + 11);
+		*(size_t*)(&(g_FpsBugPlaceBackup[7])) = offset;
+		ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
+	}
 }
 
-bool UnPatchEngine(void)
+void UnPatchEngine(void)
 {
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
-	if (!g_EngineModuleBase) return false;
+	if (!g_EngineModuleBase) return;
 
 	// Restore FPS engine block
-	ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
-
-	return true;
+	if (g_FpsBugPlace)
+	{
+		ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
+		g_FpsBugPlace = 0;
+	}
 }
 
 void MemoryPatcherInit(void)
