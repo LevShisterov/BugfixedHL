@@ -2125,6 +2125,10 @@ int	TeamFortressViewport::KeyInput( int down, int keynum, const char *pszCurrent
 			m_pScoreBoard->mouseWheeled(-3, m_pScoreBoard);
 			return 0;
 		}
+		else if (keynum == 0xF1 || keynum == 0xF2) // left and right mouse buttons
+		{
+			return 0;
+		}
 	}
 
 	return 1;
