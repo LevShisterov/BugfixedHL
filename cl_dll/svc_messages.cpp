@@ -132,15 +132,15 @@ void SvcNewUserMsg(void)
 	}
 }
 
-bool HookSvcMessages(void)
+void HookSvcMessages(void)
 {
 	memset(&pEngineMessages, 0, sizeof(cl_enginemessages_t));
 	pEngineMessages.pfnSvcPrint = SvcPrint;
 	pEngineMessages.pfnSvcNewUserMsg = SvcNewUserMsg;
-	return HookSvcMessages(&pEngineMessages);
+	HookSvcMessages(&pEngineMessages);
 }
 
-bool UnHookSvcMessages(void)
+void UnHookSvcMessages(void)
 {
-	return UnHookSvcMessages(&pEngineMessages);
+	UnHookSvcMessages(&pEngineMessages);
 }
