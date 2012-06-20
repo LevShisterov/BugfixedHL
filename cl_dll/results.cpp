@@ -75,6 +75,20 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 	map[MAX_PATH - 1] = 0;
 	if (!map[0])
 		strcpy(map, "none");
+	else
+	{
+		char *s = strrchr(map, '\\');
+		if (!s)
+			s = strrchr(map, '/');
+		else
+			s++;
+		if (!s)
+			s = map;
+		else
+			s++;
+		strrepl(s, MAX_PATH, ".bsp", "");
+		strcpy(map, s);
+	}
 	strrepl(map, MAX_PATH, "%", "");
 
 	// Get time
