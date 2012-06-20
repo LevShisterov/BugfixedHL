@@ -562,6 +562,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\com_utils.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\combat.cpp"
 				>
 				<FileConfiguration
@@ -1592,6 +1596,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\path.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\pathcorner.cpp"
 				>
 				<FileConfiguration
@@ -2507,6 +2515,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\com_utils.h"
+				>
+			</File>
+			<File
 				RelativePath="..\decals.h"
 				>
 			</File>
@@ -2564,6 +2576,10 @@
 			</File>
 			<File
 				RelativePath="..\nodes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\path.h"
 				>
 			</File>
 			<File
