@@ -16,21 +16,38 @@
 #include "wrect.h"
 #include "cl_dll.h"
 #include "cvardef.h"
+#include "jpge.h"
+#include "cl_util.h"
+#include "results.h"
 
 #define MAX_PATTERN 64
 
-size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
-size_t g_SvcMessagesTable = 0;
-size_t g_FpsBugPlace = 0;
-uint8_t g_FpsBugPlaceBackup[16];
-double *g_flFrameTime;
-double g_flFrameTimeReminder = 0;
-cvar_t *m_pCvarEngineFixFpsBug = 0;
 
+/* Public messages variables */
 void **g_EngineBuf = 0;
 int *g_EngineBufSize = 0;
 int *g_EngineReadPos = 0;
 UserMessage **g_pUserMessages = 0;
+
+/* Private messages variables */
+size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
+size_t g_SvcMessagesTable = 0;
+
+/* FPS bugfix variables */
+size_t g_FpsBugPlace = 0;
+uint8_t g_FpsBugPlaceBackup[16];
+double *g_flFrameTime = 0;
+double g_flFrameTimeReminder = 0;
+cvar_t *m_pCvarEngineFixFpsBug = 0;
+
+/* Snapshot variables */
+cvar_t *m_pCvarEngineSnapshotHook = 0, *m_pCvarSnapshotJpeg, *m_pCvarSnapshotJpegQuality;
+int (*g_pEngineSnapshotCommandHandler)(void) = 0;
+int (*g_pEngineCreateSnapshot)(char *filename) = 0;
+int *g_piScreenWidth, *g_piScreenHeight;
+int (__stdcall **g_pGlReadPixels)(int x, int y, int width, int height, DWORD format, DWORD type, void *data);
+#define GL_RGB				0x1907
+#define GL_UNSIGNED_BYTE	0x1401
 
 
 bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleSize)
@@ -45,6 +62,7 @@ bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &module
 	return true;
 }
 
+// Searches for engine address in memory
 void GetEngineModuleAddress(void)
 {
 	if (!GetModuleAddress("hw.dll", g_EngineModuleBase, g_EngineModuleSize) &&	// Try Hardware engine
@@ -54,6 +72,7 @@ void GetEngineModuleAddress(void)
 	g_EngineModuleEnd = g_EngineModuleBase + g_EngineModuleSize - 1;
 }
 
+// Converts HEX string containing pairs of symbols 0-9, A-F, a-f with possible space splitting into byte array
 size_t ConvertHexString(const char* srcHexString, unsigned char *outBuffer, size_t bufferSize)
 {
 	unsigned char *in = (unsigned char *)srcHexString;
@@ -88,12 +107,22 @@ size_t ConvertHexString(const char* srcHexString, unsigned char *outBuffer, size
 
 size_t MemoryFindForward(size_t start, size_t end, const unsigned char* pattern, const unsigned char *mask, size_t pattern_len)
 {
+	// Ensure start is lower then the end
+	if (start > end)
+	{
+		size_t reverse = end;
+		end = start;
+		start = reverse;
+	}
+
 	unsigned char *cend = (unsigned char*)(end - pattern_len + 1);
 	unsigned char *current = (unsigned char*)(start);
 
+	// Just linear search for sequence of bytes from the start till the end minus pattern length
 	size_t i;
 	if (mask)
 	{
+		// honoring mask
 		while (current < cend)
 		{
 			for (i = 0; i < pattern_len; i++)
@@ -110,6 +139,7 @@ size_t MemoryFindForward(size_t start, size_t end, const unsigned char* pattern,
 	}
 	else
 	{
+		// without mask
 		while (current < cend)
 		{
 			for (i = 0; i < pattern_len; i++)
@@ -139,7 +169,7 @@ size_t MemoryFindForward(size_t start, size_t end, const char* pattern, const ch
 
 size_t MemoryFindBackward(size_t start, size_t end, const unsigned char* pattern, const unsigned char *mask, size_t pattern_len)
 {
-	// Ensure start is high then the end
+	// Ensure start is higher then the end
 	if (start < end)
 	{
 		size_t reverse = end;
@@ -150,9 +180,11 @@ size_t MemoryFindBackward(size_t start, size_t end, const unsigned char* pattern
 	unsigned char *cend = (unsigned char*)(end);
 	unsigned char *current = (unsigned char*)(start - pattern_len);
 
+	// Just linear search backward for sequence of bytes from the start minus pattern length till the end
 	size_t i;
 	if (mask)
 	{
+		// honoring mask
 		while (current >= cend)
 		{
 			for (i = 0; i < pattern_len; i++)
@@ -169,6 +201,7 @@ size_t MemoryFindBackward(size_t start, size_t end, const unsigned char* pattern
 	}
 	else
 	{
+		// without mask
 		while (current >= cend)
 		{
 			for (i = 0; i < pattern_len; i++)
@@ -196,6 +229,7 @@ size_t MemoryFindBackward(size_t start, size_t end, const char* pattern, const c
 	return MemoryFindBackward(start, end, p, m, pl >= ml ? pl : ml);
 }
 
+// Replaces double word on specified address with new dword, returns old dword
 uint32_t HookDWord(size_t *origAddr, uint32_t newDWord)
 {
 	DWORD oldProtect;
@@ -206,6 +240,7 @@ uint32_t HookDWord(size_t *origAddr, uint32_t newDWord)
 	return origDWord;
 }
 
+// Exchanges bytes between memory address and bytes array
 void ExchangeMemoryBytes(size_t *origAddr, size_t *dataAddr, uint32_t size)
 {
 	DWORD oldProtect;
@@ -237,8 +272,8 @@ void FindSvcMessagesTable(void)
 	svc_disconnect = MemoryFindForward(svc_nop, g_EngineModuleEnd, data3, NULL, sizeof(data3) - 1);
 	if (!svc_disconnect) return;
 
-	// Form pattern to search for engine messages functions table
-	char data4[12 * 3 + 4];
+	// Form a pattern to search for engine messages functions table
+	unsigned char data4[12 * 3 + 4];
 	*((uint32_t*)data4 + 0) = 0;
 	*((uint32_t*)data4 + 1) = svc_bad;
 	*((uint32_t*)data4 + 3) = 1;
@@ -249,10 +284,10 @@ void FindSvcMessagesTable(void)
 	const char mask4[] = "FFFFFFFFFFFFFFFF00000000 FFFFFFFFFFFFFFFF00000000 FFFFFFFFFFFFFFFF00000000 FFFFFFFF";
 	unsigned char m[MAX_PATTERN];
 	ConvertHexString(mask4, m, sizeof(m));
-	// We search backward first - it should be there and near
-	g_SvcMessagesTable = MemoryFindBackward(svc_bad, g_EngineModuleBase, (unsigned char*)data4, m, sizeof(data4) - 1);
+	// We search backward first - table should be there and near
+	g_SvcMessagesTable = MemoryFindBackward(svc_bad, g_EngineModuleBase, data4, m, sizeof(data4) - 1);
 	if (!g_SvcMessagesTable)
-		g_SvcMessagesTable = MemoryFindForward(svc_bad, g_EngineModuleEnd, (unsigned char*)data4, (unsigned char*)mask4, sizeof(data4) - 1);
+		g_SvcMessagesTable = MemoryFindForward(svc_bad, g_EngineModuleEnd, data4, m, sizeof(data4) - 1);
 }
 void FindEngineMessagesBufferVariables(void)
 {
@@ -262,31 +297,34 @@ void FindEngineMessagesBufferVariables(void)
 	size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data2, mask2);
 	if (!addr2) return;
 
-	g_EngineBufSize = (int *)*(size_t *)(((uint8_t *)addr2) + 2);
-	g_EngineBuf = (void **)*(size_t *)(((uint8_t *)addr2) + 8);
+	// Pointers to buffer pointer and its size
+	g_EngineBufSize = (int *)*(size_t *)(addr2 + 2);
+	g_EngineBuf = (void **)*(size_t *)(addr2 + 8);
 
 	const char data3[] = "8B0D30E6F8038B15283D4F048BE82BCAB8ABAAAA2AF7E98BCAC1E91F03D18BC2";
 	const char mask3[] = "FFFF00000000FFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 	size_t addr3 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data3, mask3);
 	if (!addr3) return;
 
-	//g_EngineBufSize == (int *)*(size_t *)(((uint8_t *)addr3) + 2);
-	g_EngineReadPos = (int *)*(size_t *)(((uint8_t *)addr3) + 8);
+	// Pointers to current buffer position and its size
+	if (g_EngineBufSize != (int *)*(size_t *)(addr3 + 2)) return;
+	g_EngineReadPos = (int *)*(size_t *)(addr3 + 8);
 }
 void FindUserMessagesEntry(void)
 {
-	// Find and get engine messages buffer variables
+	// Search for registered user messages chain entry
 	const char data1[] = "81FB000100000F8D1B0100008B3574FF6C0385F6740B";
 	const char mask1[] = "FFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFF";
 	size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
 	if (!addr1) return;
 
-	g_pUserMessages = (UserMessage **)*(size_t *)(((uint8_t *)addr1) + 14);
+	g_pUserMessages = (UserMessage **)*(size_t *)(addr1 + 14);
 }
 
-// Hooks requested functions
+// Hooks requested SvcMessages functions
 bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
 {
+	// Ensure we have all needed addresses
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
 	if (!g_EngineModuleBase) return false;
 
@@ -299,6 +337,7 @@ bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
 	if (!g_pUserMessages) FindUserMessagesEntry();
 	if (!g_pUserMessages) return false;
 
+	// Do iterate thru registered messages chain and exchange message handlers
 	int len = sizeof(cl_enginemessages_t) / 4;
 	for (int i = 0; i < len; i++)
 	{
@@ -312,17 +351,19 @@ bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
 	return true;
 }
 
-// Unhooks requested functions
+// Unhooks requested SvcMessages functions
 bool UnHookSvcMessages(cl_enginemessages_t *pEngineMessages)
 {
 	// We just do same exchange for functions addresses
 	return HookSvcMessages(pEngineMessages);
 }
 
+// Function that eliminates FPS bug, it is using stdcall convention so it will clear the stack
 void __stdcall FpsBugFix(int a1, int64_t *a2)
 {
 	if (!m_pCvarEngineFixFpsBug || m_pCvarEngineFixFpsBug->value)
 	{
+		// Collect the remider and use it when it is over 1
 		g_flFrameTimeReminder += *g_flFrameTime * 1000 - a1;
 		if (g_flFrameTimeReminder > 1.0)
 		{
@@ -330,10 +371,85 @@ void __stdcall FpsBugFix(int a1, int64_t *a2)
 			a1++;
 		}
 	}
+	// Place fixed value on a stack and do actions that our patch had overwritten in original function
 	*a2 = a1;
 	*((double *)(a2 + 1)) = a1;
 }
 
+void SnapshotCmdHandler(void)
+{
+	if (m_pCvarEngineSnapshotHook && m_pCvarEngineSnapshotHook->value)
+	{
+		char filename[MAX_PATH];
+		char fullpath[MAX_PATH];
+		// Do snapshot
+		if (m_pCvarSnapshotJpeg->value)
+		{	// jpeg
+			if (g_piScreenWidth && g_piScreenHeight && g_pGlReadPixels)
+			{
+				// Get filename
+				if (!GetResultsFilename("jpg", filename, fullpath))
+				{
+					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.");
+				}
+				// Allocate buffer for image data
+				int size = *g_piScreenWidth * *g_piScreenHeight * 3;
+				uint8_t *pImageData = (uint8_t *)malloc(size);
+				if (pImageData)
+				{
+					// Get image data
+					(*g_pGlReadPixels)(0, 0, *g_piScreenWidth, *g_piScreenHeight, GL_RGB, GL_UNSIGNED_BYTE, (void *)pImageData);
+					// Compress and save
+					jpge::params params;
+					params.m_quality = clamp((int)m_pCvarSnapshotJpegQuality->value, 1, 100);
+					params.m_subsampling = jpge::subsampling_t::H1V1;
+					params.m_two_pass_flag = true;
+					bool res = jpge::compress_image_to_jpeg_file(fullpath, *g_piScreenWidth, *g_piScreenHeight, 3, pImageData, true, params);
+					if (!res)
+					{
+						gEngfuncs.Con_Printf("Couldn't create snapshot: something bad happen.");
+					}
+					free(pImageData);
+				}
+				else
+				{
+					gEngfuncs.Con_Printf("Couldn't allocate buffer for snapshot.");
+				}
+			}
+			else
+			{
+				gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.");
+			}
+		}
+		else
+		{	// bmp
+			if (g_pEngineCreateSnapshot)
+			{
+				// Get filename
+				if (!GetResultsFilename("bmp", filename, fullpath))
+				{
+					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.");
+				}
+				// Call original snapshot create function, but pass our filename to it
+				g_pEngineCreateSnapshot(filename);
+			}
+			else
+			{
+				gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.");
+			}
+		}
+	}
+	else
+	{
+		// Call original snapshot command handler
+		if (g_pEngineSnapshotCommandHandler)
+			g_pEngineSnapshotCommandHandler();
+		else
+			gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.");
+	}
+}
+
+// Applies engine patches
 void PatchEngine(void)
 {
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
@@ -346,17 +462,44 @@ void PatchEngine(void)
 	if (addr1)
 	{
 		g_FpsBugPlace = addr1;
-		g_flFrameTime = (double *)*(size_t *)(((uint8_t *)addr1) + 2);
+		g_flFrameTime = (double *)*(size_t *)(addr1 + 2);
 
-		// Patch FPS bug: hook correcting function there
+		// Patch FPS bug: inject correction function
 		const char data2[] = "8D542424 52 50 E8FFFFFFFF 90";
 		ConvertHexString(data2, g_FpsBugPlaceBackup, sizeof(g_FpsBugPlaceBackup));
 		size_t offset = (size_t)FpsBugFix - (g_FpsBugPlace + 20 + 11);
 		*(size_t*)(&(g_FpsBugPlaceBackup[7])) = offset;
 		ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
 	}
+
+	// Find snapshot addresses
+	const char data2[] = "A1B8F26E0481EC8000000085C0741CA1FCFB6C038B80940B000085C0740D8D4C24005150E8";
+	const char mask2[] = "FF00000000FFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+	size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data2, mask2);
+	const char data3[] = "83EC388B44243C5355568B35C036FA03570FAF35BC36FA0368247F690350E8CDDCFEFF8BD833FF83C4083BDF895C244C";
+	const char mask3[] = "FFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFF00000000FF00000000FFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFF";
+	size_t addr3 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data3, mask3);
+	const char data4[] = "83C41485C07520A1C036FA038B0DBC36FA03556801140000680719000050515757FF15A4D5F7038B0D";
+	const char mask4[] = "FFFFFFFFFFFFFFFF00000000FFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFF";
+	size_t addr4 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data4, mask4);
+	// We do splitted checks for addresses to use all we found
+	if (addr2)
+	{
+		g_pEngineSnapshotCommandHandler = (int (*)(void))addr2;
+	}
+	if (addr3)
+	{
+		g_pEngineCreateSnapshot = (int (*)(char *))addr3;
+	}
+	if (addr4)
+	{
+		g_piScreenHeight = (int *)*(size_t *)(addr4 + 8);
+		g_piScreenWidth = (int *)*(size_t *)(addr4 + 14);
+		g_pGlReadPixels = (int (__stdcall **)(int, int, int, int, DWORD, DWORD, void*))*(size_t *)(addr4 + 35);
+	}
 }
 
+// Removes engine patches
 void UnPatchEngine(void)
 {
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
@@ -370,7 +513,14 @@ void UnPatchEngine(void)
 	}
 }
 
+// Registers cvars and hooks commands
 void MemoryPatcherInit(void)
 {
 	m_pCvarEngineFixFpsBug = gEngfuncs.pfnRegisterVariable("engine_fix_fpsbug", "1", FCVAR_ARCHIVE);
-};
+	m_pCvarEngineSnapshotHook = gEngfuncs.pfnRegisterVariable("engine_snapshot_hook", "1", FCVAR_ARCHIVE);
+	m_pCvarSnapshotJpeg = gEngfuncs.pfnRegisterVariable("snapshot_jpeg", "1", FCVAR_ARCHIVE);
+	m_pCvarSnapshotJpegQuality = gEngfuncs.pfnRegisterVariable("snapshot_jpeg_quality", "95", FCVAR_ARCHIVE);
+
+	// Hook snapshot command
+	gEngfuncs.pfnAddCommand("snapshot", SnapshotCmdHandler);
+}

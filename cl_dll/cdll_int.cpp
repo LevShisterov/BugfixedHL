@@ -39,6 +39,7 @@ extern "C"
 #include "interface.h"
 #include "svc_messages.h"
 #include "memory.h"
+#include "results.h"
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -317,6 +318,7 @@ void DLLEXPORT HUD_Init( void )
 	gHUD.Init();
 	Scheme_Init();
 	MemoryPatcherInit();
+	ResultsInit();
 }
 
 

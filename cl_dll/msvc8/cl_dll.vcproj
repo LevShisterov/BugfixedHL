@@ -49,7 +49,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\utils\vgui\include&quot;;&quot;..\..\engine&quot;;&quot;..\..\common&quot;;&quot;..\..\pm_shared&quot;;&quot;..\..\dlls&quot;;&quot;..\&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\utils\vgui\include&quot;;&quot;..\..\engine&quot;;&quot;..\..\common&quot;;&quot;..\..\pm_shared&quot;;&quot;..\..\dlls&quot;;&quot;..\jpeg&quot;;&quot;..\&quot;"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;CLIENT_DLL;CLIENT_WEAPONS"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
@@ -140,7 +140,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;..\..\utils\vgui\include&quot;;&quot;..\..\engine&quot;;&quot;..\..\common&quot;;&quot;..\..\pm_shared&quot;;&quot;..\..\dlls&quot;;&quot;..\&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\utils\vgui\include&quot;;&quot;..\..\engine&quot;;&quot;..\..\common&quot;;&quot;..\..\pm_shared&quot;;&quot;..\..\dlls&quot;;&quot;..\jpeg&quot;;&quot;..\&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;CLIENT_DLL;CLIENT_WEAPONS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -740,6 +740,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\jpeg\jpge.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\dlls\memory.cpp"
 				>
 			</File>
@@ -906,6 +910,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\results.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\saytext.cpp"
@@ -2116,6 +2124,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\jpeg\jpge.h"
+				>
+			</File>
+			<File
 				RelativePath="..\kbutton.h"
 				>
 			</File>
@@ -2161,6 +2173,10 @@
 			</File>
 			<File
 				RelativePath="..\..\pm_shared\pm_shared.h"
+				>
+			</File>
+			<File
+				RelativePath="..\results.h"
 				>
 			</File>
 			<File
