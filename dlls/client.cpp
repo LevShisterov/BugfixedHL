@@ -38,6 +38,7 @@
 #include "weaponinfo.h"
 #include "usercmd.h"
 #include "netadr.h"
+#include "path.h"
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
 extern DLL_GLOBAL BOOL		g_fGameOver;
@@ -525,23 +526,15 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 	{
 		char model[256];
 		strncpy(model, mdls, sizeof(model) - 1);
-		model[sizeof(model) - 1] = '\0';
-		char *p = model;
-		while (*p != NULL)
+		model[sizeof(model) - 1] = 0;
+		RemoveInvalidFilenameChars(model);
+		if (strlen(model) > MAX_TEAM_NAME - 1 || _stricmp(mdls, model))
 		{
-			if (*p < 32 ||
-				*p == '<' || *p == '>' || *p == ':' || *p == ';' ||
-				*p == '%' || *p == '?' || *p == '*' || *p == '"' ||
-				*p == '|' || *p == '/' || *p == '\\')
-				*p = ' ';
-			p++;
-		}
-		if (_stricmp(mdls, model))
-		{
+			model[MAX_TEAM_NAME - 1] = 0;
 			int clientIndex = pPlayer->entindex();
 			g_engfuncs.pfnSetClientKeyValue(clientIndex, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()), "model", model);
 			g_engfuncs.pfnSetClientKeyValue(clientIndex, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()), "team", model);
-			sprintf(text, "* Model can't contain special characters like: <>:;%%?*\"|/\\\n" );
+			sprintf(text, "* Model is restricted to 15 characters and can't contain special characters like: <>:\"/\\|?*\n" );
 			UTIL_SayText(text, pPlayer);
 		}
 	}
