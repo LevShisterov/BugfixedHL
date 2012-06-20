@@ -693,8 +693,8 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	int iWeaponRules;
 	int iAmmoRules;
 	int i;
-	CBasePlayerWeapon *rgpPackWeapons[ 20 ];// 20 hardcoded for now. How to determine exactly how many weapons we have?
-	int iPackAmmo[ MAX_AMMO_SLOTS + 1];
+	CBasePlayerWeapon *rgpPackWeapons[ MAX_WEAPONS ];
+	int iPackAmmo[ MAX_AMMO_SLOTS ];
 	int iPW = 0;// index into packweapons array
 	int iPA = 0;// index into packammo array
 
@@ -703,7 +703,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 
 	// get the game rules 
 	iWeaponRules = g_pGameRules->DeadPlayerWeapons( this );
- 	iAmmoRules = g_pGameRules->DeadPlayerAmmo( this );
+	iAmmoRules = g_pGameRules->DeadPlayerAmmo( this );
 
 	if ( iWeaponRules == GR_PLR_DROP_GUN_NO && iAmmoRules == GR_PLR_DROP_AMMO_NO )
 	{
@@ -712,15 +712,15 @@ void CBasePlayer::PackDeadPlayerItems( void )
 		return;
 	}
 
-// go through all of the weapons and make a list of the ones to pack
-	for ( i = 0 ; i < MAX_ITEM_TYPES ; i++ )
+	// go through all of the weapons and make a list of the ones to pack
+	for ( i = 0 ; i < MAX_ITEM_TYPES && iPW < MAX_WEAPONS ; i++ )
 	{
 		if ( m_rgpPlayerItems[ i ] )
 		{
 			// there's a weapon here. Should I pack it?
 			CBasePlayerItem *pPlayerItem = m_rgpPlayerItems[ i ];
 
-			while ( pPlayerItem )
+			while ( pPlayerItem && iPW < MAX_WEAPONS )
 			{
 				switch( iWeaponRules )
 				{
@@ -745,7 +745,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 		}
 	}
 
-// now go through ammo and make a list of which types to pack.
+	// now go through ammo and make a list of which types to pack.
 	if ( iAmmoRules != GR_PLR_DROP_AMMO_NO )
 	{
 		for ( i = 0 ; i < MAX_AMMO_SLOTS ; i++ )
@@ -779,7 +779,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 		}
 	}
 
-// create a box to pack the stuff into.
+	// create a box to pack the stuff into.
 	CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", pev->origin, pev->angles, edict() );
 
 	pWeaponBox->pev->angles.x = 0;// don't let weaponbox tilt.
@@ -788,18 +788,18 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	pWeaponBox->SetThink( &CWeaponBox::Kill );
 	pWeaponBox->pev->nextthink = gpGlobals->time + 120;
 
-// back these two lists up to their first elements
+	// back these two lists up to their first elements
 	iPA = 0;
 	iPW = 0;
 
-// pack the ammo
+	// pack the ammo
 	while ( iPackAmmo[ iPA ] != -1 )
 	{
 		pWeaponBox->PackAmmo( MAKE_STRING( CBasePlayerItem::AmmoInfoArray[ iPackAmmo[ iPA ] ].pszName ), m_rgAmmo[ iPackAmmo[ iPA ] ] );
 		iPA++;
 	}
 
-// now pack all of the items in the lists
+	// now pack all of the items in the lists
 	while ( rgpPackWeapons[ iPW ] )
 	{
 		// weapon unhooked from the player. Pack it into der box.
@@ -3698,14 +3698,16 @@ int CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 
 
 
-int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
+int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem, bool bCallHolster )
 {
+	pItem->pev->nextthink = 0;// crowbar may be trying to swing again, etc.
+	pItem->SetThink( NULL );
+
 	if (m_pActiveItem == pItem)
 	{
 		ResetAutoaim( );
-		pItem->Holster( );
-		pItem->pev->nextthink = 0;// crowbar may be trying to swing again, etc.
-		pItem->SetThink( NULL );
+		if ( bCallHolster )
+			pItem->Holster( );
 		m_pActiveItem = NULL;
 		pev->viewmodel = 0;
 		pev->weaponmodel = 0;

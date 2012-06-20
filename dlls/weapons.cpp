@@ -715,8 +715,8 @@ void CBasePlayerItem::DestroyItem( void )
 {
 	if ( m_pPlayer )
 	{
-		// if attached to a player, remove. 
-		m_pPlayer->RemovePlayerItem( this );
+		// if attached to a player, remove.
+		m_pPlayer->RemovePlayerItem( this, false );
 	}
 
 	Kill( );
@@ -1190,7 +1190,17 @@ void CBasePlayerWeapon::RetireWeapon( void )
 	m_pPlayer->pev->weaponmodel = iStringNull;
 	//m_pPlayer->pev->viewmodelindex = NULL;
 
-	g_pGameRules->GetNextBestWeapon( m_pPlayer, this );
+	if (!g_pGameRules->GetNextBestWeapon( m_pPlayer, this ))
+	{
+		// Another weapon wasn't selected. Get rid of current one
+		if (m_pPlayer->m_pActiveItem == this)
+		{
+			m_pPlayer->ResetAutoaim();
+			m_pPlayer->m_pActiveItem->Holster();
+			m_pPlayer->m_pLastItem = NULL;
+			m_pPlayer->m_pActiveItem = NULL;
+		}
+	}
 }
 
 //*********************************************************
@@ -1360,7 +1370,7 @@ BOOL CWeaponBox::PackWeapon( CBasePlayerItem *pWeapon )
 
 	if ( pWeapon->m_pPlayer )
 	{
-		if ( !pWeapon->m_pPlayer->RemovePlayerItem( pWeapon ) )
+		if ( !pWeapon->m_pPlayer->RemovePlayerItem( pWeapon, true ) )
 		{
 			// failed to unhook the weapon from the player!
 			return FALSE;

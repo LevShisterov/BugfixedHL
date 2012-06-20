@@ -420,8 +420,7 @@ void CTripmine::Holster( int skiplocal /* = 0 */ )
 	{
 		// out of mines
 		m_pPlayer->pev->weapons &= ~(1<<WEAPON_TRIPMINE);
-		SetThink( &CTripmine::DestroyItem );
-		pev->nextthink = gpGlobals->time + 0.1;
+		DestroyItem();
 	}
 
 	SendWeaponAnim( TRIPMINE_HOLSTER );
