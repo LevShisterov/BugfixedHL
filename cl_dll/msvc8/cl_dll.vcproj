@@ -314,6 +314,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\dlls\com_utils.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\com_weapons.cpp"
 				>
 				<FileConfiguration
@@ -820,6 +824,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\dlls\path.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\pm_shared\pm_debug.c"
@@ -2036,6 +2044,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\dlls\com_utils.h"
+				>
+			</File>
+			<File
 				RelativePath="..\com_weapons.h"
 				>
 			</File>
@@ -2097,6 +2109,10 @@
 			</File>
 			<File
 				RelativePath="..\parsemsg.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\dlls\path.h"
 				>
 			</File>
 			<File
