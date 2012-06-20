@@ -14,3 +14,5 @@
 
 void RemoveInvalidFilenameChars(char *path);
 void RemoveInvalidPathChars(char *path, bool isRoted);
+// Creates directory with all intermediate directories.
+bool CreateDirectoryFull(char *path);
