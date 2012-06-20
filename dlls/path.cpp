@@ -9,6 +9,9 @@
 // File path manipulation routines.
 //
 
+#include "path.h"
+
+
 void RemoveInvalidFilenameChars(char *path)
 {
 	char *c = path;
