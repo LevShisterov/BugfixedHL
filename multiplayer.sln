@@ -8,20 +8,15 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
-		Profile|Win32 = Profile|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}.Debug|Win32.ActiveCfg = Debug|Win32
 		{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}.Debug|Win32.Build.0 = Debug|Win32
-		{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}.Profile|Win32.ActiveCfg = Release|Win32
-		{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}.Profile|Win32.Build.0 = Release|Win32
 		{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}.Release|Win32.ActiveCfg = Release|Win32
 		{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}.Release|Win32.Build.0 = Release|Win32
 		{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}.Debug|Win32.ActiveCfg = Debug|Win32
 		{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}.Debug|Win32.Build.0 = Debug|Win32
-		{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}.Profile|Win32.ActiveCfg = Profile|Win32
-		{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}.Profile|Win32.Build.0 = Profile|Win32
 		{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}.Release|Win32.ActiveCfg = Release|Win32
 		{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
