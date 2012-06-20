@@ -390,7 +390,7 @@ void SnapshotCmdHandler(void)
 				// Get filename
 				if (!GetResultsFilename("jpg", filename, fullpath))
 				{
-					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.");
+					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.\n");
 				}
 				// Allocate buffer for image data
 				int size = *g_piScreenWidth * *g_piScreenHeight * 3;
@@ -407,18 +407,18 @@ void SnapshotCmdHandler(void)
 					bool res = jpge::compress_image_to_jpeg_file(fullpath, *g_piScreenWidth, *g_piScreenHeight, 3, pImageData, true, params);
 					if (!res)
 					{
-						gEngfuncs.Con_Printf("Couldn't create snapshot: something bad happen.");
+						gEngfuncs.Con_Printf("Couldn't create snapshot: something bad happen.\n");
 					}
 					free(pImageData);
 				}
 				else
 				{
-					gEngfuncs.Con_Printf("Couldn't allocate buffer for snapshot.");
+					gEngfuncs.Con_Printf("Couldn't allocate buffer for snapshot.\n");
 				}
 			}
 			else
 			{
-				gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.");
+				gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.\n");
 			}
 		}
 		else
@@ -428,14 +428,14 @@ void SnapshotCmdHandler(void)
 				// Get filename
 				if (!GetResultsFilename("bmp", filename, fullpath))
 				{
-					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.");
+					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.\n");
 				}
 				// Call original snapshot create function, but pass our filename to it
 				g_pEngineCreateSnapshot(filename);
 			}
 			else
 			{
-				gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.");
+				gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.\n");
 			}
 		}
 	}
@@ -445,7 +445,7 @@ void SnapshotCmdHandler(void)
 		if (g_pEngineSnapshotCommandHandler)
 			g_pEngineSnapshotCommandHandler();
 		else
-			gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.");
+			gEngfuncs.Con_Printf("Couldn't create snapshot: engine wasn't hooked properly.\n");
 	}
 }
 
