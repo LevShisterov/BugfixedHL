@@ -84,10 +84,10 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 	// Substitute values
 	if (!DoSubstitutions(filename, fullpath, m_pCvarResultsFileFormat->string, map, pTm))
 	{
-		gEngfuncs.Con_Printf("results_file_format contains invalid path, using default format instead.");
+		gEngfuncs.Con_Printf("results_file_format contains invalid path, using default format instead.\n");
 		if (!DoSubstitutions(filename, fullpath, defaultFilenameFormat, map, pTm))
 		{
-			gEngfuncs.Con_Printf("Couldn't construct filepath for game results file using default file format.");
+			gEngfuncs.Con_Printf("Couldn't construct filepath for game results file using default file format.\n");
 			filename[0] = 0;
 			fullpath[0] = 0;
 			return false;
@@ -115,7 +115,7 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 	if (g_bFormatError)
 	{
 		g_bFormatError = false;
-		gEngfuncs.Con_Printf("Couldn't construct filepath for game results file: check results_file_format, may be it is too long.");
+		gEngfuncs.Con_Printf("Couldn't construct filepath for game results file: check results_file_format, may be it is too long.\n");
 		filename[0] = 0;
 		fullpath[0] = 0;
 		return false;
@@ -154,14 +154,14 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 			if (g_bFormatError)
 			{
 				g_bFormatError = false;
-				gEngfuncs.Con_Printf("Couldn't construct filepath for game results file using results_counter_format.");
+				gEngfuncs.Con_Printf("Couldn't construct filepath for game results file using results_counter_format.\n");
 				sprintf_s(frmt, MAX_PATH, "%%s%s.%%s", defaultCounterFormat);
 				sprintf_s(file, MAX_PATH, frmt, filename, i, extension);
 				sprintf_s(path, MAX_PATH, frmt, fullpath, i, extension);
 				if (g_bFormatError)
 				{
 					g_bFormatError = false;
-					gEngfuncs.Con_Printf("Couldn't construct filepath for game results file using default counter format.");
+					gEngfuncs.Con_Printf("Couldn't construct filepath for game results file using default counter format.\n");
 					filename[0] = 0;
 					fullpath[0] = 0;
 					return false;
@@ -172,7 +172,7 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 		}
 		if (i == 1000)
 		{
-			gEngfuncs.Con_Printf("Couldn't construct filepath for game results file: counter exausted, fix results_file_format.");
+			gEngfuncs.Con_Printf("Couldn't construct filepath for game results file: counter exausted, fix results_file_format.\n");
 			filename[0] = 0;
 			fullpath[0] = 0;
 			return false;
