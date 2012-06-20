@@ -475,8 +475,6 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 
 	char text[256];
 	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
-	if (!pPlayer->IsConnected())
-		return;
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	if ( pEntity->v.netname && STRING(pEntity->v.netname)[0] != 0 && !FStrEq( STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" )) )
