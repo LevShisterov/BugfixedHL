@@ -66,3 +66,48 @@ void RemoveInvalidPathChars(char *path, bool isRoted)
 		}
 	*d = 0;
 }
+
+// Creates directory with all intermediate directories.
+bool CreateDirectoryFull(char *path)
+{
+	if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES)
+		return true;
+
+	// Construct full path
+	char *filepart;
+	char fullpath[MAX_PATH];
+	GetFullPathName(path, MAX_PATH, fullpath, &filepart);
+
+	char dup[MAX_PATH];
+	char *cd = dup;
+	char *c;
+	if (fullpath[0] != 0 && fullpath[1] == ':')
+	{
+		cd[0] = fullpath[0];
+		cd[1] = fullpath[1];
+		cd += 2;
+		c = fullpath + 2;
+	}
+	else
+	{
+		c = fullpath;
+	}
+	while(*c)
+	{
+		while(*c && *c != '\\')
+		{
+			*cd = *c;
+			cd++;
+			c++;
+		}
+		*cd = 0;
+		if (GetFileAttributes(dup) == INVALID_FILE_ATTRIBUTES)
+		{
+			CreateDirectory(dup, 0);
+		}
+		*cd = *c;
+		cd++;
+		c++;
+	}
+	return true;
+}
