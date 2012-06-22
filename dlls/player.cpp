@@ -3324,12 +3324,20 @@ Reset stuff so that the state is transmitted.
 */
 void CBasePlayer :: ForceClientDllUpdate( void )
 {
-	m_iClientHealth  = -1;
+	m_iClientHideHUD = -1;
+	m_iClientFOV = -1;		// make sure fov reset is sent
+	m_iClientHealth = -1;
 	m_iClientBattery = -1;
-	m_iTrain |= TRAIN_NEW;  // Force new train message.
-	m_fWeapon = FALSE;          // Force weapon send
-	m_fKnownItem = FALSE;    // Force weaponinit messages.
+	m_iTrain |= TRAIN_NEW;	// Force new train message.
+	m_fWeapon = FALSE;		// Force weapon send
+	m_fKnownItem = FALSE;	// Force weaponinit messages.
 	m_fInitHUD = TRUE;		// Force HUD gmsgResetHUD message
+
+	// client ammo values also have to be reset
+	for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
+	{
+		m_rgAmmoLast[i] = 0;
+	}
 
 	// Now force all the necessary messages
 	//  to be sent.
