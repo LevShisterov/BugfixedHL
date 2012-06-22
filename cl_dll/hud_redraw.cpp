@@ -20,6 +20,7 @@
 #include "cl_util.h"
 
 #include "vgui_TeamFortressViewport.h"
+#include "demo_api.h"
 
 #define MAX_LOGO_FRAMES 56
 
@@ -114,8 +115,8 @@ int CHud :: Redraw( float flTime, int intermission )
 			gViewPort->ShowScoreBoard();
 			gViewPort->UpdateSpectatorPanel();
 
-			// Take a screenshot if the client's got the cvar set
-			if ( CVAR_GET_FLOAT( "hud_takesshots" ) != 0 )
+			// Take a screenshot if the client's got the cvar set and not in demo playback
+			if (!gEngfuncs.pDemoAPI->IsPlayingback() && CVAR_GET_FLOAT( "hud_takesshots" ) != 0)
 				m_flShotTime = flTime + 1.0;	// Take a screenshot in a second
 		}
 	}

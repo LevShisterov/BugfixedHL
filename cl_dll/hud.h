@@ -509,11 +509,14 @@ private:
 class CHudTimer: public CHudBase
 {
 public:
-	int Init( void );
-	int VidInit( void );
+	int Init(void);
+	int VidInit(void);
+	void Reset(void);
+	void Think(void);
 	int Draw(float flTime);
 
-	void DoResync(void) { m_iNextSyncTime = 0; }
+	void DoResync(void);
+	void ReadDemoTimerBuffer(int type, const unsigned char *buffer);
 	void CustomTimerCommand(void);
 
 	enum {
@@ -531,18 +534,29 @@ private:
 		MAX_CUSTOM_TIMERS = 2,
 	};
 
-	int SyncTimer(float fTime);
-	void DrawTimerInternal(float time, float ypos, int r, int g, int b, bool redOnLow);
+	void SyncTimer(float fTime);
+	void DrawTimerInternal(int time, float ypos, int r, int g, int b, bool redOnLow);
 
-	float	m_iNextSyncTime;
-	float	m_iEndtime;
-	float	m_iCustomTimes[MAX_CUSTOM_TIMERS];
+	float	m_flDemoSyncTime;
+	bool	m_bDemoSyncTimeValid;
+	float	m_flNextSyncTime;
+	float	m_flEndtime;
+	bool	m_bDelayTimeleftReading;
+	float	m_flCustomTimerStart[MAX_CUSTOM_TIMERS];
+	float	m_flCustomTimerEnd[MAX_CUSTOM_TIMERS];
 	bool	m_bCustomTimerNeedSound[MAX_CUSTOM_TIMERS];
 	int		m_bAgVersion;
 	char	m_szNextmap[64];
+	bool	m_bNeedWriteTimer;
+	bool	m_bNeedWriteCustomTimer;
+	bool	m_bNeedWriteNextmap;
 
 	cvar_t *m_pCvarHudTimer;
 	cvar_t *m_pCvarHudNextmap;
+	cvar_t *m_pCvarMpTimelimit;
+	cvar_t *m_pCvarMpTimeleft;
+	cvar_t *m_pCvarSvAgVersion;
+	cvar_t *m_pCvarAmxNextmap;
 };
 
 //

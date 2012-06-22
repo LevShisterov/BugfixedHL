@@ -96,6 +96,12 @@ void DLLEXPORT Demo_ReadBuffer( int size, unsigned char *buffer )
 		g_demozoom = *(float * )&buffer[ i ];
 		i += sizeof( float );
 		break;
+	case TYPE_TIME:
+	case TYPE_TIMER:
+	case TYPE_CUSTOM_TIMER:
+	case TYPE_NEXTMAP:
+		gHUD.m_Timer.ReadDemoTimerBuffer(type, buffer + i);
+		break;
 	default:
 		gEngfuncs.Con_DPrintf( "Unknown demo buffer type, skipping.\n" );
 		break;
