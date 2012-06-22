@@ -2117,15 +2117,23 @@ int	TeamFortressViewport::KeyInput( int down, int keynum, const char *pszCurrent
 	{
 		if (keynum == 239)
 		{
-			m_pScoreBoard->mouseWheeled(+3, m_pScoreBoard);
-			return 0;
+			// Capture scrolling only in squelch mode
+			if (GetClientVoiceMgr()->IsInSquelchMode())
+			{
+				m_pScoreBoard->mouseWheeled(+3, m_pScoreBoard);
+				return 0;
+			}
 		}
 		else if (keynum == 240)
 		{
-			m_pScoreBoard->mouseWheeled(-3, m_pScoreBoard);
-			return 0;
+			// Capture scrolling only in squelch mode
+			if (GetClientVoiceMgr()->IsInSquelchMode())
+			{
+				m_pScoreBoard->mouseWheeled(-3, m_pScoreBoard);
+				return 0;
+			}
 		}
-		else if (keynum == 0xF1 || keynum == 0xF2) // left and right mouse buttons
+		else if (keynum == 0xF1 || keynum == 0xF2) // block left and right mouse buttons, so they don't generate events after scoreboard is hidden
 		{
 			return 0;
 		}
