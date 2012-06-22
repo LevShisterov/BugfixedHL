@@ -2133,7 +2133,7 @@ int	TeamFortressViewport::KeyInput( int down, int keynum, const char *pszCurrent
 				return 0;
 			}
 		}
-		else if (keynum == 0xF1 || keynum == 0xF2) // block left and right mouse buttons, so they don't generate events after scoreboard is hide
+		else if (keynum == 0xF1 || keynum == 0xF2) // block left and right mouse buttons, so they don't generate events after scoreboard is hidden
 		{
 			return 0;
 		}
