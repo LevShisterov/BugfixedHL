@@ -958,7 +958,7 @@ void ScorePanel::mousePressed(MouseCode code, Panel* panel)
 
 void ScorePanel::cursorMoved(int x, int y, Panel *panel)
 {
-	if (GetClientVoiceMgr()->IsInSquelchMode() && this->isWithin(x, y))
+	if (GetClientVoiceMgr()->IsInSquelchMode() && this->isWithin(x, y) && !m_PlayerList.isWithinScrollBar(x, y))
 	{
 		// look for which cell the mouse is currently over
 		for (int i = 0; i < NUM_ROWS; i++)

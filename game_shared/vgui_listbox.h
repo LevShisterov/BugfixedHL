@@ -61,6 +61,9 @@ public:
 	// returns the maximum value the scrollbar can scroll to
 	int				GetScrollMax();
 
+	// returns scrollbar
+	bool			isWithinScrollBar(int x, int y) { return m_ScrollBar.isWithin(x, y); }
+
 // vgui overrides.
 public:
 	
