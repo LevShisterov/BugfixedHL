@@ -23,13 +23,11 @@
 #define MAX_PATTERN 64
 
 
-/* Public messages variables */
+/* messages variables */
 void **g_EngineBuf = 0;
 int *g_EngineBufSize = 0;
 int *g_EngineReadPos = 0;
 UserMessage **g_pUserMessages = 0;
-
-/* Private messages variables */
 size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
 size_t g_SvcMessagesTable = 0;
 
