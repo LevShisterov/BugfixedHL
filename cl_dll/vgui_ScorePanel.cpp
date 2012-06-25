@@ -908,6 +908,9 @@ void ScorePanel::mousePressed(MouseCode code, Panel* panel)
 	if(gHUD.m_iIntermission)
 		return;
 
+	if (code != MOUSE_LEFT)
+		return;
+
 	if (!GetClientVoiceMgr()->IsInSquelchMode())
 	{
 		GetClientVoiceMgr()->StartSquelchMode();
