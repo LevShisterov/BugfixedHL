@@ -413,8 +413,8 @@ int CHudTimer::Draw(float fTime)
 
 	// Draw next map
 	int hud_nextmap = (int)m_pCvarHudNextmap->value;
-	if (m_szNextmap[0] && timeleft < 60 &&
-		(hud_nextmap > 1 || (hud_nextmap = 1 && timeleft >= 37)))
+	if (m_szNextmap[0] && timeleft < 60 && timeleft >= 0 && m_flEndtime > 0 &&
+		(hud_nextmap == 2 || (hud_nextmap = 1 && timeleft >= 37)))
 	{
 		sprintf(text, "Nextmap is %s", m_szNextmap);
 		ypos = ScreenHeight * (TIMER_Y + TIMER_Y_NEXT_OFFSET);
