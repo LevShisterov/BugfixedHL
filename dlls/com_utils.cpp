@@ -11,7 +11,13 @@
 
 #include <windows.h>
 
+#include "com_utils.h"
 
+
+/*============
+String functions
+strrepl: replaces substrings in a string
+============*/
 bool strrepl(char *str, int size, const char *find, const char *repl)
 {
 	if (size < 1) return true;
