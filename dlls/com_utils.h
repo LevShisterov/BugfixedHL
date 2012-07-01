@@ -9,4 +9,8 @@
 // Functions that can be used on both: client and server.
 //
 
+/*============
+String functions
+strrepl: replaces substrings in a string
+============*/
 bool strrepl(char *str, int size, const char *find, const char *repl);
