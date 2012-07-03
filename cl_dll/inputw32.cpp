@@ -519,9 +519,15 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 		{
 			viewangles[PITCH] += m_pitch->value * mouse_y;
 			if (viewangles[PITCH] > cl_pitchdown->value)
+			{
 				viewangles[PITCH] = cl_pitchdown->value;
+				diffPitch = 0;
+			}
 			if (viewangles[PITCH] < -cl_pitchup->value)
+			{
 				viewangles[PITCH] = -cl_pitchup->value;
+				diffPitch = 0;
+			}
 		}
 		else
 		{

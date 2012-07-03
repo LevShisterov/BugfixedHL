@@ -480,7 +480,7 @@ void PatchEngine(void)
 	const char data4[] = "83C41485C07520A1C036FA038B0DBC36FA03556801140000680719000050515757FF15A4D5F7038B0D";
 	const char mask4[] = "FFFFFFFFFFFFFFFF00000000FFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFF";
 	size_t addr4 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data4, mask4);
-	// We do splitted checks for addresses to use all we found
+	// We do splitted checks for addresses to use all we have found
 	if (addr2)
 	{
 		g_pEngineSnapshotCommandHandler = (int (*)(void))addr2;
