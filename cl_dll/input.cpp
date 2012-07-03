@@ -39,8 +39,9 @@ extern "C"
 }
 
 extern int g_iAlive;
-
 extern int g_weaponselect;
+extern float diffYaw, diffPitch;
+
 extern cl_enginefunc_t gEngfuncs;
 
 // Defined in pm_math.c
@@ -641,11 +642,17 @@ void CL_AdjustAngles ( float frametime, vec3_t &viewangles )
 
 	if (up || down)
 		V_StopPitchDrift ();
-		
+
 	if (viewangles[PITCH] > cl_pitchdown->value)
+	{
 		viewangles[PITCH] = cl_pitchdown->value;
+		diffPitch = 0;
+	}
 	if (viewangles[PITCH] < -cl_pitchup->value)
+	{
 		viewangles[PITCH] = -cl_pitchup->value;
+		diffPitch = 0;
+	}
 
 	if (viewangles[ROLL] > 50)
 		viewangles[ROLL] = 50;
