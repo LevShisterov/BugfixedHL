@@ -38,8 +38,9 @@ extern "C"
 }
 
 extern int g_iAlive;
-
 extern int g_weaponselect;
+extern float diffYaw, diffPitch;
+
 extern cl_enginefunc_t gEngfuncs;
 
 // Defined in pm_math.c
@@ -605,7 +606,7 @@ CL_AdjustAngles
 Moves the local angle positions
 ================
 */
-void CL_AdjustAngles ( float frametime, float *viewangles )
+void CL_AdjustAngles ( float frametime, vec3_t &viewangles )
 {
 	float	speed;
 	float	up, down;
@@ -640,11 +641,17 @@ void CL_AdjustAngles ( float frametime, float *viewangles )
 
 	if (up || down)
 		V_StopPitchDrift ();
-		
+
 	if (viewangles[PITCH] > cl_pitchdown->value)
+	{
 		viewangles[PITCH] = cl_pitchdown->value;
+		diffPitch = 0;
+	}
 	if (viewangles[PITCH] < -cl_pitchup->value)
+	{
 		viewangles[PITCH] = -cl_pitchup->value;
+		diffPitch = 0;
+	}
 
 	if (viewangles[ROLL] > 50)
 		viewangles[ROLL] = 50;
@@ -990,8 +997,8 @@ void InitInput (void)
 	cl_backspeed		= gEngfuncs.pfnRegisterVariable ( "cl_backspeed", "400", FCVAR_ARCHIVE );
 	cl_sidespeed		= gEngfuncs.pfnRegisterVariable ( "cl_sidespeed", "400", 0 );
 	cl_movespeedkey		= gEngfuncs.pfnRegisterVariable ( "cl_movespeedkey", "0.3", 0 );
-	cl_pitchup			= gEngfuncs.pfnRegisterVariable ( "cl_pitchup", "89", 0 );
-	cl_pitchdown		= gEngfuncs.pfnRegisterVariable ( "cl_pitchdown", "89", 0 );
+	cl_pitchup			= gEngfuncs.pfnRegisterVariable ( "cl_pitchup", "89.9999", 0 );
+	cl_pitchdown		= gEngfuncs.pfnRegisterVariable ( "cl_pitchdown", "89.9999", 0 );
 
 	cl_vsmoothing		= gEngfuncs.pfnRegisterVariable ( "cl_vsmoothing", "0.05", FCVAR_ARCHIVE );
 
