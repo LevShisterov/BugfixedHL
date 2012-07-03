@@ -36,6 +36,9 @@ extern "C"
 	void DLLEXPORT IN_ClearStates (void);
 }
 
+// Defined in pm_math.c
+extern "C" float anglemod( float a );
+
 extern cl_enginefunc_t gEngfuncs;
 
 extern int iMouseInUse;
@@ -69,6 +72,7 @@ int			mouse_buttons;
 int			mouse_oldbuttonstate;
 POINT		current_pos;
 float		mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
+float		diffYaw, diffPitch;
 
 static int	restore_spi;
 static int	originalmouseparms[3], newmouseparms[3] = {0, 0, 1};
@@ -213,6 +217,8 @@ bool CheckIsMouseInGame()
 			g_iMouseInGame = 1;
 			mx_accum = 0;
 			my_accum = 0;
+			diffYaw = 0;
+			diffPitch = 0;
 			SetCursorPos ( gEngfuncs.GetWindowCenterX(), gEngfuncs.GetWindowCenterY() );
 			return true;
 		}
@@ -522,6 +528,15 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 		{
 			IN_ResetMouse();
 		}
+
+		// Round angles for network transfer but keep reminders
+		float yaw = anglemod(viewangles[YAW] + diffYaw);
+		diffYaw = viewangles[YAW] + diffYaw - yaw;
+		viewangles[YAW] = yaw;
+		float pitch = anglemod(viewangles[PITCH] + diffPitch);
+		if (pitch > 180.0f) pitch -= 360.0f;
+		diffPitch = viewangles[PITCH] + diffPitch - pitch;
+		viewangles[PITCH] = pitch;
 	}
 
 	gEngfuncs.SetViewAngles( (float *)viewangles );
@@ -590,6 +605,8 @@ void DLLEXPORT IN_ClearStates (void)
 
 	mx_accum = 0;
 	my_accum = 0;
+	diffYaw = 0;
+	diffPitch = 0;
 	mouse_oldbuttonstate = 0;
 }
 
