@@ -50,6 +50,7 @@ TeamFortressViewport *gViewPort = NULL;
 PVOID hVehHandler = NULL;
 
 void InitInput (void);
+void ShutdownInput (void);
 void EV_HookEvents( void );
 void IN_Commands( void );
 
@@ -68,6 +69,7 @@ void	DLLEXPORT HUD_Init( void );
 int		DLLEXPORT HUD_Redraw( float flTime, int intermission );
 int		DLLEXPORT HUD_UpdateClientData( client_data_t *cdata, float flTime );
 void	DLLEXPORT HUD_Reset ( void );
+void	DLLEXPORT HUD_Shutdown( void );
 void	DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server );
 void	DLLEXPORT HUD_PlayerMoveInit( struct playermove_s *ppmove );
 char	DLLEXPORT HUD_PlayerMoveTexture( char *name );
@@ -288,9 +290,7 @@ int DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 ==========================
 	HUD_VidInit
 
-Called when the game initializes
-and whenever the vid_mode is changed
-so the HUD can reinitialize itself.
+Called whenever the client connects to a server.
 ==========================
 */
 
@@ -306,9 +306,8 @@ int DLLEXPORT HUD_VidInit( void )
 ==========================
 	HUD_Init
 
-Called whenever the client connects
-to a server.  Reinitializes all 
-the hud variables.
+Called when the game initializes and whenever the vid_mode is changed so the HUD can reinitialize itself.
+Reinitializes all the hud variables.
 ==========================
 */
 
@@ -361,15 +360,29 @@ int DLLEXPORT HUD_UpdateClientData(client_data_t *pcldata, float flTime )
 
 /*
 ==========================
-	HUD_Reset
+	Obsolete: HUD_Reset
 
-Called at start and end of demos to restore to "non"HUD state.
+Obsolete: Called at start and end of demos to restore to "non"HUD state.
+Obsolete: Doesn't called anymore from the engine.
 ==========================
 */
 
 void DLLEXPORT HUD_Reset( void )
 {
 	gHUD.VidInit();
+}
+
+/*
+==========================
+	HUD_Shutdown
+
+Called at game exit.
+==========================
+*/
+
+void DLLEXPORT HUD_Shutdown( void )
+{
+	ShutdownInput();
 }
 
 /*
