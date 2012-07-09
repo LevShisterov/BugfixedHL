@@ -41,16 +41,16 @@ int CHudTimer::Init(void)
 	m_pCvarHudTimer = gEngfuncs.pfnRegisterVariable("hud_timer", "1", FCVAR_ARCHIVE);
 	m_pCvarHudNextmap = gEngfuncs.pfnRegisterVariable("hud_nextmap", "1", FCVAR_ARCHIVE);
 
-	m_pCvarMpTimelimit = CVAR_GET_POINTER("mp_timelimit");
-	m_pCvarMpTimeleft = CVAR_GET_POINTER("mp_timeleft");
-	m_pCvarSvAgVersion = CVAR_GET_POINTER("sv_ag_version");
-	m_pCvarAmxNextmap = CVAR_GET_POINTER("amx_nextmap");
-
 	return 1;
 };
 
 int CHudTimer::VidInit(void)
 {
+	m_pCvarMpTimelimit = CVAR_GET_POINTER("mp_timelimit");
+	m_pCvarMpTimeleft = CVAR_GET_POINTER("mp_timeleft");
+	m_pCvarSvAgVersion = CVAR_GET_POINTER("sv_ag_version");
+	m_pCvarAmxNextmap = CVAR_GET_POINTER("amx_nextmap");
+
 	m_flDemoSyncTime = 0;
 	m_bDemoSyncTimeValid = false;
 	m_flNextSyncTime = 0;
@@ -165,15 +165,18 @@ void CHudTimer::SyncTimer(float fTime)
 		else if (status.remote_address.type == NA_LOOPBACK)
 		{
 			// Get timer settings directly from cvars
-			m_flEndtime = m_pCvarMpTimelimit->value;
-			float timeleft = m_pCvarMpTimeleft->value;
-			if (timeleft > 0)
+			if (m_pCvarMpTimelimit && m_pCvarMpTimeleft)
 			{
-				float endtime = timeleft + fTime;
-				if (abs(m_flEndtime - endtime) > 1.5)
-					m_flEndtime = endtime;
+				m_flEndtime = m_pCvarMpTimelimit->value;
+				float timeleft = m_pCvarMpTimeleft->value;
+				if (timeleft > 0)
+				{
+					float endtime = timeleft + fTime;
+					if (abs(m_flEndtime - endtime) > 1.5)
+						m_flEndtime = endtime;
+				}
+				if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
 			}
-			if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
 
 			// Get AG version
 			if (m_bAgVersion == SV_AG_UNKNOWN)
