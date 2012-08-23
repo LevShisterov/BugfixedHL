@@ -125,7 +125,8 @@ void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct 
 	dst->sequence				= src->sequence;
 	dst->animtime				= src->animtime;
 
-	if (src->health <= 0 && src->solid != SOLID_NOT)
+	// Prevent lags when passing over dead player
+	if (src->solid == SOLID_SLIDEBOX && (src->movetype == MOVETYPE_TOSS || src->movetype == MOVETYPE_NONE || src->movetype == MOVETYPE_NOCLIP))
 		dst->solid				= SOLID_NOT;
 	else
 		dst->solid				= src->solid;
