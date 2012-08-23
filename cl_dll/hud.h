@@ -57,6 +57,7 @@ typedef struct cvar_s cvar_t;
 #define MAX_HUD_STRING			80
 #define MAX_MOTD_LENGTH			1536
 #define MAX_STEAMID				32	// 0:0:4294967295, STEAM_ID_PENDING
+#define MAX_MAP_NAME			64
 
 #define ADJUST_MENU		-5	// space correction between text lines in hud menu in pixels
 #define ADJUST_MESSAGE	0	// space correction between text lines in hud messages in pixels
@@ -527,6 +528,7 @@ public:
 	};
 
 	int GetAgVersion(void) { return m_bAgVersion; }
+	char* GetNextmap(void) { return m_szNextmap; }
 
 private:
 
@@ -546,7 +548,7 @@ private:
 	float	m_flCustomTimerEnd[MAX_CUSTOM_TIMERS];
 	bool	m_bCustomTimerNeedSound[MAX_CUSTOM_TIMERS];
 	int		m_bAgVersion;
-	char	m_szNextmap[64];
+	char	m_szNextmap[MAX_MAP_NAME];
 	bool	m_bNeedWriteTimer;
 	bool	m_bNeedWriteCustomTimer;
 	bool	m_bNeedWriteNextmap;

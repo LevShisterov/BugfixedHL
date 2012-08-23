@@ -99,6 +99,12 @@ void CHudTimer::SyncTimer(float fTime)
 			// Retrieve settings from the server
 			char buffer[2048];
 			int len = NetSendReceiveUdp(*((unsigned int*)status.remote_address.ip), status.remote_address.port, "\xFF\xFF\xFF\xFFV\xFF\xFF\xFF\xFF", 9, buffer, sizeof(buffer));
+			if (*(int*)buffer == -1 && buffer[4] == 'A' && len == 9)
+			{
+				// Was challenge response, send again with code
+				buffer[4] = 'V';
+				len = NetSendReceiveUdp(*((unsigned int*)status.remote_address.ip), status.remote_address.port, buffer, 9, buffer, sizeof(buffer));
+			}
 			if (len > 0)
 			{
 				// Get map end time
