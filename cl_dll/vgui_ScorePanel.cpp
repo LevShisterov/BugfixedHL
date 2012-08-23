@@ -105,13 +105,6 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 	m_pCurrentHighlightLabel = NULL;
 	m_iHighlightRow = -1;
 
-	// Initialize the top title.
-	m_TitleLabel.setFont(tfont);
-	m_TitleLabel.setText("");
-	m_TitleLabel.setBgColor( 0, 0, 0, 255 );
-	m_TitleLabel.setFgColor( Scheme::sc_primary1 );
-	m_TitleLabel.setContentAlignment( vgui::Label::a_west );
-
 	LineBorder *border = new LineBorder(Color(60, 60, 60, 128));
 	setBorder(border);
 	setPaintBorderEnabled(true);
@@ -122,9 +115,26 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 		// only expand column size for res greater than 640
 		xpos = XRES(xpos);
 	}
-	m_TitleLabel.setBounds(xpos, 4, wide - xpos * 2, SBOARD_TITLE_SIZE_Y);
+
+	// Initialize the top title.
+	m_TitleLabel.setFont(tfont);
+	m_TitleLabel.setText("");
+	m_TitleLabel.setBgColor( 0, 0, 0, 255 );
+	m_TitleLabel.setFgColor( Scheme::sc_primary1 );
+	m_TitleLabel.setContentAlignment( vgui::Label::a_west );
+	m_TitleLabel.setBounds(xpos, 4, wide / 2 - xpos - 1, SBOARD_TITLE_SIZE_Y);
 	m_TitleLabel.setContentFitted(false);
 	m_TitleLabel.setParent(this);
+
+	// Initialize nextmap label.
+	m_NextmapLabel.setFont(tfont);
+	m_NextmapLabel.setText("");
+	m_NextmapLabel.setBgColor( 0, 0, 0, 255 );
+	m_NextmapLabel.setFgColor( Scheme::sc_primary1 );
+	m_NextmapLabel.setContentAlignment( vgui::Label::a_east );
+	m_NextmapLabel.setBounds(wide / 2 + 1, 4, wide / 2 - xpos - 1, SBOARD_TITLE_SIZE_Y);
+	m_NextmapLabel.setContentFitted(false);
+	m_NextmapLabel.setParent(this);
 
 	// Setup the header (labels like "name", "steamId", etc..).
 	m_HeaderGrid.SetDimensions(NUM_COLUMNS, 1);
@@ -326,12 +336,12 @@ bool HACK_GetPlayerUniqueID( int iPlayer, char playerID[16] )
 void ScorePanel::Update()
 {
 	// Set the title
-	if (gViewPort->m_szServerName)
-	{
-		char sz[MAX_SERVERNAME_LENGTH];
-		sprintf_s(sz, MAX_SERVERNAME_LENGTH, "%s", gViewPort->m_szServerName );
-		m_TitleLabel.setText(sz);
-	}
+	m_TitleLabel.setText(MAX_SERVERNAME_LENGTH, gViewPort->m_szServerName);
+
+	// Set next map
+	char temp[MAX_MAP_NAME];
+	sprintf_s(temp, MAX_MAP_NAME, "nextmap: %s", gHUD.m_Timer.GetNextmap());
+	m_NextmapLabel.setText(MAX_MAP_NAME, temp);
 
 	m_iRows = 0;
 	gViewPort->GetAllPlayersInfo();

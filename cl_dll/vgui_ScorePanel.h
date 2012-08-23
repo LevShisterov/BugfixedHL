@@ -249,6 +249,7 @@ private:
 
 	int				m_iCurrentConfiguration;	// Used to remember current columns configuration
 	Label			m_TitleLabel;
+	Label			m_NextmapLabel;
 
 	// Here is how these controls are arranged hierarchically.
 	// m_HeaderGrid
