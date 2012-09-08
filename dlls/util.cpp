@@ -507,18 +507,25 @@ int UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &cente
 
 CBaseEntity *UTIL_FindEntityInSphere( CBaseEntity *pStartEntity, const Vector &vecCenter, float flRadius )
 {
-	edict_t	*pentEntity;
+	CBaseEntity *resultEntity = NULL;
+	edict_t *pentEntity;
 
 	if (pStartEntity)
 		pentEntity = pStartEntity->edict();
 	else
 		pentEntity = NULL;
 
-	pentEntity = FIND_ENTITY_IN_SPHERE( pentEntity, vecCenter, flRadius);
+	while (true)
+	{
+		pentEntity = FIND_ENTITY_IN_SPHERE(pentEntity, vecCenter, flRadius);
+		if (pentEntity == NULL) return NULL;
+		if (FNullEnt(pentEntity)) return NULL;
+		resultEntity = CBaseEntity::Instance(pentEntity);
+		// If we will find edict that doesn't have class we will skip it
+		if (resultEntity != NULL) break;
+	}
 
-	if (!FNullEnt(pentEntity))
-		return CBaseEntity::Instance(pentEntity);
-	return NULL;
+	return resultEntity;
 }
 
 
