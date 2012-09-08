@@ -526,11 +526,10 @@ void CBasePlayerItem::Materialize( void )
 	}
 
 	pev->solid = SOLID_TRIGGER;
-
 	UTIL_SetOrigin( pev, pev->origin );// link into world.
-	SetTouch (&CBasePlayerItem::DefaultTouch);
-	SetThink (NULL);
 
+	SetTouch( &CBasePlayerItem::DefaultTouch );
+	SetThink( NULL );
 }
 
 //=========================================================
@@ -716,8 +715,8 @@ void CBasePlayerItem::DestroyItem( void )
 {
 	if ( m_pPlayer )
 	{
-		// if attached to a player, remove. 
-		m_pPlayer->RemovePlayerItem( this );
+		// if attached to a player, remove.
+		m_pPlayer->RemovePlayerItem( this, false );
 	}
 
 	Kill( );
@@ -759,8 +758,9 @@ void CBasePlayerItem::AttachToPlayer ( CBasePlayer *pPlayer )
 	pev->modelindex = 0;// server won't send down to clients if modelindex == 0
 	pev->model = iStringNull;
 	pev->owner = pPlayer->edict();
-	pev->nextthink = gpGlobals->time + .1;
+	pev->nextthink = 0; // Remove think - prevents futher attempts to materialize
 	SetTouch( NULL );
+	SetThink( NULL );
 }
 
 // CALLED THROUGH the newly-touched weapon's instance. The existing player weapon is pOriginal
@@ -958,11 +958,11 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 
 	if ( pszAmmo1() )
 	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] != 0);
+		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0);
 	}
 	if ( pszAmmo2() )
 	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] != 0);
+		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] > 0);
 	}
 	if (m_iClip > 0)
 	{
@@ -1086,6 +1086,7 @@ void CBasePlayerAmmo::Materialize( void )
 	}
 
 	SetTouch( &CBasePlayerAmmo::DefaultTouch );
+	SetThink( NULL );
 }
 
 void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther )
@@ -1174,7 +1175,17 @@ void CBasePlayerWeapon::RetireWeapon( void )
 	m_pPlayer->pev->weaponmodel = iStringNull;
 	//m_pPlayer->pev->viewmodelindex = NULL;
 
-	g_pGameRules->GetNextBestWeapon( m_pPlayer, this );
+	if (!g_pGameRules->GetNextBestWeapon( m_pPlayer, this ))
+	{
+		// Another weapon wasn't selected. Get rid of current one
+		if (m_pPlayer->m_pActiveItem == this)
+		{
+			m_pPlayer->ResetAutoaim();
+			m_pPlayer->m_pActiveItem->Holster();
+			m_pPlayer->m_pLastItem = NULL;
+			m_pPlayer->m_pActiveItem = NULL;
+		}
+	}
 }
 
 //*********************************************************
@@ -1344,7 +1355,7 @@ BOOL CWeaponBox::PackWeapon( CBasePlayerItem *pWeapon )
 
 	if ( pWeapon->m_pPlayer )
 	{
-		if ( !pWeapon->m_pPlayer->RemovePlayerItem( pWeapon ) )
+		if ( !pWeapon->m_pPlayer->RemovePlayerItem( pWeapon, true ) )
 		{
 			// failed to unhook the weapon from the player!
 			return FALSE;

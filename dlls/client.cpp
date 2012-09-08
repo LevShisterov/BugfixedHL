@@ -122,9 +122,15 @@ void ClientDisconnect( edict_t *pEntity )
 	// since the edict doesn't get deleted, fix it so it doesn't interfere.
 	pEntity->v.takedamage = DAMAGE_NO;// don't attract autoaim
 	pEntity->v.solid = SOLID_NOT;// nonsolid
+	pEntity->v.flags = 0;	// clear client flags, because engine doesn't clear them before calling ClientConnect, but only before ClientPutInServer, on next connection to this slot
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
 
 	g_pGameRules->ClientDisconnected( pEntity );
+
+	// Mark player as disconnected
+	entvars_t *pev = &pEntity->v;
+	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
+	pl->Disconnect();
 }
 
 
@@ -476,6 +482,8 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 
 	char text[256];
 	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
+	if (!pPlayer->IsConnected())
+		return;
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	if ( pEntity->v.netname && STRING(pEntity->v.netname)[0] != 0 && !FStrEq( STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" )) )
@@ -565,6 +573,7 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 	CBaseEntity		*pClass;
 
 	// Every call to ServerActivate should be matched by a call to ServerDeactivate
+	ASSERT( g_serveractive == 0 );
 	g_serveractive = 1;
 
 	// Clients have not been initialized yet
