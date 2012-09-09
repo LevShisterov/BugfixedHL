@@ -141,9 +141,9 @@ public:
 public:
 
 	CVoiceLabel*	FindVoiceLabel(int clientindex);	// Find a CVoiceLabel representing the specified speaker. 
-													// Returns NULL if none.
-													// entindex can be -1 if you want a currently-unused voice label.
-	CVoiceLabel*	GetFreeVoiceLabel();			// Get an unused voice label. Returns NULL if none.
+														// Returns NULL if none.
+														// entindex can be -1 if you want a currently-unused voice label.
+	CVoiceLabel*	GetFreeVoiceLabel();	// Get an unused voice label. Returns NULL if none.
 
 	void			RepositionLabels();
 
@@ -176,12 +176,12 @@ public:
 	// It is checked periodically, and the server is told to squelch or unsquelch the appropriate players.
 	CPlayerBitVec	m_ServerBannedPlayers;
 
-	cl_entity_s		m_VoiceHeadModels[VOICE_MAX_PLAYERS];			// These aren't necessarily in the order of players. They are just
-																	// a place for it to put data in during CreateEntities.
+	cl_entity_s		m_VoiceHeadModels[MAX_PLAYERS];		// These aren't necessarily in the order of players. They are just
+														// a place for it to put data in during CreateEntities.
 
 	IVoiceStatusHelper	*m_pHelper;		// Each mod provides an implementation of this.
 
-	
+
 	// Scoreboard icons.
 	double			m_BlinkTimer;			// Blink scoreboard icons..
 	vgui::BitmapTGA	*m_pScoreboardNeverSpoken;
@@ -190,8 +190,8 @@ public:
 	vgui::BitmapTGA	*m_pScoreboardSpeaking2;
 	vgui::BitmapTGA	*m_pScoreboardSquelch;
 	vgui::BitmapTGA	*m_pScoreboardBanned;
-	
-	vgui::Label		   *m_pBanButtons[VOICE_MAX_PLAYERS];		// scoreboard buttons.
+
+	vgui::Label		*m_pBanButtons[MAX_PLAYERS];	// scoreboard buttons.
 
 	// Squelch mode stuff.
 	bool				m_bInSquelchMode;
@@ -210,7 +210,7 @@ public:
 	bool				m_bServerAcked;			// Set to true when the server knows the client is talking.
 
 public:
-	
+
 	CVoiceBanMgr		m_BanMgr;				// Tracks which users we have squelched and don't want to hear.
 
 public:
