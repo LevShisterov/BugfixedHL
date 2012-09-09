@@ -14,6 +14,7 @@
 
 bool IsValidFilename(const char *path)
 {
+	if (path[0] == 0) return false;
 	const char *c = path;
 	const char *d = path;
 	while (*c)

@@ -144,7 +144,7 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 
 	// Check for incorrect player model
 	char *mdls = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
-	if (_stricmp(mdls, prevModel))
+	if (prevModel[0] == 0 || _stricmp(mdls, prevModel))
 	{
 		if (!IsValidFilename(mdls))
 		{
