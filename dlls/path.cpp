@@ -86,6 +86,8 @@ void RemoveInvalidPathChars(char *path, bool isRoted)
 	*d = 0;
 }
 
+#ifdef _WIN32
+
 // Creates directory with all intermediate directories.
 bool CreateDirectoryFull(char *path)
 {
@@ -130,3 +132,5 @@ bool CreateDirectoryFull(char *path)
 	}
 	return true;
 }
+
+#endif
