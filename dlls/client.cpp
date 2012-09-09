@@ -131,6 +131,7 @@ void ClientDisconnect( edict_t *pEntity )
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 	pl->Disconnect();
+	g_checkedPlayerModels[pl->entindex() - 1][0] = 0;
 }
 
 
@@ -139,31 +140,29 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 {
 	char text[256];
 	int clientIndex = pPlayer->entindex();
+	char *prevModel = g_checkedPlayerModels[clientIndex - 1];
 
 	// Check for incorrect player model
 	char *mdls = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
-	if (_stricmp(mdls, g_checkedPlayerModels[clientIndex - 1]))
+	if (_stricmp(mdls, prevModel))
 	{
-		char model[MAX_MODEL_NAME];
-		strncpy(model, mdls, sizeof(model) - 1);
-		model[sizeof(model) - 1] = 0;
-
-		RemoveInvalidFilenameChars(model);
-		if (strlen(model) > MAX_MODEL_NAME - 1 || _stricmp(mdls, model))
+		if (!IsValidFilename(mdls))
 		{
-			if (model[0] == 0)
-				strcpy(model, "gordon");	// default model if empty
+			if (prevModel[0] == 0)
+				strcpy(prevModel, "gordon");	// default model if empty
 
-			// Set changed model back into info buffer
-			g_engfuncs.pfnSetClientKeyValue(clientIndex, infobuffer, "model", model);
+			// Set previous model back into info buffer
+			g_engfuncs.pfnSetClientKeyValue(clientIndex, infobuffer, "model", prevModel);
 
 			// Inform player
 			sprintf(text, "* Model is restricted to %d characters and can't contain special characters like: <>:\"/\\|?*\n", MAX_MODEL_NAME - 1);
 			UTIL_SayText(text, pPlayer);
 		}
-
-		// Remember model player has currently
-		strcpy(g_checkedPlayerModels[clientIndex - 1], model);
+		else
+		{
+			// Remember model player has set
+			strcpy(prevModel, mdls);
+		}
 	}
 }
 
