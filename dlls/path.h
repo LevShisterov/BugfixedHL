@@ -12,6 +12,7 @@
 #include <windows.h>
 
 
+bool IsValidFilename(const char *path);
 void RemoveInvalidFilenameChars(char *path);
 void RemoveInvalidPathChars(char *path, bool isRoted);
 // Creates directory with all intermediate directories.

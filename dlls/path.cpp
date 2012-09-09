@@ -12,6 +12,21 @@
 #include "path.h"
 
 
+bool IsValidFilename(const char *path)
+{
+	const char *c = path;
+	const char *d = path;
+	while (*c)
+	{
+		if (*c <= 31  || *c == '<' || *c == '>' || *c == '"' ||
+			*c == '/' || *c == '|' || *c == '?' || *c == '*' ||
+			*c == ':' || *c == '\\')
+			return false;
+		c++;
+	}
+	return true;
+}
+
 void RemoveInvalidFilenameChars(char *path)
 {
 	char *c = path;

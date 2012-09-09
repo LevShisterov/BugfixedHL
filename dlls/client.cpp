@@ -54,6 +54,8 @@ extern int g_teamplay;
 
 void LinkUserMessages( void );
 
+char g_checkedPlayerModels[MAX_PLAYERS][MAX_MODEL_NAME];	// Used to store checked player model name
+
 /*
  * used by kill command and disconnect command
  * ROBIN: Moved here from player.cpp, to allow multiple player models
@@ -78,7 +80,7 @@ ClientConnect
 called when a player connects to a server
 ============
 */
-BOOL ClientConnect( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ]  )
+BOOL ClientConnect( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ] )
 {
 	return g_pGameRules->ClientConnected( pEntity, pszName, pszAddress, szRejectReason );
 
@@ -87,8 +89,6 @@ BOOL ClientConnect( edict_t *pEntity, const char *pszName, const char *pszAddres
 //		ExitIntermission ();
 
 }
-
-
 /*
 ===========
 ClientDisconnect
@@ -125,8 +125,40 @@ void ClientDisconnect( edict_t *pEntity )
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 	pl->Disconnect();
+	g_checkedPlayerModels[pl->entindex() - 1][0] = 0;
 }
 
+
+// Checks player model for validity
+void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
+{
+	char text[256];
+	int clientIndex = pPlayer->entindex();
+	char *prevModel = g_checkedPlayerModels[clientIndex - 1];
+
+	// Check for incorrect player model
+	char *mdls = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
+	if (_stricmp(mdls, prevModel))
+	{
+		if (!IsValidFilename(mdls))
+		{
+			if (prevModel[0] == 0)
+				strcpy(prevModel, "gordon");	// default model if empty
+
+			// Set previous model back into info buffer
+			g_engfuncs.pfnSetClientKeyValue(clientIndex, infobuffer, "model", prevModel);
+
+			// Inform player
+			sprintf(text, "* Model is restricted to %d characters and can't contain special characters like: <>:\"/\\|?*\n", MAX_MODEL_NAME - 1);
+			UTIL_SayText(text, pPlayer);
+		}
+		else
+		{
+			// Remember model player has set
+			strcpy(prevModel, mdls);
+		}
+	}
+}
 
 // called by ClientKill and DeadThink
 void respawn(entvars_t* pev, BOOL fCopyCorpse)
@@ -190,11 +222,14 @@ void ClientPutInServer( edict_t *pEntity )
 
 	entvars_t *pev = &pEntity->v;
 
+	// Allocate a CBasePlayer for pev, and call spawn
 	pPlayer = GetClassPtr((CBasePlayer *)pev);
 	pPlayer->SetCustomDecalFrames(-1); // Assume none;
 
-	// Allocate a CBasePlayer for pev, and call spawn
-	pPlayer->Spawn() ;
+	// Check player model before spawn
+	CheckPlayerModel(pPlayer, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()));
+
+	pPlayer->Spawn();
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
@@ -584,21 +619,24 @@ it gets sent into the rest of the engine.
 void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 {
 	// Is the client spawned yet?
-	if ( !pEntity->pvPrivateData )
+	if (!pEntity->pvPrivateData)
 		return;
-
-	char text[256];
+	// Get player class if it was created (first PutInServer on this slot happen)
 	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
 	if (!pPlayer->IsConnected())
 		return;
 
-	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
+	CheckPlayerModel(pPlayer, infobuffer);
+
+	char text[256];
+
+	// msg everyone if someone changes their name, and it isn't the first time (changing no name to current name)
 	if ( pEntity->v.netname && STRING(pEntity->v.netname)[0] != 0 && !FStrEq( STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" )) )
 	{
 		char sName[256];
 		char *pName = g_engfuncs.pfnInfoKeyValue( infobuffer, "name" );
 		strncpy( sName, pName, sizeof(sName) - 1 );
-		sName[ sizeof(sName) - 1 ] = '\0';
+		sName[ sizeof(sName) - 1 ] = 0;
 
 		// First parse the name and remove any %'s
 		for ( char *pApersand = sName; pApersand != NULL && *pApersand != 0; pApersand++ )
@@ -609,9 +647,9 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 		}
 
 		// Set the name
-		g_engfuncs.pfnSetClientKeyValue( ENTINDEX(pEntity), infobuffer, "name", sName );
+		g_engfuncs.pfnSetClientKeyValue(ENTINDEX(pEntity), infobuffer, "name", sName);
 
-		sprintf( text, "* %s changed name to %s\n", STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" ) );
+		sprintf(text, "* %s changed name to %s\n", STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue(infobuffer, "name"));
 		UTIL_SayTextAll(text, pPlayer);
 
 		// team match?
@@ -632,25 +670,6 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 				GETPLAYERAUTHID( pEntity ),
 				GETPLAYERUSERID( pEntity ), 
 				g_engfuncs.pfnInfoKeyValue( infobuffer, "name" ) );
-		}
-	}
-
-	// Check for incorrect player model
-	char *mdls = g_engfuncs.pfnInfoKeyValue( infobuffer, "model" );
-	if (_stricmp(mdls, pPlayer->m_szTeamName))	// Yes m_szTeamName will be always "" in non-teamplay, so we will do some extra unneeded checks to model, but it is not hard.
-	{
-		char model[256];
-		strncpy(model, mdls, sizeof(model) - 1);
-		model[sizeof(model) - 1] = 0;
-		RemoveInvalidFilenameChars(model);
-		if (strlen(model) > MAX_TEAM_NAME - 1 || _stricmp(mdls, model))
-		{
-			model[MAX_TEAM_NAME - 1] = 0;
-			int clientIndex = pPlayer->entindex();
-			g_engfuncs.pfnSetClientKeyValue(clientIndex, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()), "model", model);
-			g_engfuncs.pfnSetClientKeyValue(clientIndex, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()), "team", model);
-			sprintf(text, "* Model is restricted to 15 characters and can't contain special characters like: <>:\"/\\|?*\n" );
-			UTIL_SayText(text, pPlayer);
 		}
 	}
 
