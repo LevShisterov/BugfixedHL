@@ -149,7 +149,7 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 			g_engfuncs.pfnSetClientKeyValue(clientIndex, infobuffer, "model", prevModel);
 
 			// Inform player
-			sprintf(text, "* Model is restricted to %d characters and can't contain special characters like: <>:\"/\\|?*\n", MAX_MODEL_NAME - 1);
+			sprintf(text, "* Model should be non-empty, less then %d characters and can't contain special characters like: <>:\"/\\|?*\n* Your current model remains: \"%s\"\n", MAX_MODEL_NAME - 1, prevModel);
 			UTIL_SayText(text, pPlayer);
 		}
 		else
