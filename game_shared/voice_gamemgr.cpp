@@ -23,12 +23,12 @@ CPlayerBitVec	g_PlayerModEnable;		// Set to 1 for each player if the player want
 										// (If it's zero, then the server reports that the game rules are saying the
 										// player can't hear anyone).
 
-CPlayerBitVec	g_BanMasks[VOICE_MAX_PLAYERS];	// Tells which players don't want to hear each other.
+CPlayerBitVec	g_BanMasks[MAX_PLAYERS];	// Tells which players don't want to hear each other.
 												// These are indexed as clients and each bit represents a client
 												// (so player entity is bit+1).
 
-CPlayerBitVec	g_SentGameRulesMasks[VOICE_MAX_PLAYERS];	// These store the masks we last sent to each client so we can determine if
-CPlayerBitVec	g_SentBanMasks[VOICE_MAX_PLAYERS];			// we need to resend them.
+CPlayerBitVec	g_SentGameRulesMasks[MAX_PLAYERS];	// These store the masks we last sent to each client so we can determine if
+CPlayerBitVec	g_SentBanMasks[MAX_PLAYERS];			// we need to resend them.
 CPlayerBitVec	g_bWantModEnable;
 
 cvar_t voice_serverdebug = {"voice_serverdebug", "0"};
@@ -100,14 +100,14 @@ CVoiceGameMgr::~CVoiceGameMgr()
 bool CVoiceGameMgr::Init(
 	IVoiceGameMgrHelper *pHelper,
 	int maxClients)
-{		  
+{
 	m_pHelper = pHelper;
-	m_nMaxPlayers = VOICE_MAX_PLAYERS < maxClients ? VOICE_MAX_PLAYERS : maxClients;
+	m_nMaxPlayers = MAX_PLAYERS < maxClients ? MAX_PLAYERS : maxClients;
 	g_engfuncs.pfnPrecacheModel("sprites/voiceicon.spr");
 
-	m_msgPlayerVoiceMask = REG_USER_MSG( "VoiceMask", VOICE_MAX_PLAYERS_DW*4 * 2 );
+	m_msgPlayerVoiceMask = REG_USER_MSG( "VoiceMask", VOICE_MAX_PLAYERS_DW * 4 * 2 );
 	m_msgRequestState = REG_USER_MSG( "ReqState", 0 );
-	
+
 	// register voice_serverdebug if it hasn't been registered already
 	if ( !CVAR_GET_POINTER( "voice_serverdebug" ) )
 		CVAR_REGISTER( &voice_serverdebug );
