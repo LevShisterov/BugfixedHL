@@ -140,7 +140,7 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 	char *mdls = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
 	if (prevModel[0] == 0 || _stricmp(mdls, prevModel))
 	{
-		if (!IsValidFilename(mdls))
+		if (strlen(mdls) > MAX_MODEL_NAME - 1 || !IsValidFilename(mdls))
 		{
 			if (prevModel[0] == 0)
 				strcpy(prevModel, "gordon");	// default model if empty
