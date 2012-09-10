@@ -118,7 +118,9 @@ int CHudDeathNotice :: Draw( float flTime )
 			y = YRES(DEATHNOTICE_TOP) + 2 + (20 * i);  //!!!
 
 			int id = (rgDeathNoticeList[i].iId == -1) ? m_HUD_d_skull : rgDeathNoticeList[i].iId;
-			x = ScreenWidth - ConsoleStringLen(rgDeathNoticeList[i].szVictim) - (gHUD.GetSpriteRect(id).right - gHUD.GetSpriteRect(id).left);
+			HLHSPRITE spr = gHUD.GetSprite(id);
+			wrect_t rect = gHUD.GetSpriteRect(id);
+			x = ScreenWidth - ConsoleStringLen(rgDeathNoticeList[i].szVictim) - (rect.right - rect.left);
 
 			if ( !rgDeathNoticeList[i].iSuicide )
 			{
@@ -137,10 +139,10 @@ int CHudDeathNotice :: Draw( float flTime )
 			}
 
 			// Draw death weapon
-			SPR_Set( gHUD.GetSprite(id), r, g, b );
-			SPR_DrawAdditive( 0, x, y, &gHUD.GetSpriteRect(id) );
+			SPR_Set(spr , r, g, b);
+			SPR_DrawAdditive(0, x, y, &rect);
 
-			x += (gHUD.GetSpriteRect(id).right - gHUD.GetSpriteRect(id).left);
+			x += (rect.right - rect.left);
 
 			// Draw victims name (if it was a player that was killed)
 			if (rgDeathNoticeList[i].iNonPlayerKill == FALSE)
@@ -165,9 +167,10 @@ int CHudDeathNotice :: MsgFunc_DeathMsg( const char *pszName, int iSize, void *p
 	int killer = READ_BYTE();
 	int victim = READ_BYTE();
 
-	char killedwith[32];
-	strcpy( killedwith, "d_" );
-	strncat( killedwith, READ_STRING(), 32 );
+	char killedwith[MAX_WEAPON_NAME];
+	strcpy(killedwith, "d_");
+	strncat(killedwith, READ_STRING(), sizeof(killedwith) - 1);
+	killedwith[sizeof(killedwith) - 1] = 0;
 
 	if (gViewPort)
 		gViewPort->DeathMsg( killer, victim );

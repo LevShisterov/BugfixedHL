@@ -564,7 +564,8 @@ private:
 //
 //-----------------------------------------------------
 //
-#define MAX_SPRITE_NAME_LENGTH	24
+#define MAX_SPRITE_NAME_LENGTH		24
+#define RESERVE_SPRITES_FOR_WEAPONS	32
 
 class CHudStatusIcons: public CHudBase
 {
@@ -629,6 +630,7 @@ private:
 	int						m_iLogo;
 	client_sprite_t			*m_pSpriteList;
 	int						m_iSpriteCount;
+	int						m_iSpriteCountAlloc;
 	int						m_iSpriteCountAllRes;
 	float					m_flMouseSensitivity;
 	int						m_iConcussionEffect;
@@ -682,14 +684,12 @@ public:
 	{
 		return (index < 0) ? 0 : m_rghSprites[index];
 	}
-
 	wrect_t& GetSpriteRect( int index )
 	{
 		return m_rgrcRects[index];
 	}
-
-	
 	int GetSpriteIndex( const char *SpriteName );	// gets a sprite index, for use in the m_rghSprites[] array
+	void AddSprite(client_sprite_t *p);
 
 	CHudAmmo			m_Ammo;
 	CHudHealth			m_Health;

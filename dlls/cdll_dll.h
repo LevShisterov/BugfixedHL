@@ -21,6 +21,7 @@
 #define CDLL_DLL_H
 
 #define MAX_WEAPONS		32		// ???
+#define MAX_WEAPON_NAME	32
 
 
 #define MAX_WEAPON_POSITIONS	10	// this is the max number of weapon items in each bucket on a client

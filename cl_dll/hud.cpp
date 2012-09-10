@@ -477,9 +477,10 @@ void CHud :: VidInit( void )
 			}
 
 			// allocated memory for sprite handle arrays
- 			m_rghSprites = new HLHSPRITE[m_iSpriteCount];
-			m_rgrcRects = new wrect_t[m_iSpriteCount];
-			m_rgszSpriteNames = new char[m_iSpriteCount * MAX_SPRITE_NAME_LENGTH];
+			m_iSpriteCountAlloc = m_iSpriteCount + RESERVE_SPRITES_FOR_WEAPONS;
+			m_rghSprites = new HLHSPRITE[m_iSpriteCountAlloc];
+			m_rgrcRects = new wrect_t[m_iSpriteCountAlloc];
+			m_rgszSpriteNames = new char[m_iSpriteCountAlloc * MAX_SPRITE_NAME_LENGTH];
 
 			p = m_pSpriteList;
 			int index = 0;
@@ -542,6 +543,47 @@ void CHud :: VidInit( void )
 	m_StatusIcons.VidInit();
 	m_Timer.VidInit();
 	GetClientVoiceMgr()->VidInit();
+}
+
+void CHud::AddSprite(client_sprite_t *p)
+{
+	// Realloc if needed
+	if (m_iSpriteCount >= m_iSpriteCountAlloc)
+	{
+		int oldAllocCount = m_iSpriteCountAlloc;
+		int newAllocCount = m_iSpriteCountAlloc + RESERVE_SPRITES_FOR_WEAPONS;
+		m_iSpriteCountAlloc = m_iSpriteCount + RESERVE_SPRITES_FOR_WEAPONS;
+		HLHSPRITE *new_rghSprites = new HLHSPRITE[newAllocCount];
+		wrect_t *new_rgrcRects = new wrect_t[newAllocCount];
+		char *new_rgszSpriteNames = new char[newAllocCount * MAX_SPRITE_NAME_LENGTH];
+		int a = sizeof(char*) * oldAllocCount * MAX_SPRITE_NAME_LENGTH;
+		int b = sizeof(m_rgszSpriteNames);
+		memcpy(new_rghSprites, m_rghSprites, sizeof(HLHSPRITE) * oldAllocCount);
+		memcpy(new_rgrcRects, m_rgrcRects, sizeof(wrect_t*) * oldAllocCount);
+		memcpy(new_rgszSpriteNames, m_rgszSpriteNames, oldAllocCount * MAX_SPRITE_NAME_LENGTH);
+		delete[] m_rghSprites;
+		delete[] m_rgrcRects;
+		delete[] m_rgszSpriteNames;
+		m_rghSprites = new_rghSprites;
+		m_rgrcRects = new_rgrcRects;
+		m_rgszSpriteNames = new_rgszSpriteNames;
+	}
+
+	// Search for existing sprite
+	int i = 0;
+	for (i = 0; i < m_iSpriteCount; i++)
+	{
+		if (!_stricmp(&m_rgszSpriteNames[i * MAX_SPRITE_NAME_LENGTH], p->szName))
+			return;
+	}
+
+	char sz[256];
+	sprintf(sz, "sprites/%s.spr", p->szSprite);
+	m_rghSprites[m_iSpriteCount] = SPR_Load(sz);
+	m_rgrcRects[m_iSpriteCount] = p->rc;
+	strncpy(&m_rgszSpriteNames[m_iSpriteCount * MAX_SPRITE_NAME_LENGTH], p->szName, MAX_SPRITE_NAME_LENGTH);
+	m_rgszSpriteNames[m_iSpriteCount * MAX_SPRITE_NAME_LENGTH + MAX_SPRITE_NAME_LENGTH - 1] = 0;
+	m_iSpriteCount++;
 }
 
 int CHud::MsgFunc_Logo(const char *pszName,  int iSize, void *pbuf)
