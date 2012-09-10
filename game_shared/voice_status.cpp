@@ -339,7 +339,7 @@ void CVoiceStatus::Frame(double frametime)
 			m_Labels[i].m_pBackground->setVisible( false );
 	}
 
-	for(int i=0; i < VOICE_MAX_PLAYERS; i++)
+	for(int i=0; i < MAX_PLAYERS; i++)
 		UpdateBanButton(i);
 }
 
@@ -352,7 +352,7 @@ void CVoiceStatus::CreateEntities()
 	cl_entity_t *localPlayer = gEngfuncs.GetLocalPlayer();
 
 	int iOutModel = 0;
-	for(int i=0; i < VOICE_MAX_PLAYERS; i++)
+	for(int i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(!m_VoicePlayers[i])
 			continue;
@@ -423,7 +423,7 @@ void CVoiceStatus::UpdateSpeakerStatus(int entindex, qboolean bTalking)
 	{
 		m_bServerAcked = !!bTalking;
 	}
-	else if(entindex >= 0 && entindex <= VOICE_MAX_PLAYERS)
+	else if(entindex >= 0 && entindex <= MAX_PLAYERS)
 	{
 		int iClient = entindex - 1;
 		if(iClient < 0)
@@ -804,7 +804,7 @@ void CVoiceStatus::FreeBitmaps()
 	m_pScoreboardBanned = NULL;
 
 	// Clear references to the images in panels.
-	for(int i=0; i < VOICE_MAX_PLAYERS; i++)
+	for(int i=0; i < MAX_PLAYERS; i++)
 	{
 		if (m_pBanButtons[i])
 		{

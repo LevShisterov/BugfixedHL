@@ -73,6 +73,7 @@ OBJ = \
 	$(DLL_OBJDIR)/cbase.o \
 	$(DLL_OBJDIR)/client.o \
 	$(DLL_OBJDIR)/combat.o \
+	$(DLL_OBJDIR)/com_utils.o \
 	$(DLL_OBJDIR)/crossbow.o \
 	$(DLL_OBJDIR)/crowbar.o \
 	$(DLL_OBJDIR)/doors.o \
@@ -101,6 +102,7 @@ OBJ = \
 	$(DLL_OBJDIR)/mp5.o \
 	$(DLL_OBJDIR)/mpstubb.o \
 	$(DLL_OBJDIR)/multiplay_gamerules.o \
+	$(DLL_OBJDIR)/path.o \
 	$(DLL_OBJDIR)/pathcorner.o \
 	$(DLL_OBJDIR)/plane.o \
 	$(DLL_OBJDIR)/plats.o \

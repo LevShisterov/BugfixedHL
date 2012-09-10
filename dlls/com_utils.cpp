@@ -9,10 +9,14 @@
 // Functions that can be used on both: client and server.
 //
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #include "com_utils.h"
 
+
+#ifdef _WIN32
 
 /*============
 String functions
@@ -68,3 +72,5 @@ bool strrepl(char *str, int size, const char *find, const char *repl)
 	free(buffer);
 	return true;
 }
+
+#endif

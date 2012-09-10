@@ -49,5 +49,6 @@
 #define MAX_PLAYER_NAME		32
 #define MAX_TEAMS			32
 #define MAX_TEAM_NAME		16
+#define MAX_MODEL_NAME		MAX_TEAM_NAME
 
 #endif

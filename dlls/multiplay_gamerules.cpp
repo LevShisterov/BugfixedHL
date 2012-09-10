@@ -230,30 +230,33 @@ void CHalfLifeMultiplay :: Think ( void )
 
 	if ( flFragLimit )
 	{
-		int bestfrags = 9999;
+		bool first = true;
+		int bestfrags = flFragLimit;
 		int remain;
 
 		// check if any player is over the frag limit
 		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
 			CBaseEntity *pPlayer = UTIL_PlayerByIndex( i );
+			if ( pPlayer == NULL) continue;
 
-			if ( pPlayer && pPlayer->pev->frags >= flFragLimit )
+			if ( pPlayer->pev->frags >= flFragLimit )
 			{
 				GoToIntermission();
 				return;
 			}
 
-
-			if ( pPlayer )
+			remain = flFragLimit - pPlayer->pev->frags;
+			if ( first )
 			{
-				remain = flFragLimit - pPlayer->pev->frags;
-				if ( remain < bestfrags )
-				{
-					bestfrags = remain;
-				}
+				bestfrags = remain;
+				first = false;
+				continue;
 			}
-
+			if ( remain < bestfrags )
+			{
+				bestfrags = remain;
+			}
 		}
 		frags_remaining = bestfrags;
 	}
@@ -439,7 +442,8 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 
 	// sending just one score makes the hud scoreboard active;  otherwise
 	// it is just disabled for single play
-	MESSAGE_BEGIN( MSG_ONE, gmsgScoreInfo, NULL, pl->edict() );
+	// Let all know that new player have zero score
+	MESSAGE_BEGIN( MSG_ALL, gmsgScoreInfo, NULL );
 		WRITE_BYTE( ENTINDEX(pl->edict()) );
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
@@ -502,6 +506,12 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 					GETPLAYERUSERID( pPlayer->edict() ),
 					GETPLAYERAUTHID( pPlayer->edict() ),
 					GETPLAYERUSERID( pPlayer->edict() ) );
+			}
+
+			if ( pPlayer->m_pTank != NULL )
+			{
+				// Stop controlling the tank
+				pPlayer->m_pTank->Use( pPlayer, pPlayer, USE_OFF, 0 );
 			}
 
 			pPlayer->RemoveAllItems( TRUE );// destroy all of the players weapons and items

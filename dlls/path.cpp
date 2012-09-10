@@ -12,6 +12,22 @@
 #include "path.h"
 
 
+bool IsValidFilename(const char *path)
+{
+	if (path[0] == 0) return false;
+	const char *c = path;
+	const char *d = path;
+	while (*c)
+	{
+		if (*c <= 31  || *c == '<' || *c == '>' || *c == '"' ||
+			*c == '/' || *c == '|' || *c == '?' || *c == '*' ||
+			*c == ':' || *c == '\\')
+			return false;
+		c++;
+	}
+	return true;
+}
+
 void RemoveInvalidFilenameChars(char *path)
 {
 	char *c = path;
@@ -70,6 +86,8 @@ void RemoveInvalidPathChars(char *path, bool isRoted)
 	*d = 0;
 }
 
+#ifdef _WIN32
+
 // Creates directory with all intermediate directories.
 bool CreateDirectoryFull(char *path)
 {
@@ -114,3 +132,5 @@ bool CreateDirectoryFull(char *path)
 	}
 	return true;
 }
+
+#endif
