@@ -33,7 +33,7 @@ WEAPON *gpActiveSel;	// NULL means off, 1 means just the menu bar, otherwise
 						// this points to the active weapon menu item
 WEAPON *gpLastSel;		// Last weapon menu selection 
 
-client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes, int iCount);
+client_sprite_t *GetSpriteFromList(client_sprite_t *pList, const char *psz, int iRes, int iCount);
 
 WeaponsResource gWR;
 
@@ -79,7 +79,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 	else
 		iRes = 640;
 
-	char sz[128];
+	char sz[256];
 
 	if ( !pWeapon )
 		return;
@@ -88,10 +88,18 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 	memset( &pWeapon->rcInactive, 0, sizeof(wrect_t) );
 	memset( &pWeapon->rcAmmo, 0, sizeof(wrect_t) );
 	memset( &pWeapon->rcAmmo2, 0, sizeof(wrect_t) );
+	memset( &pWeapon->rcCrosshair, 0, sizeof(wrect_t) );
+	memset( &pWeapon->rcAutoaim, 0, sizeof(wrect_t) );
+	memset( &pWeapon->rcZoomedCrosshair, 0, sizeof(wrect_t) );
+	memset( &pWeapon->rcZoomedAutoaim, 0, sizeof(wrect_t) );
 	pWeapon->hInactive = 0;
 	pWeapon->hActive = 0;
 	pWeapon->hAmmo = 0;
 	pWeapon->hAmmo2 = 0;
+	pWeapon->hCrosshair = 0;
+	pWeapon->hAutoaim = 0;
+	pWeapon->hZoomedCrosshair = 0;
+	pWeapon->hZoomedAutoaim = 0;
 
 	sprintf(sz, "sprites/%s.txt", pWeapon->szName);
 	client_sprite_t *pList = SPR_GetList(sz, &i);
@@ -100,28 +108,24 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 		return;
 
 	client_sprite_t *p;
-	
-	p = GetSpriteList( pList, "crosshair", iRes, i );
+
+	p = GetSpriteFromList(pList, "crosshair", iRes, i);
 	if (p)
 	{
 		sprintf(sz, "sprites/%s.spr", p->szSprite);
 		pWeapon->hCrosshair = SPR_Load(sz);
 		pWeapon->rcCrosshair = p->rc;
 	}
-	else
-		pWeapon->hCrosshair = NULL;
 
-	p = GetSpriteList(pList, "autoaim", iRes, i);
+	p = GetSpriteFromList(pList, "autoaim", iRes, i);
 	if (p)
 	{
 		sprintf(sz, "sprites/%s.spr", p->szSprite);
 		pWeapon->hAutoaim = SPR_Load(sz);
 		pWeapon->rcAutoaim = p->rc;
 	}
-	else
-		pWeapon->hAutoaim = 0;
 
-	p = GetSpriteList( pList, "zoom", iRes, i );
+	p = GetSpriteFromList(pList, "zoom", iRes, i);
 	if (p)
 	{
 		sprintf(sz, "sprites/%s.spr", p->szSprite);
@@ -134,7 +138,7 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 		pWeapon->rcZoomedCrosshair = pWeapon->rcCrosshair;
 	}
 
-	p = GetSpriteList(pList, "zoom_autoaim", iRes, i);
+	p = GetSpriteFromList(pList, "zoom_autoaim", iRes, i);
 	if (p)
 	{
 		sprintf(sz, "sprites/%s.spr", p->szSprite);
@@ -147,7 +151,15 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 		pWeapon->rcZoomedAutoaim = pWeapon->rcZoomedCrosshair;
 	}
 
-	p = GetSpriteList(pList, "weapon", iRes, i);
+	p = GetSpriteFromList(pList, "weapon_s", iRes, i);
+	if (p)
+	{
+		sprintf(sz, "sprites/%s.spr", p->szSprite);
+		pWeapon->hActive = SPR_Load(sz);
+		pWeapon->rcActive = p->rc;
+	}
+
+	p = GetSpriteFromList(pList, "weapon", iRes, i);
 	if (p)
 	{
 		sprintf(sz, "sprites/%s.spr", p->szSprite);
@@ -156,20 +168,8 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 
 		gHR.iHistoryGap = max( gHR.iHistoryGap, pWeapon->rcActive.bottom - pWeapon->rcActive.top );
 	}
-	else
-		pWeapon->hInactive = 0;
 
-	p = GetSpriteList(pList, "weapon_s", iRes, i);
-	if (p)
-	{
-		sprintf(sz, "sprites/%s.spr", p->szSprite);
-		pWeapon->hActive = SPR_Load(sz);
-		pWeapon->rcActive = p->rc;
-	}
-	else
-		pWeapon->hActive = 0;
-
-	p = GetSpriteList(pList, "ammo", iRes, i);
+	p = GetSpriteFromList(pList, "ammo", iRes, i);
 	if (p)
 	{
 		sprintf(sz, "sprites/%s.spr", p->szSprite);
@@ -178,10 +178,8 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 
 		gHR.iHistoryGap = max( gHR.iHistoryGap, pWeapon->rcActive.bottom - pWeapon->rcActive.top );
 	}
-	else
-		pWeapon->hAmmo = 0;
 
-	p = GetSpriteList(pList, "ammo2", iRes, i);
+	p = GetSpriteFromList(pList, "ammo2", iRes, i);
 	if (p)
 	{
 		sprintf(sz, "sprites/%s.spr", p->szSprite);
@@ -190,9 +188,14 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 
 		gHR.iHistoryGap = max( gHR.iHistoryGap, pWeapon->rcActive.bottom - pWeapon->rcActive.top );
 	}
-	else
-		pWeapon->hAmmo2 = 0;
 
+	// Load all "damage by" sprites into global sprites list
+	p = GetSpriteFromList(pList, "d_", iRes, i);
+	while (p != NULL)
+	{
+		gHUD.AddSprite(p);
+		p = GetSpriteFromList(p, "d_", iRes, i - (p - pList) - 1);
+	}
 }
 
 // Returns the first weapon for a given slot.
@@ -1201,24 +1204,24 @@ int CHudAmmo::DrawWList(float flTime)
 
 
 /* =================================
-	GetSpriteList
+	GetSpriteFromList
 
-Finds and returns the matching 
-sprite name 'psz' and resolution 'iRes'
+Finds and returns the sprite which name starts
+with 'pszNameStart' and resolution 'iRes'
 in the given sprite list 'pList'
 iCount is the number of items in the pList
 ================================= */
-client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes, int iCount)
+client_sprite_t *GetSpriteFromList(client_sprite_t *pList, const char *pszNameStart, int iRes, int iCount)
 {
-	if (!pList)
+	if (!pList || iCount <= 0)
 		return NULL;
 
 	int i = iCount;
+	int len = strlen(pszNameStart);
 	client_sprite_t *p = pList;
-
 	while(i--)
 	{
-		if ((!strcmp(psz, p->szName)) && (p->iRes == iRes))
+		if (p->iRes == iRes && !strncmp(pszNameStart, p->szName, len))
 			return p;
 		p++;
 	}
