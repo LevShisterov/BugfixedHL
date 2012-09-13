@@ -448,8 +448,7 @@ void CHud :: VidInit( void )
 	// Load Sprites
 	// ---------
 	//	m_hsprFont = LoadSprite("sprites/%d_font.spr");
-	
-	m_hsprLogo = 0;	
+	m_hsprLogo = 0;
 	m_hsprCursor = 0;
 
 	if (ScreenWidth < 640)
@@ -457,7 +456,9 @@ void CHud :: VidInit( void )
 	else
 		m_iRes = 640;
 
-	// Only load this once
+	client_sprite_t *p;
+	m_iSpriteCount = 0;
+	// Only load hud.txt once
 	if ( !m_pSpriteList )
 	{
 		// we need to load the hud.txt, and all sprites within
@@ -466,57 +467,31 @@ void CHud :: VidInit( void )
 		if (m_pSpriteList)
 		{
 			// count the number of sprites of the appropriate res
-			m_iSpriteCount = 0;
-			client_sprite_t *p = m_pSpriteList;
-			int j;
-			for ( j = 0; j < m_iSpriteCountAllRes; j++ )
+			m_iSpriteCountAlloc = 0;
+			p = m_pSpriteList;
+			for (int i = 0; i < m_iSpriteCountAllRes; i++)
 			{
-				if ( p->iRes == m_iRes )
-					m_iSpriteCount++;
+				if (p->iRes == m_iRes)
+					m_iSpriteCountAlloc++;
 				p++;
 			}
 
 			// allocated memory for sprite handle arrays
-			m_iSpriteCountAlloc = m_iSpriteCount + RESERVE_SPRITES_FOR_WEAPONS;
+			m_iSpriteCountAlloc += RESERVE_SPRITES_FOR_WEAPONS;
 			m_rghSprites = new HLHSPRITE[m_iSpriteCountAlloc];
 			m_rgrcRects = new wrect_t[m_iSpriteCountAlloc];
 			m_rgszSpriteNames = new char[m_iSpriteCountAlloc * MAX_SPRITE_NAME_LENGTH];
-
-			p = m_pSpriteList;
-			int index = 0;
-			for ( j = 0; j < m_iSpriteCountAllRes; j++ )
-			{
-				if ( p->iRes == m_iRes )
-				{
-					char sz[256];
-					sprintf(sz, "sprites/%s.spr", p->szSprite);
-					m_rghSprites[index] = SPR_Load(sz);
-					m_rgrcRects[index] = p->rc;
-					strncpy( &m_rgszSpriteNames[index * MAX_SPRITE_NAME_LENGTH], p->szName, MAX_SPRITE_NAME_LENGTH );
-
-					index++;
-				}
-
-				p++;
-			}
 		}
 	}
-	else
+	// Load srpites on every VidInit
+	// so make sure all the sprites have been loaded (may be we've gone through a transition, or loaded a save game)
+	if (m_pSpriteList)
 	{
-		// we have already have loaded the sprite reference from hud.txt, but
-		// we need to make sure all the sprites have been loaded (we've gone through a transition, or loaded a save game)
-		client_sprite_t *p = m_pSpriteList;
-		int index = 0;
-		for ( int j = 0; j < m_iSpriteCountAllRes; j++ )
+		p = m_pSpriteList;
+		for (int i = 0; i < m_iSpriteCountAllRes; i++)
 		{
-			if ( p->iRes == m_iRes )
-			{
-				char sz[256];
-				sprintf( sz, "sprites/%s.spr", p->szSprite );
-				m_rghSprites[index] = SPR_Load(sz);
-				index++;
-			}
-
+			if (p->iRes == m_iRes)
+				AddSprite(p);
 			p++;
 		}
 	}
@@ -547,17 +522,15 @@ void CHud :: VidInit( void )
 
 void CHud::AddSprite(client_sprite_t *p)
 {
-	// Realloc if needed
+	// Realloc arrays if needed
 	if (m_iSpriteCount >= m_iSpriteCountAlloc)
 	{
 		int oldAllocCount = m_iSpriteCountAlloc;
 		int newAllocCount = m_iSpriteCountAlloc + RESERVE_SPRITES_FOR_WEAPONS;
-		m_iSpriteCountAlloc = m_iSpriteCount + RESERVE_SPRITES_FOR_WEAPONS;
+		m_iSpriteCountAlloc = newAllocCount;
 		HLHSPRITE *new_rghSprites = new HLHSPRITE[newAllocCount];
 		wrect_t *new_rgrcRects = new wrect_t[newAllocCount];
 		char *new_rgszSpriteNames = new char[newAllocCount * MAX_SPRITE_NAME_LENGTH];
-		int a = sizeof(char*) * oldAllocCount * MAX_SPRITE_NAME_LENGTH;
-		int b = sizeof(m_rgszSpriteNames);
 		memcpy(new_rghSprites, m_rghSprites, sizeof(HLHSPRITE) * oldAllocCount);
 		memcpy(new_rgrcRects, m_rgrcRects, sizeof(wrect_t*) * oldAllocCount);
 		memcpy(new_rgszSpriteNames, m_rgszSpriteNames, oldAllocCount * MAX_SPRITE_NAME_LENGTH);
