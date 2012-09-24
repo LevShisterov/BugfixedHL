@@ -3668,16 +3668,17 @@ int CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 
 
 
-int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem, bool bCallHolster )
+int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 {
 	pItem->pev->nextthink = 0;// crowbar may be trying to swing again, etc.
 	pItem->SetThink( NULL );
+	pItem->SetTouch( NULL );
 
 	if (m_pActiveItem == pItem)
 	{
 		ResetAutoaim( );
-		if ( bCallHolster )
-			pItem->Holster( );
+		if (pItem->m_pPlayer)	// Ugly way to distinguish between calls from PackWeapon and DestroyItem
+			pItem->Holster();
 		m_pActiveItem = NULL;
 		pev->viewmodel = 0;
 		pev->weaponmodel = 0;
@@ -3685,11 +3686,15 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem, bool bCallHolster )
 	else if ( m_pLastItem == pItem )
 		m_pLastItem = NULL;
 
-	CBasePlayerItem *pPrev = m_rgpPlayerItems[pItem->iItemSlot()];
+	pItem->m_pPlayer = NULL;
+
+	int slotId = pItem->iItemSlot();
+	CBasePlayerItem *pPrev = m_rgpPlayerItems[slotId];
 
 	if (pPrev == pItem)
 	{
-		m_rgpPlayerItems[pItem->iItemSlot()] = pItem->m_pNext;
+		pev->weapons &= ~(1 << slotId);
+		m_rgpPlayerItems[slotId] = pItem->m_pNext;
 		return TRUE;
 	}
 	else
@@ -3700,6 +3705,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem, bool bCallHolster )
 		}
 		if (pPrev)
 		{
+			pev->weapons &= ~(1 << slotId);
 			pPrev->m_pNext = pItem->m_pNext;
 			return TRUE;
 		}
@@ -4484,8 +4490,6 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 			g_pGameRules->GetNextBestWeapon( this, pWeapon );
 
 			UTIL_MakeVectors ( pev->angles ); 
-
-			pev->weapons &= ~(1<<pWeapon->m_iId);// take item off hud
 
 			CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", pev->origin + gpGlobals->v_forward * 10, pev->angles, edict() );
 			pWeaponBox->pev->angles.x = 0;

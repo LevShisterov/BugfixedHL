@@ -641,47 +641,49 @@ BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
 
 void CBasePlayerWeapon::ItemPostFrame( void )
 {
-	if ((m_fInReload) && ( m_pPlayer->m_flNextAttack <= UTIL_WeaponTimeBase() ) )
+	CBasePlayer *pPlayer = m_pPlayer;	// Cache player cos attack could retire weapon and remove it from player
+
+	if ((m_fInReload) && ( pPlayer->m_flNextAttack <= UTIL_WeaponTimeBase() ) )
 	{
 		// complete the reload. 
-		int j = min( iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
+		int j = min( iMaxClip() - m_iClip, pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
 
 		// Add them to the clip
 		m_iClip += j;
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= j;
+		pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= j;
 
-		m_pPlayer->TabulateAmmo();
+		pPlayer->TabulateAmmo();
 
 		m_fInReload = FALSE;
 	}
 
-	if ((m_pPlayer->pev->button & IN_ATTACK2) && CanAttack( m_flNextSecondaryAttack, gpGlobals->time, UseDecrement() ) )
+	if ((pPlayer->pev->button & IN_ATTACK2) && CanAttack( m_flNextSecondaryAttack, gpGlobals->time, UseDecrement() ) )
 	{
-		if ( pszAmmo2() && !m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] )
+		if ( pszAmmo2() && !pPlayer->m_rgAmmo[SecondaryAmmoIndex()] )
 		{
 			m_fFireOnEmpty = TRUE;
 		}
 
-		m_pPlayer->TabulateAmmo();
+		pPlayer->TabulateAmmo();
 		SecondaryAttack();
-		m_pPlayer->pev->button &= ~IN_ATTACK2;
+		pPlayer->pev->button &= ~IN_ATTACK2;
 	}
-	else if ((m_pPlayer->pev->button & IN_ATTACK) && CanAttack( m_flNextPrimaryAttack, gpGlobals->time, UseDecrement() ) )
+	else if ((pPlayer->pev->button & IN_ATTACK) && CanAttack( m_flNextPrimaryAttack, gpGlobals->time, UseDecrement() ) )
 	{
-		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] ) )
+		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !pPlayer->m_rgAmmo[PrimaryAmmoIndex()] ) )
 		{
 			m_fFireOnEmpty = TRUE;
 		}
 
-		m_pPlayer->TabulateAmmo();
+		pPlayer->TabulateAmmo();
 		PrimaryAttack();
 	}
-	else if ( m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
+	else if ( pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
 	{
 		// reload when reload is pressed, or if no buttons are down and weapon is empty.
 		Reload();
 	}
-	else if ( !(m_pPlayer->pev->button & (IN_ATTACK|IN_ATTACK2) ) )
+	else if ( !(pPlayer->pev->button & (IN_ATTACK|IN_ATTACK2) ) )
 	{
 		// no fire buttons down
 
@@ -690,7 +692,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		if ( !IsUseable() && m_flNextPrimaryAttack < ( UseDecrement() ? 0.0 : gpGlobals->time ) ) 
 		{
 			// weapon isn't useable, switch.
-			if ( !(iFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && g_pGameRules->GetNextBestWeapon( m_pPlayer, this ) )
+			if ( !(iFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && g_pGameRules->GetNextBestWeapon( pPlayer, this ) )
 			{
 				m_flNextPrimaryAttack = ( UseDecrement() ? 0.0 : gpGlobals->time ) + 0.3;
 				return;
@@ -709,7 +711,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		WeaponIdle( );
 		return;
 	}
-	
+
 	// catch all
 	if ( ShouldWeaponIdle() )
 	{
@@ -721,8 +723,10 @@ void CBasePlayerItem::DestroyItem( void )
 {
 	if ( m_pPlayer )
 	{
+		CBasePlayer *pPlayer = m_pPlayer;
+		m_pPlayer = NULL;	// RemovePlayerItem will not call Holster
 		// if attached to a player, remove.
-		m_pPlayer->RemovePlayerItem( this, false );
+		pPlayer->RemovePlayerItem( this );
 	}
 
 	Kill( );
@@ -1361,7 +1365,7 @@ BOOL CWeaponBox::PackWeapon( CBasePlayerItem *pWeapon )
 
 	if ( pWeapon->m_pPlayer )
 	{
-		if ( !pWeapon->m_pPlayer->RemovePlayerItem( pWeapon, true ) )
+		if ( !pWeapon->m_pPlayer->RemovePlayerItem( pWeapon ) )
 		{
 			// failed to unhook the weapon from the player!
 			return FALSE;
@@ -1392,7 +1396,6 @@ BOOL CWeaponBox::PackWeapon( CBasePlayerItem *pWeapon )
 	pWeapon->pev->owner = edict();
 	pWeapon->SetThink( NULL );// crowbar may be trying to swing again, etc.
 	pWeapon->SetTouch( NULL );
-	pWeapon->m_pPlayer = NULL;
 
 	//ALERT ( at_console, "packed %s\n", STRING(pWeapon->pev->classname) );
 

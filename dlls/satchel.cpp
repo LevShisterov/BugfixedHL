@@ -293,7 +293,6 @@ BOOL CSatchel::CanDeploy( void )
 
 BOOL CSatchel::Deploy( )
 {
-
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1.0;
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
 
@@ -302,7 +301,6 @@ BOOL CSatchel::Deploy( )
 	else
 		return DefaultDeploy( "models/v_satchel.mdl", "models/p_satchel.mdl", SATCHEL_DRAW, "trip" );
 
-	
 	return TRUE;
 }
 
@@ -310,7 +308,9 @@ BOOL CSatchel::Deploy( )
 void CSatchel::Holster( int skiplocal /* = 0 */ )
 {
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
-	
+
+	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
+
 	if ( m_chargeReady )
 	{
 		SendWeaponAnim( SATCHEL_RADIO_HOLSTER );
@@ -319,11 +319,9 @@ void CSatchel::Holster( int skiplocal /* = 0 */ )
 	{
 		SendWeaponAnim( SATCHEL_DROP );
 	}
-	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 
 	if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] && m_chargeReady != SATCHEL_READY )
 	{
-		m_pPlayer->pev->weapons &= ~(1<<WEAPON_SATCHEL);
 		DestroyItem();
 	}
 }
