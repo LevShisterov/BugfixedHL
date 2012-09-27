@@ -827,7 +827,8 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 		while (m_pActiveItem)
 		{
 			pPendingItem = m_pActiveItem->m_pNext;
-			m_pActiveItem->Drop( );
+			m_pActiveItem->m_pPlayer = NULL;
+			m_pActiveItem->Kill();
 			m_pActiveItem = pPendingItem;
 		}
 	}

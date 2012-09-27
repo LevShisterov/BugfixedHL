@@ -741,9 +741,7 @@ int CBasePlayerItem::AddToPlayer( CBasePlayer *pPlayer )
 
 void CBasePlayerItem::Drop( void )
 {
-	SetTouch( NULL );
-	SetThink(&CBasePlayerItem::SUB_Remove);
-	pev->nextthink = gpGlobals->time + .1;
+	Kill();
 }
 
 void CBasePlayerItem::Kill( void )
