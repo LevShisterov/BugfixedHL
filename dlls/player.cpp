@@ -3731,7 +3731,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 
 	if (pPrev == pItem)
 	{
-		pev->weapons &= ~(1 << slotId);
+		pev->weapons &= ~(1 << pItem->m_iId);	// take item off hud
 		m_rgpPlayerItems[slotId] = pItem->m_pNext;
 		return TRUE;
 	}
@@ -3743,7 +3743,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 		}
 		if (pPrev)
 		{
-			pev->weapons &= ~(1 << slotId);
+			pev->weapons &= ~(1 << pItem->m_iId);	// take item off hud
 			pPrev->m_pNext = pItem->m_pNext;
 			return TRUE;
 		}
@@ -4511,85 +4511,65 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 		return;
 	}
 
-	if ( !strlen( pszItemName ) )
+	CBasePlayerItem *pWeapon;
+	if (!strlen(pszItemName))
 	{
 		// if this string has no length, the client didn't type a name!
 		// assume player wants to drop the active item.
-		// make the string null to make future operations in this function easier
-		pszItemName = NULL;
-	} 
-
-	CBasePlayerItem *pWeapon;
-	int i;
-
-	for ( i = 0 ; i < MAX_ITEM_TYPES ; i++ )
+		pWeapon = m_pActiveItem;
+	}
+	else
 	{
-		pWeapon = m_rgpPlayerItems[ i ];
-
-		while ( pWeapon )
+		// try to match by name.
+		bool match = false;
+		for (int  i = 0; i < MAX_ITEM_TYPES && !match; i++)
 		{
-			if ( pszItemName )
+			pWeapon = m_rgpPlayerItems[ i ];
+			while (pWeapon)
 			{
-				// try to match by name. 
-				if ( !strcmp( pszItemName, STRING( pWeapon->pev->classname ) ) )
+				if (!strcmp(pszItemName, STRING(pWeapon->pev->classname)))
 				{
-					// match! 
+					match = true;
 					break;
 				}
-			}
-			else
-			{
-				// trying to drop active item
-				if ( pWeapon == m_pActiveItem )
-				{
-					// active item!
-					break;
-				}
-			}
 
-			pWeapon = pWeapon->m_pNext; 
+				pWeapon = pWeapon->m_pNext; 
+			}
 		}
+		if (!match)
+			return;
+	}
 
-		
-		// if we land here with a valid pWeapon pointer, that's because we found the 
-		// item we want to drop and hit a BREAK;  pWeapon is the item.
-		if ( pWeapon )
+	// Return if we didn't find a weapon to drop
+	if (!pWeapon) return;
+
+	g_pGameRules->GetNextBestWeapon( this, pWeapon );
+
+	UTIL_MakeVectors ( pev->angles );
+
+	CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", pev->origin + gpGlobals->v_forward * 10, pev->angles, edict() );
+	pWeaponBox->pev->angles.x = 0;
+	pWeaponBox->pev->angles.z = 0;
+	pWeaponBox->PackWeapon( pWeapon );
+	pWeaponBox->pev->velocity = gpGlobals->v_forward * 300 + gpGlobals->v_forward * 100;
+
+	// drop half of the ammo for this weapon.
+	int iAmmoIndex = GetAmmoIndex( pWeapon->pszAmmo1() ); // ???
+
+	if ( iAmmoIndex != -1 )
+	{
+		// this weapon weapon uses ammo, so pack an appropriate amount.
+		if ( pWeapon->iFlags() & ITEM_FLAG_EXHAUSTIBLE )
 		{
-			g_pGameRules->GetNextBestWeapon( this, pWeapon );
-
-			UTIL_MakeVectors ( pev->angles ); 
-
-			CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", pev->origin + gpGlobals->v_forward * 10, pev->angles, edict() );
-			pWeaponBox->pev->angles.x = 0;
-			pWeaponBox->pev->angles.z = 0;
-			pWeaponBox->PackWeapon( pWeapon );
-			pWeaponBox->pev->velocity = gpGlobals->v_forward * 300 + gpGlobals->v_forward * 100;
-			
-			// drop half of the ammo for this weapon.
-			int	iAmmoIndex;
-
-			iAmmoIndex = GetAmmoIndex ( pWeapon->pszAmmo1() ); // ???
-			
-			if ( iAmmoIndex != -1 )
-			{
-				// this weapon weapon uses ammo, so pack an appropriate amount.
-				if ( pWeapon->iFlags() & ITEM_FLAG_EXHAUSTIBLE )
-				{
-					// pack up all the ammo, this weapon is its own ammo type
-					pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] );
-					m_rgAmmo[ iAmmoIndex ] = 0; 
-
-				}
-				else
-				{
-					// pack half of the ammo
-					pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] / 2 );
-					m_rgAmmo[ iAmmoIndex ] /= 2; 
-				}
-
-			}
-
-			return;// we're done, so stop searching with the FOR loop.
+			// pack up all the ammo, this weapon is its own ammo type
+			pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] );
+			m_rgAmmo[ iAmmoIndex ] = 0;
+		}
+		else
+		{
+			// pack half of the ammo
+			pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] / 2 );
+			m_rgAmmo[ iAmmoIndex ] /= 2;
 		}
 	}
 }
