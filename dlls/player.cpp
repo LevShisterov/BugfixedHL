@@ -3693,7 +3693,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 
 	if (pPrev == pItem)
 	{
-		pev->weapons &= ~(1 << slotId);
+		pev->weapons &= ~(1 << pItem->m_iId);	// take item off hud
 		m_rgpPlayerItems[slotId] = pItem->m_pNext;
 		return TRUE;
 	}
@@ -3705,7 +3705,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 		}
 		if (pPrev)
 		{
-			pev->weapons &= ~(1 << slotId);
+			pev->weapons &= ~(1 << pItem->m_iId);	// take item off hud
 			pPrev->m_pNext = pItem->m_pNext;
 			return TRUE;
 		}
