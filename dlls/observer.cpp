@@ -46,13 +46,12 @@ void CBasePlayer::StartObserver( void )
 		WRITE_BYTE(ENTINDEX(edict()));	// index number of primary entity
 	MESSAGE_END();
 
-	// Holster weapon immediately, to allow it to cleanup
-	if (m_pActiveItem)
-		m_pActiveItem->Holster();
-
 	// Let's go of tanks
 	if (m_pTank != NULL)
 		m_pTank->Use(this, this, USE_OFF, 0);
+
+	// Remove all the player's stuff
+	RemoveAllItems(FALSE);
 
 	// clear out the suit message cache so we don't keep chattering
 	SetSuitUpdate(NULL, FALSE, 0);
@@ -89,9 +88,6 @@ void CBasePlayer::StartObserver( void )
 
 	// Clear out the status bar
 	m_fInitHUD = TRUE;
-
-	// Remove all the player's stuff
-	RemoveAllItems(FALSE);
 
 	// Move player to same view position he had on entering spectator
 	UTIL_SetOrigin(pev, pev->origin + view_ofs);
