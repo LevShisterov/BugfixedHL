@@ -66,13 +66,13 @@ void UpdateBeams ( void )
 	if ( pBeam )
 	{
 		pBeam->target = tr.endpos;
-		pBeam->die	  = gEngfuncs.GetClientTime() + 0.1; // We keep it alive just a little bit forward in the future, just in case.
+		pBeam->die	  = gEngfuncs.GetClientTime() + 999999; // We keep it alive a lot forward in the future, just in case.
 	}
 		
 	if ( pBeam2 )
 	{
 		pBeam2->target = tr.endpos;
-		pBeam2->die	   = gEngfuncs.GetClientTime() + 0.1; // We keep it alive just a little bit forward in the future, just in case.
+		pBeam2->die	   = gEngfuncs.GetClientTime() + 999999; // We keep it alive a lot forward in the future, just in case.
 	}
 }
 
