@@ -313,6 +313,8 @@ public:
 	BOOL m_bConnected;	// we set it in Spawn() so it will be TRUE only after player was spawned
 	BOOL IsConnected() { return m_bConnected; }
 	void Disconnect() { m_bConnected = FALSE; }
+
+	Vector m_vecLastViewAngles;
 };
 
 #define AUTOAIM_2DEGREES  0.0348994967025
