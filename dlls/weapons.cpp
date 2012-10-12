@@ -313,6 +313,7 @@ void W_Precache(void)
 
 	// common world objects
 	UTIL_PrecacheOther( "item_suit" );
+	UTIL_PrecacheOther( "item_healthkit" );
 	UTIL_PrecacheOther( "item_battery" );
 	UTIL_PrecacheOther( "item_antidote" );
 	UTIL_PrecacheOther( "item_security" );
@@ -334,31 +335,26 @@ void W_Precache(void)
 	UTIL_PrecacheOther( "ammo_9mmAR" );
 	UTIL_PrecacheOther( "ammo_ARgrenades" );
 
+	// 9mm ammo box
+	UTIL_PrecacheOther( "ammo_9mmbox" );
+
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// python
 	UTIL_PrecacheOtherWeapon( "weapon_357" );
 	UTIL_PrecacheOther( "ammo_357" );
-#endif
-	
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
+
 	// gauss
 	UTIL_PrecacheOtherWeapon( "weapon_gauss" );
 	UTIL_PrecacheOther( "ammo_gaussclip" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// rpg
 	UTIL_PrecacheOtherWeapon( "weapon_rpg" );
 	UTIL_PrecacheOther( "ammo_rpgclip" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// crossbow
 	UTIL_PrecacheOtherWeapon( "weapon_crossbow" );
 	UTIL_PrecacheOther( "ammo_crossbow" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// egon
 	UTIL_PrecacheOtherWeapon( "weapon_egon" );
 #endif
@@ -377,15 +373,11 @@ void W_Precache(void)
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// squeak grenade
 	UTIL_PrecacheOtherWeapon( "weapon_snark" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// hornetgun
 	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
-#endif
 
-
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
+	// weaponbox
 	if ( g_pGameRules->IsDeathmatch() )
 	{
 		UTIL_PrecacheOther( "weaponbox" );// container for dropped deathmatch weapons
@@ -419,11 +411,8 @@ void W_Precache(void)
 	PRECACHE_SOUND ("weapons/bullet_hit2.wav");	// hit by bullet
 	
 	PRECACHE_SOUND ("items/weapondrop1.wav");// weapon falls to the ground
-
 }
 
-
- 
 
 TYPEDESCRIPTION	CBasePlayerItem::m_SaveData[] = 
 {
