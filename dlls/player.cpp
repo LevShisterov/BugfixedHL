@@ -2589,6 +2589,11 @@ void CBasePlayer::PostThink()
 	m_afButtonLast = pev->button;
 
 pt_end:
+	if (pev->deadflag == DEAD_NO)
+		m_vecLastViewAngles = pev->angles;
+	else
+		pev->angles = m_vecLastViewAngles;
+
 #if defined( CLIENT_WEAPONS )
 	// Decay timers on weapons
 	// go through all of the weapons and make a list of the ones to pack
