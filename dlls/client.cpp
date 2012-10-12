@@ -53,7 +53,7 @@ extern int g_teamplay;
 
 void LinkUserMessages( void );
 
-char g_checkedPlayerModels[MAX_PLAYERS][MAX_MODEL_NAME];	// Used to store checked player model name
+char g_checkedPlayerModels[MAX_PLAYERS][MAX_TEAM_NAME];	// Used to store checked player model name
 
 /*
  * used by kill command and disconnect command
@@ -146,7 +146,7 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 	char *mdls = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
 	if (prevModel[0] == 0 || _stricmp(mdls, prevModel))
 	{
-		if (strlen(mdls) > MAX_MODEL_NAME - 1 || !IsValidFilename(mdls))
+		if (strlen(mdls) > MAX_TEAM_NAME - 1 || !IsValidFilename(mdls))
 		{
 			if (prevModel[0] == 0)
 				strcpy(prevModel, "gordon");	// default model if empty
@@ -155,7 +155,7 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 			g_engfuncs.pfnSetClientKeyValue(clientIndex, infobuffer, "model", prevModel);
 
 			// Inform player
-			sprintf(text, "* Model should be non-empty, less then %d characters and can't contain special characters like: <>:\"/\\|?*\n* Your current model remains: \"%s\"\n", MAX_MODEL_NAME - 1, prevModel);
+			sprintf(text, "* Model should be non-empty, less then %d characters and can't contain special characters like: <>:\"/\\|?*\n* Your current model remains: \"%s\"\n", MAX_TEAM_NAME - 1, prevModel);
 			UTIL_SayText(text, pPlayer);
 		}
 		else
