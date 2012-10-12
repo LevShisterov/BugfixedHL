@@ -49,7 +49,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;..\..\dlls&quot;,&quot;..\..\engine&quot;,&quot;..\..\common&quot;,&quot;..\..\pm_shared&quot;,&quot;..\..\game_shared&quot;"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				RuntimeLibrary="1"
 				BrowseInformation="1"
@@ -140,7 +140,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="&quot;..\..\dlls&quot;,&quot;..\..\engine&quot;,&quot;..\..\common&quot;,&quot;..\..\pm_shared&quot;,&quot;..\..\game_shared&quot;"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -230,7 +230,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="&quot;..\..\dlls&quot;,&quot;..\..\engine&quot;,&quot;..\..\common&quot;,&quot;..\..\pm_shared&quot;,&quot;..\..\game_shared&quot;"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -1131,6 +1131,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\hl.def"
+				>
+			</File>
+			<File
 				RelativePath="..\wpn_shared\hl_wpn_glock.cpp"
 				>
 				<FileConfiguration
@@ -1377,10 +1381,6 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\hl.def"
-				>
 			</File>
 			<File
 				RelativePath="..\mp5.cpp"
