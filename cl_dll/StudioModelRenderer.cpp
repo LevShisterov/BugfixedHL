@@ -29,6 +29,20 @@
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
 
+// Bones that used in gait animation
+#define NUM_LEGS_BONES 8
+const char *legs_bones[NUM_LEGS_BONES] =
+{
+	{ "Bip01" },
+	{ "Bip01 Pelvis" },
+	{ "Bip01 L Leg" },
+	{ "Bip01 L Leg1" },
+	{ "Bip01 L Foot" },
+	{ "Bip01 R Leg" },
+	{ "Bip01 R Leg1" },
+	{ "Bip01 R Foot" },
+};
+
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;
 
@@ -898,10 +912,14 @@ void CStudioModelRenderer::StudioSetupBones ( void )
 
 		for (i = 0; i < m_pStudioHeader->numbones; i++)
 		{
-			if (strcmp( pbones[i].name, "Bip01 Spine") == 0)
+			for (int j = 0; j < NUM_LEGS_BONES; j++)
+			{
+				if (strcmp(pbones[i].name, legs_bones[j])) continue;
+				// setup animation only for legs bones
+				memcpy(pos[i], pos2[i], sizeof(pos[i]));
+				memcpy(q[i], q2[i], sizeof(q[i]));
 				break;
-			memcpy( pos[i], pos2[i], sizeof( pos[i] ));
-			memcpy( q[i], q2[i], sizeof( q[i] ));
+			}
 		}
 	}
 
