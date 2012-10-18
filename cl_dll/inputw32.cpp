@@ -176,7 +176,6 @@ void Force_CenterView_f (void)
 void SetDinputBufferSize(void)
 {
 	static DIPROPDWORD dipdw = { { sizeof(dipdw), sizeof(dipdw.diph), 0, DIPH_DEVICE }, 0 };
-	unsigned int bufsize;
 
 	dipdw.dwData = dipdw.dwData + max(1, dipdw.dwData / 2);
 
