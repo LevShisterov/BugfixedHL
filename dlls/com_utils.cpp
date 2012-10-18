@@ -48,7 +48,7 @@ bool strrepl(char *str, int size, const char *find, const char *repl)
 			{
 				// Match found: rewind buffer and copy relpacement there
 				buf -= len_find - 1;
-				int len = buf_end - buf;
+				size_t len = buf_end - buf;
 				if (len < 1) break;
 				strncpy(buf, repl, len);
 				match = find;
