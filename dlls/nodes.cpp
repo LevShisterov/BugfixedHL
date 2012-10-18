@@ -3428,7 +3428,7 @@ void CGraph :: TestRoutingTables( void )
 #endif
 							ALERT(at_aiconsole, "Routing is inconsistent!!!\n");
 							ALERT(at_aiconsole, "(%d to %d |%d/%d)1:", iFrom, iTo, iHull, iCap);
-							for (int i = 0; i < cPathSize1; i++)
+							for (i = 0; i < cPathSize1; i++)
 							{
 								ALERT(at_aiconsole, "%d ", pMyPath[i]);
 							}
