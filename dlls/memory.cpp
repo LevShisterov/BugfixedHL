@@ -400,7 +400,7 @@ void SnapshotCmdHandler(void)
 					// Compress and save
 					jpge::params params;
 					params.m_quality = clamp((int)m_pCvarSnapshotJpegQuality->value, 1, 100);
-					params.m_subsampling = jpge::subsampling_t::H1V1;
+					params.m_subsampling = jpge::H1V1;
 					params.m_two_pass_flag = true;
 					bool res = jpge::compress_image_to_jpeg_file(fullpath, *g_piScreenWidth, *g_piScreenHeight, 3, pImageData, true, params);
 					if (!res)
