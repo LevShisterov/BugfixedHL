@@ -96,8 +96,8 @@ void CGameStudioModelRenderer::InitOnConnect(void)
 ///
 int CGameStudioModelRenderer::ParseModels(void)
 {
-	if (!stricmp(m_szEnemyModelsList, cl_forceemenymodels->string) &&
-		!stricmp(m_szTeammatesModel, cl_forceteammatesmodel->string))
+	if (!_stricmp(m_szEnemyModelsList, cl_forceemenymodels->string) &&
+		!_stricmp(m_szTeammatesModel, cl_forceteammatesmodel->string))
 		return m_iEnemyModelsCount;
 	strncpy(m_szEnemyModelsList, cl_forceemenymodels->string, sizeof(m_szEnemyModelsList));
 	m_szEnemyModelsList[sizeof(m_szEnemyModelsList) - 1] = 0;
@@ -142,7 +142,7 @@ int CGameStudioModelRenderer::ParseModels(void)
 		if (buffer[0] == 0) continue;
 
 		// Don't add teammates model to a list
-		if (!stricmp(m_szTeammatesModel, buffer))
+		if (!_stricmp(m_szTeammatesModel, buffer))
 		{
 			ConsolePrint("\"");
 			ConsolePrint(buffer);
@@ -153,7 +153,7 @@ int CGameStudioModelRenderer::ParseModels(void)
 		bool found = false;
 		for (int j = 0; j < m_iEnemyModelsCount; j++)
 		{
-			if (!stricmp(m_szEnemyModels[j], buffer))
+			if (!_stricmp(m_szEnemyModels[j], buffer))
 			{
 				found = true;
 				break;
@@ -180,8 +180,8 @@ int CGameStudioModelRenderer::ParseModels(void)
 ///
 void CGameStudioModelRenderer::ParseColors(void)
 {
-	if (!stricmp(m_szEnemyColor, cl_forceemenycolors->string) &&
-		!stricmp(m_szTeammatesColor, cl_forceteammatescolors->string))
+	if (!_stricmp(m_szEnemyColor, cl_forceemenycolors->string) &&
+		!_stricmp(m_szTeammatesColor, cl_forceteammatescolors->string))
 		return;
 
 	strncpy(m_szEnemyColor, cl_forceemenycolors->string, sizeof(m_szEnemyColor));
@@ -205,7 +205,7 @@ bool CGameStudioModelRenderer::AreTeammates(int playerIndex1, int playerIndex2)
 {
 	return	g_PlayerExtraInfo[playerIndex1].teamnumber > 0 &&
 			g_PlayerExtraInfo[playerIndex1].teamnumber == g_PlayerExtraInfo[playerIndex2].teamnumber;// &&
-			//!stricmp(g_PlayerExtraInfo[playerIndex1].teamname, g_PlayerExtraInfo[playerIndex2].teamname);
+			//!_stricmp(g_PlayerExtraInfo[playerIndex1].teamname, g_PlayerExtraInfo[playerIndex2].teamname);
 }
 
 ///
@@ -222,7 +222,7 @@ char *CGameStudioModelRenderer::GetNextEnemyModel(void)
 		{
 			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1)))
 				continue;
-			if (!stricmp(m_szEnemyModels[j], m_szPlayerRemapModel[i]))
+			if (!_stricmp(m_szEnemyModels[j], m_szPlayerRemapModel[i]))
 			{
 				used = true;
 				break;
@@ -262,13 +262,13 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 	// Check if local player changed the model
 	GetPlayerInfo(m_iLocalPlayerIndex, &g_PlayerInfoList[m_iLocalPlayerIndex]);
 	if (g_PlayerInfoList[m_iLocalPlayerIndex].model != NULL &&
-		stricmp(m_szPlayerActualModel[m_iLocalPlayerIndex - 1], g_PlayerInfoList[m_iLocalPlayerIndex].model))
+		_stricmp(m_szPlayerActualModel[m_iLocalPlayerIndex - 1], g_PlayerInfoList[m_iLocalPlayerIndex].model))
 	{
 		// Clear out stale mappings
 		int maxClients = gEngfuncs.GetMaxClients();
 		for (int i = 0; i < maxClients; i++)
 		{
-			if (!stricmp(m_szPlayerActualModel[i], g_PlayerInfoList[m_iLocalPlayerIndex].model))
+			if (!_stricmp(m_szPlayerActualModel[i], g_PlayerInfoList[m_iLocalPlayerIndex].model))
 				m_szPlayerRemapModel[i][0] = 0;
 		}
 
@@ -301,7 +301,7 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 	actualModelName[MAX_TEAM_NAME - 1] = 0;
 
 	// Check if model was changed by a player or he have no replacement model
-	if (stricmp(m_szPlayerActualModel[playerIndex], actualModelName) || m_szPlayerRemapModel[playerIndex][0] == 0)
+	if (_stricmp(m_szPlayerActualModel[playerIndex], actualModelName) || m_szPlayerRemapModel[playerIndex][0] == 0)
 	{
 		// Store actual model name for future comparisions
 		strcpy(m_szPlayerActualModel[playerIndex], actualModelName);
@@ -315,7 +315,7 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 		{
 			if (i == playerIndex ||
 				!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1)) ||
-				stricmp(m_szPlayerActualModel[i], actualModelName))
+				_stricmp(m_szPlayerActualModel[i], actualModelName))
 				continue;
 			strcpy(m_szPlayerRemapModel[playerIndex], m_szPlayerRemapModel[i]);
 			break;
@@ -326,7 +326,7 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 			// Lookup, may be model is in allow list
 			for (int j = 0; j < m_iEnemyModelsCount; j++)
 			{
-				if (!stricmp(m_szEnemyModels[j], actualModelName))
+				if (!_stricmp(m_szEnemyModels[j], actualModelName))
 				{
 					strcpy(m_szPlayerRemapModel[playerIndex], m_szEnemyModels[j]);
 					break;
