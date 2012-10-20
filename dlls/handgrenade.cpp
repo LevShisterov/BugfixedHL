@@ -97,7 +97,7 @@ void CHandGrenade::Holster( int skiplocal /* = 0 */ )
 
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+	if (m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0)
 	{
 		SendWeaponAnim( HANDGRENADE_HOLSTER );
 	}
@@ -191,7 +191,7 @@ void CHandGrenade::WeaponIdle( void )
 		// we've finished the throw, restart.
 		m_flStartThrow = 0;
 
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+		if (m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0)
 		{
 			SendWeaponAnim( HANDGRENADE_DRAW );
 		}

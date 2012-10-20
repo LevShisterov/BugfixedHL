@@ -1161,7 +1161,7 @@ int CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon )
 	
 	return pWeapon->m_pPlayer->GiveAmmo( iAmmo, (char *)pszAmmo1(), iMaxAmmo1() ); // , &m_iPrimaryAmmoType
 }
-	
+
 //=========================================================
 // RetireWeapon - no more ammo for this gun, put it away.
 //=========================================================
@@ -1179,8 +1179,6 @@ void CBasePlayerWeapon::RetireWeapon( void )
 		{
 			m_pPlayer->ResetAutoaim();
 			m_pPlayer->m_pActiveItem->Holster();
-			m_pPlayer->m_pLastItem = NULL;
-			m_pPlayer->m_pActiveItem = NULL;
 		}
 	}
 }
