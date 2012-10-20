@@ -320,7 +320,7 @@ void CSatchel::Holster( int skiplocal /* = 0 */ )
 		SendWeaponAnim( SATCHEL_DROP );
 	}
 
-	if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] && m_chargeReady != SATCHEL_READY )
+	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 && m_chargeReady != SATCHEL_READY)
 	{
 		DestroyItem();
 	}
@@ -433,7 +433,7 @@ void CSatchel::WeaponIdle( void )
 		strcpy( m_pPlayer->m_szAnimExtention, "hive" );
 		break;
 	case SATCHEL_RELOAD:
-		if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] )
+		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 		{
 			RetireWeapon();
 			m_chargeReady = SATCHEL_IDLE;

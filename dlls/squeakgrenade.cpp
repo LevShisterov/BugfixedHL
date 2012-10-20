@@ -482,7 +482,7 @@ void CSqueak::Holster( int skiplocal /* = 0 */ )
 
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0)
 	{
 		SendWeaponAnim( SQUEAK_DOWN );
 	}
@@ -567,7 +567,7 @@ void CSqueak::WeaponIdle( void )
 	{
 		m_fJustThrown = 0;
 
-		if ( !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] )
+		if (m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] <= 0)
 		{
 			RetireWeapon();
 			return;
