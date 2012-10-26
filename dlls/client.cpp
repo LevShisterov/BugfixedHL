@@ -419,7 +419,11 @@ void ClientCommand( edict_t *pEntity )
 	const char *pstr;
 
 	// Is the client spawned yet?
-	if ( !pEntity->pvPrivateData )
+	if (!pEntity->pvPrivateData)
+		return;
+	// PrivateData is never deleted after it was created on first PutInServer so we will check for IsConnected flag too
+	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
+	if (!pPlayer->IsConnected())
 		return;
 
 	entvars_t *pev = &pEntity->v;
@@ -514,7 +518,7 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 	// Is the client spawned yet?
 	if (!pEntity->pvPrivateData)
 		return;
-	// Get player class if it was created (first PutInServer on this slot happen)
+	// PrivateData is never deleted after it was created on first PutInServer so we will check for IsConnected flag too
 	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
 	if (!pPlayer->IsConnected())
 		return;
