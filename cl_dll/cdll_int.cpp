@@ -317,6 +317,7 @@ void DLLEXPORT HUD_Init( void )
 	gHUD.Init();
 	Scheme_Init();
 	MemoryPatcherInit();
+	SvcMessagesInit();
 	ResultsInit();
 }
 

@@ -14,5 +14,6 @@
 
 void HookSvcMessages(void);
 void UnHookSvcMessages(void);
+void SvcMessagesInit(void);
 
 #endif SVC_MESSAGES_H

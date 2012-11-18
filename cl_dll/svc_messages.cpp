@@ -19,6 +19,7 @@
 #include "vgui_TeamFortressViewport.h"
 #include "vgui_ScorePanel.h"
 
+cvar_t *m_pCvarClLogMessages = 0;
 cl_enginemessages_t pEngineMessages;
 
 void SvcPrint(void)
@@ -35,6 +36,7 @@ void SvcPrint(void)
 	}
 	else if (gViewPort && gViewPort->m_pScoreBoard && gViewPort->m_pScoreBoard->m_iStatusRequestState != STATUS_REQUEST_IDLE)
 	{
+		// Proccess status command answer
 		if (str[0] == '#' && str[1] != 0 && str[2] != 0 && str[3] == ' ' ) // start of new player info row (or table header)
 		{
 			gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_PROCESSING; // players info table started
@@ -78,12 +80,13 @@ void SvcPrint(void)
 		{
 			gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_IDLE;
 		}
-		// Supress status output
+		// Suppress status output
 		*g_EngineReadPos += strlen(str) + 1;
 		return;
 	}
 	else
 	{
+		// Clear cached steam id for left player
 		int len = strlen(str);
 		if (!strcmp(str + len - 9, " dropped\n"))
 		{
@@ -122,6 +125,10 @@ void SvcNewUserMsg(void)
 
 	pEngineMessages.pfnSvcNewUserMsg();
 
+	// Log user message to console
+	if (m_pCvarClLogMessages && m_pCvarClLogMessages->value)
+		gEngfuncs.Con_Printf("User Message: %d, %s, %d\n", id, name, len == 255 ? -1 : len);
+
 	// Fix engine bug that leads to duplicate user message ids in user messages chain
 	UserMessage *current = *g_pUserMessages;
 	while (current != 0)
@@ -143,4 +150,22 @@ void HookSvcMessages(void)
 void UnHookSvcMessages(void)
 {
 	UnHookSvcMessages(&pEngineMessages);
+}
+
+void DumpUserMessages(void)
+{
+	// Dump all user messages to console
+	UserMessage *current = *g_pUserMessages;
+	while (current != 0)
+	{
+		gEngfuncs.Con_Printf("User Message: %d, %s, %d\n", current->messageId, current->messageName, current->messageLen);
+		current = current->nextMessage;
+	}
+}
+
+// Registers cvars and commands
+void SvcMessagesInit(void)
+{
+	m_pCvarClLogMessages = gEngfuncs.pfnRegisterVariable("cl_messages_log", "0", FCVAR_ARCHIVE);
+	gEngfuncs.pfnAddCommand("cl_messages_dump", DumpUserMessages);
 }

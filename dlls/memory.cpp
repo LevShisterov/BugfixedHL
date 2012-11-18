@@ -32,14 +32,14 @@ size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
 size_t g_SvcMessagesTable = 0;
 
 /* FPS bugfix variables */
+cvar_t *m_pCvarEngineFixFpsBug = 0;
 size_t g_FpsBugPlace = 0;
 uint8_t g_FpsBugPlaceBackup[16];
 double *g_flFrameTime = 0;
 double g_flFrameTimeReminder = 0;
-cvar_t *m_pCvarEngineFixFpsBug = 0;
 
 /* Snapshot variables */
-cvar_t *m_pCvarEngineSnapshotHook = 0, *m_pCvarSnapshotJpeg, *m_pCvarSnapshotJpegQuality;
+cvar_t *m_pCvarEngineSnapshotHook = 0, *m_pCvarSnapshotJpeg = 0, *m_pCvarSnapshotJpegQuality = 0;
 int (*g_pEngineSnapshotCommandHandler)(void) = 0;
 int (*g_pEngineCreateSnapshot)(char *filename) = 0;
 int *g_piScreenWidth, *g_piScreenHeight;
