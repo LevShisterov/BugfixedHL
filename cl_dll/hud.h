@@ -527,7 +527,7 @@ public:
 	};
 
 	int GetAgVersion(void) { return m_bAgVersion; }
-	char* GetNextmap(void) { return m_szNextmap; }
+	const char* GetNextmap(void) { return m_szNextmap; }
 
 private:
 
