@@ -410,9 +410,7 @@ BOOL CHalfLifeMultiplay :: GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerI
 		return FALSE;
 	}
 
-	pPlayer->SwitchWeapon( pBest );
-
-	return TRUE;
+	return pPlayer->SwitchWeapon( pBest );
 }
 
 //=========================================================
