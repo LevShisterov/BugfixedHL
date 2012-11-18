@@ -189,8 +189,12 @@ int gmsgStatusValue = 0;
 
 int gmsgViewMode = 0;
 int gmsgVGUIMenu = 0;
+int gmsgStatusIcon = 0;
 
-
+const char* const gCustomMessages[]  = {
+	"IconInfo",
+	NULL
+};
 
 void LinkUserMessages( void )
 {
@@ -239,6 +243,13 @@ void LinkUserMessages( void )
 
 	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
 	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);		// Opens team selection menu with map briefing
+	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);	// Displays specified status icon sprite in hud
+
+	// Register messages from some custom mods to prevent "Host_Error: UserMsg: Not Present on Client"
+	for (int i = 0; gCustomMessages[i] != NULL; i++)
+	{
+		REG_USER_MSG(gCustomMessages[i], 0);
+	}
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
