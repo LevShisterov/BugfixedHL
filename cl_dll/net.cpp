@@ -8,7 +8,6 @@
 
 #include "net.h"
 #include <windows.h>
-#include <winsock.h>
 #include <time.h>
 
 
@@ -60,14 +59,14 @@ int NetSendReceiveUdp(unsigned long sin_addr, int sin_port, const char *sendbuf,
 	// Create a socket for sending data
 	SOCKET SendSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-	struct sockaddr_in RecvAddr, fromaddr;
-	memset(&RecvAddr, 0, sizeof(struct sockaddr_in));
-	RecvAddr.sin_family = AF_INET;
-	RecvAddr.sin_addr.s_addr = sin_addr;
-	RecvAddr.sin_port = sin_port;
+	struct sockaddr_in addr, fromaddr;
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = sin_addr;
+	addr.sin_port = sin_port;
 
 	// Send request
-	sendto(SendSocket, sendbuf, len, 0, (struct sockaddr *) &RecvAddr, sizeof(struct sockaddr_in));
+	sendto(SendSocket, sendbuf, len, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
 
 	time_t timeout;
 	timeout = time(NULL) + 3;
@@ -113,8 +112,8 @@ int NetSendReceiveUdp(unsigned long sin_addr, int sin_port, const char *sendbuf,
 		}
 		// Check address from which data came
 		if (res >= 0 &&
-			RecvAddr.sin_addr.s_addr == fromaddr.sin_addr.s_addr &&
-			RecvAddr.sin_port == fromaddr.sin_port)
+			addr.sin_addr.s_addr == fromaddr.sin_addr.s_addr &&
+			addr.sin_port == fromaddr.sin_port)
 		{
 			closesocket(SendSocket);
 			return res;
@@ -123,6 +122,107 @@ int NetSendReceiveUdp(unsigned long sin_addr, int sin_port, const char *sendbuf,
 	}
 	closesocket(SendSocket);
 	return -1;
+}
+
+int NetSendUdp(unsigned long sin_addr, int sin_port, const char *sendbuf, int len, SOCKET *s)
+{
+	if (!g_bInitialised)
+		WinsockInit();
+	if (g_bFailedInitialization)
+		return -1;
+
+	// Create or get a socket for sending data
+	SOCKET s1;
+	if (s && *s)
+		s1 = *s;
+	else
+		s1 = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	struct sockaddr_in addr;
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = sin_addr;
+	addr.sin_port = sin_port;
+
+	// Send buffer
+	int res = sendto(s1, sendbuf, len, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+
+	// Return socket if send was succeded
+	if (res != SOCKET_ERROR && s)
+		*s = s1;
+	else
+		closesocket(s1);
+
+	return res;
+}
+
+int NetReceiveUdp(unsigned long sin_addr, int sin_port, char *recvbuf, int size, SOCKET s)
+{
+	if (!g_bInitialised)
+		WinsockInit();
+	if (g_bFailedInitialization)
+		return -1;
+	if (s == NULL)
+		return -1;
+
+	struct sockaddr_in addr, fromaddr;
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = sin_addr;
+	addr.sin_port = sin_port;
+
+	// Try to receive response
+	int res;
+	unsigned long nonzero = 1;
+	ioctlsocket(s, FIONBIO, &nonzero);
+	SOCKET maxfd;
+	fd_set rfd;
+	fd_set efd;
+	struct timeval tv;
+
+	// Do select on socket
+	FD_ZERO(&rfd);
+	FD_ZERO(&efd);
+	FD_SET(s, &rfd);
+	FD_SET(s, &efd);
+	maxfd = s;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	res = select(maxfd + 1, &rfd, NULL, &efd, &tv);
+	// Check for error on socket
+	if (res == SOCKET_ERROR || FD_ISSET(s, &efd))
+		return -1;
+	// Return if nothing to receive
+	if (res == 0)
+		return 0;
+	// Get what we had received
+	int fromaddrlen = sizeof(struct sockaddr_in);
+	res = recvfrom(s, recvbuf, size, 0, (struct sockaddr *) &fromaddr, &fromaddrlen);
+	// Check for error on socket
+	if (res == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
+		return -1;
+	// Check address from which data came
+	if (res >= 0 &&
+		(addr.sin_addr.s_addr == 0 && addr.sin_port == 0) ||
+		(addr.sin_addr.s_addr == fromaddr.sin_addr.s_addr &&
+		addr.sin_port == fromaddr.sin_port))
+	{
+		return res;
+	}
+	return 0;
+}
+
+void NetClearSocket(SOCKET s)
+{
+	if (s == NULL) return;
+	char buffer[2048];
+	while (NetReceiveUdp(0, 0, buffer, sizeof(buffer), s) > 0);
+}
+
+void NetCloseSocket(SOCKET s)
+{
+	if (s == NULL) return;
+	closesocket(s);
 }
 
 char *NetGetRuleValueFromBuffer(const char *buffer, int len, const char *cvar)

@@ -339,9 +339,17 @@ void ScorePanel::Update()
 	m_TitleLabel.setText(MAX_SERVERNAME_LENGTH, gViewPort->m_szServerName);
 
 	// Set next map
-	char temp[MAX_MAP_NAME];
-	sprintf_s(temp, MAX_MAP_NAME, "nextmap: %s", gHUD.m_Timer.GetNextmap());
-	m_NextmapLabel.setText(MAX_MAP_NAME, temp);
+	char temp[MAX_MAP_NAME + 10];
+	const char* nextmap = gHUD.m_Timer.GetNextmap();
+	if (nextmap[0])
+	{
+		sprintf_s(temp, sizeof(temp), "nextmap: %s", nextmap);
+		m_NextmapLabel.setText(MAX_MAP_NAME, temp);
+	}
+	else
+	{
+		m_NextmapLabel.setText("");
+	}
 
 	m_iRows = 0;
 	gViewPort->GetAllPlayersInfo();
