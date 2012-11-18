@@ -31,6 +31,16 @@
 #define CUSTOM_TIMER_G 160
 #define CUSTOM_TIMER_B 0
 
+enum RulesRequestStatus
+{
+	SOCKET_NONE = 0,
+	SOCKET_IDLE = 1,
+	SOCKET_AWAITING_CODE = 2,
+	SOCKET_AWAITING_ANSWER = 3,
+} g_eRulesRequestStatus = SOCKET_NONE;
+
+SOCKET g_timerSocket = NULL;	// We will declare socket here to not include winsocks in hud.h
+
 
 int CHudTimer::Init(void)
 {
@@ -61,23 +71,24 @@ int CHudTimer::VidInit(void)
 	memset(m_bCustomTimerNeedSound, 0, sizeof(m_bCustomTimerNeedSound));
 	m_bAgVersion = SV_AG_UNKNOWN;
 
-	Reset();
-
-	return 1;
-};
-
-void CHudTimer::Reset(void)
-{
 	m_bNeedWriteTimer = true;
 	m_bNeedWriteCustomTimer = true;
 	m_bNeedWriteNextmap = true;
-}
+
+	if (g_timerSocket != NULL)
+	{
+		NetCloseSocket(g_timerSocket);
+		g_timerSocket = NULL;
+		g_eRulesRequestStatus = SOCKET_NONE;
+	}
+
+	return 1;
+};
 
 void CHudTimer::DoResync(void)
 {
 	m_bDelayTimeleftReading = true;
 	m_flNextSyncTime = 0;
-	Think();
 }
 
 void CHudTimer::SyncTimer(float fTime)
@@ -91,132 +102,15 @@ void CHudTimer::SyncTimer(float fTime)
 	NET_API->Status(&status);
 	if (status.connected)
 	{
-		float prevEndtime = m_flEndtime;
-		int prevAgVersion = m_bAgVersion;
-
 		if (status.remote_address.type == NA_IP)
 		{
-			// Retrieve settings from the server
-			char buffer[2048];
-			int len = NetSendReceiveUdp(*((unsigned int*)status.remote_address.ip), status.remote_address.port, "\xFF\xFF\xFF\xFFV\xFF\xFF\xFF\xFF", 9, buffer, sizeof(buffer));
-			if (*(int*)buffer == -1 && buffer[4] == 'A' && len == 9)
-			{
-				// Was challenge response, send again with code
-				buffer[4] = 'V';
-				len = NetSendReceiveUdp(*((unsigned int*)status.remote_address.ip), status.remote_address.port, buffer, 9, buffer, sizeof(buffer));
-			}
-			if (len > 0)
-			{
-				// Get map end time
-				char *value = NetGetRuleValueFromBuffer(buffer, len, "mp_timelimit");
-				if (value && value[0])
-				{
-					m_flEndtime = atof(value) * 60;
-				}
-				else
-				{
-					m_flEndtime = 0;
-				}
-				value = NetGetRuleValueFromBuffer(buffer, len, "mp_timeleft");
-				if (value && value[0] && !gHUD.m_iIntermission && !m_bDelayTimeleftReading)
-				{
-					float timeleft = atof(value);
-					if (timeleft > 0)
-					{
-						float endtime = timeleft + (int)(fTime - status.latency + 0.5);
-						if (abs(m_flEndtime - endtime) > 1.5)
-							m_flEndtime = endtime;
-					}
-				}
-				if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
-
-				// Get AG version
-				if (m_bAgVersion == SV_AG_UNKNOWN)
-				{
-					value = NetGetRuleValueFromBuffer(buffer, len, "sv_ag_version");
-					if (value && value[0])
-					{
-						if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
-						{
-							m_bAgVersion = SV_AG_FULL;
-						}
-						else // We will assume its miniAG server, which will be true in almost all cases
-						{
-							m_bAgVersion = SV_AG_MINI;
-						}
-					}
-					else
-					{
-						m_bAgVersion = SV_AG_NONE;
-					}
-
-					if (m_bAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
-				}
-
-				// Get nextmap
-				value = NetGetRuleValueFromBuffer(buffer, len, "amx_nextmap");
-				if (value && value[0])
-				{
-					if (strcmp(m_szNextmap, value))
-					{
-						m_bNeedWriteNextmap = true;
-						strncpy(m_szNextmap, value, sizeof(m_szNextmap) - 1);
-						m_szNextmap[sizeof(m_szNextmap) - 1] = 0;
-					}
-				}
-			}
-
-			m_flNextSyncTime = fTime + 30;	// Don't sync offten, we gets updates via svc_print
+			SyncTimerRemote(*((unsigned int*)status.remote_address.ip), status.remote_address.port, fTime, status.latency);
+			if (g_eRulesRequestStatus == SOCKET_AWAITING_CODE || g_eRulesRequestStatus == SOCKET_AWAITING_ANSWER)
+				return;
 		}
 		else if (status.remote_address.type == NA_LOOPBACK)
 		{
-			// Get timer settings directly from cvars
-			if (m_pCvarMpTimelimit && m_pCvarMpTimeleft)
-			{
-				m_flEndtime = m_pCvarMpTimelimit->value;
-				float timeleft = m_pCvarMpTimeleft->value;
-				if (timeleft > 0)
-				{
-					float endtime = timeleft + fTime;
-					if (abs(m_flEndtime - endtime) > 1.5)
-						m_flEndtime = endtime;
-				}
-				if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
-			}
-
-			// Get AG version
-			if (m_bAgVersion == SV_AG_UNKNOWN)
-			{
-				if (m_pCvarSvAgVersion && m_pCvarSvAgVersion->string[0])
-				{
-					if (!strcmp(m_pCvarSvAgVersion->string, "6.6") || !strcmp(m_pCvarSvAgVersion->string, "6.3"))
-					{
-						m_bAgVersion = SV_AG_FULL;
-					}
-					else // We will assume its miniAG server, which will be true in almost all cases
-					{
-						m_bAgVersion = SV_AG_MINI;
-					}
-				}
-				else
-				{
-					m_bAgVersion = SV_AG_NONE;
-				}
-
-				if (m_bAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
-			}
-
-			// Get nextmap
-			if (m_pCvarAmxNextmap && m_pCvarAmxNextmap->string[0])
-			{
-				if (strcmp(m_szNextmap, m_pCvarAmxNextmap->string))
-				{
-					m_bNeedWriteNextmap = true;
-					strncpy(m_szNextmap, m_pCvarAmxNextmap->string, sizeof(m_szNextmap) - 1);
-					m_szNextmap[sizeof(m_szNextmap) - 1] = 0;
-				}
-			}
-
+			SyncTimerLocal(fTime);
 			m_flNextSyncTime = fTime + 5;
 		}
 		else
@@ -227,34 +121,209 @@ void CHudTimer::SyncTimer(float fTime)
 		if (m_bDelayTimeleftReading)
 		{
 			m_bDelayTimeleftReading = false;
-			m_flNextSyncTime = fTime + 1.5; // Do update soon
+			// We are not synced via timeleft because it has a delay when server set it after mp_timelimit changed
+			// So do an update soon
+			m_flNextSyncTime = fTime + 1.5;
 		}
 	}
 	else
 	{
+		// Close socket if we are not connected anymore
+		if (g_timerSocket != NULL)
+		{
+			NetCloseSocket(g_timerSocket);
+			g_timerSocket = NULL;
+			g_eRulesRequestStatus = SOCKET_NONE;
+		}
+
 		m_flNextSyncTime = fTime + 1;
 	}
 };
 
+void CHudTimer::SyncTimerLocal(float fTime)
+{
+	float prevEndtime = m_flEndtime;
+	int prevAgVersion = m_bAgVersion;
+
+	// Get timer settings directly from cvars
+	if (m_pCvarMpTimelimit && m_pCvarMpTimeleft)
+	{
+		m_flEndtime = m_pCvarMpTimelimit->value * 60;
+		if (!m_bDelayTimeleftReading)
+		{
+			float timeleft = m_pCvarMpTimeleft->value;
+			if (timeleft > 0)
+			{
+				float endtime = timeleft + fTime;
+				if (abs(m_flEndtime - endtime) > 1.5)
+					m_flEndtime = endtime;
+			}
+		}
+		if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
+	}
+
+	// Get AG version
+	if (m_bAgVersion == SV_AG_UNKNOWN)
+	{
+		if (m_pCvarSvAgVersion && m_pCvarSvAgVersion->string[0])
+		{
+			if (!strcmp(m_pCvarSvAgVersion->string, "6.6") || !strcmp(m_pCvarSvAgVersion->string, "6.3"))
+			{
+				m_bAgVersion = SV_AG_FULL;
+			}
+			else // We will assume its miniAG server, which will be true in almost all cases
+			{
+				m_bAgVersion = SV_AG_MINI;
+			}
+		}
+		else
+		{
+			m_bAgVersion = SV_AG_NONE;
+		}
+
+		if (m_bAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
+	}
+
+	// Get nextmap
+	if (m_pCvarAmxNextmap && m_pCvarAmxNextmap->string[0])
+	{
+		if (strcmp(m_szNextmap, m_pCvarAmxNextmap->string))
+		{
+			m_bNeedWriteNextmap = true;
+			strncpy(m_szNextmap, m_pCvarAmxNextmap->string, sizeof(m_szNextmap) - 1);
+			m_szNextmap[sizeof(m_szNextmap) - 1] = 0;
+		}
+	}
+}
+
+void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTime, double latency)
+{
+	float prevEndtime = m_flEndtime;
+	int prevAgVersion = m_bAgVersion;
+	char buffer[2048];
+	int len = 0;
+
+	// Check for query timeout and just do a resend
+	if (fTime - m_flNextSyncTime > 3 && (g_eRulesRequestStatus == SOCKET_AWAITING_CODE || g_eRulesRequestStatus == SOCKET_AWAITING_ANSWER))
+		g_eRulesRequestStatus = SOCKET_IDLE;
+
+	// Retrieve settings from the server
+	switch(g_eRulesRequestStatus)
+	{
+	case SOCKET_NONE:
+	case SOCKET_IDLE:
+		NetClearSocket(g_timerSocket);
+		NetSendUdp(ip, port, "\xFF\xFF\xFF\xFFV\xFF\xFF\xFF\xFF", 9, &g_timerSocket);
+		g_eRulesRequestStatus = SOCKET_AWAITING_CODE;
+		m_flNextSyncTime = fTime;	// set time for timeout checking
+		return;
+	case SOCKET_AWAITING_CODE:
+		len = NetReceiveUdp(ip, port, buffer, sizeof(buffer), g_timerSocket);
+		if (len == 0) return;
+		if (*(int*)buffer == -1 && buffer[4] == 'A' && len == 9)
+		{
+			// Answer is challenge response, send again with the code
+			buffer[4] = 'V';
+			NetSendUdp(ip, port, buffer, 9, &g_timerSocket);
+			g_eRulesRequestStatus = SOCKET_AWAITING_ANSWER;
+			m_flNextSyncTime = fTime;	// set time for timeout checking
+			return;
+		}
+		// Answer is rules response
+		g_eRulesRequestStatus = SOCKET_IDLE;
+		break;
+	case SOCKET_AWAITING_ANSWER:
+		len = NetReceiveUdp(ip, port, buffer, sizeof(buffer), g_timerSocket);
+		if (len == 0) return;
+		g_eRulesRequestStatus = SOCKET_IDLE;
+		break;
+	}
+	m_flNextSyncTime = fTime + 10;	// Don't sync offten, we get update notifications via svc_print
+
+	// Parse rules
+	if (len > 0)
+	{
+		// Get map end time
+		char *value = NetGetRuleValueFromBuffer(buffer, len, "mp_timelimit");
+		if (value && value[0])
+		{
+			m_flEndtime = atof(value) * 60;
+		}
+		else
+		{
+			m_flEndtime = 0;
+		}
+		value = NetGetRuleValueFromBuffer(buffer, len, "mp_timeleft");
+		if (value && value[0] && !gHUD.m_iIntermission && !m_bDelayTimeleftReading)
+		{
+			float timeleft = atof(value);
+			if (timeleft > 0)
+			{
+				float endtime = timeleft + (int)(fTime - latency + 0.5);
+				if (abs(m_flEndtime - endtime) > 1.5)
+					m_flEndtime = endtime;
+			}
+		}
+		if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
+
+		// Get AG version
+		if (m_bAgVersion == SV_AG_UNKNOWN)
+		{
+			value = NetGetRuleValueFromBuffer(buffer, len, "sv_ag_version");
+			if (value && value[0])
+			{
+				if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
+				{
+					m_bAgVersion = SV_AG_FULL;
+				}
+				else // We will assume its miniAG server, which will be true in almost all cases
+				{
+					m_bAgVersion = SV_AG_MINI;
+				}
+			}
+			else
+			{
+				m_bAgVersion = SV_AG_NONE;
+			}
+
+			if (m_bAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
+		}
+
+		// Get nextmap
+		value = NetGetRuleValueFromBuffer(buffer, len, "amx_nextmap");
+		if (value && value[0])
+		{
+			if (strcmp(m_szNextmap, value))
+			{
+				m_bNeedWriteNextmap = true;
+				strncpy(m_szNextmap, value, sizeof(m_szNextmap) - 1);
+				m_szNextmap[sizeof(m_szNextmap) - 1] = 0;
+			}
+		}
+	}
+}
+
 void CHudTimer::Think(void)
 {
+	float flTime = gEngfuncs.GetClientTime();
+	// Check for time reset (can it happen?)
+	if (m_flNextSyncTime - flTime > 60) m_flNextSyncTime = flTime;
 	// Do sync. We do it always, so message hud can hide miniAG timer, and timer could work just as it is enabled
-	if (m_flNextSyncTime <= gEngfuncs.GetClientTime()) SyncTimer(gEngfuncs.GetClientTime());
+	if (m_flNextSyncTime <= flTime) SyncTimer(flTime);
 
-	// If we are recording demo write changes to demo
+	// If we are recording write changes to the demo
 	if (gEngfuncs.pDemoAPI->IsRecording())
 	{
 		int i = 0;
 		unsigned char buffer[100];
 		// Current game time
-		float time = gEngfuncs.GetClientTime();
-		if ((int)m_flDemoSyncTime != (int)time)
+		if ((int)m_flDemoSyncTime != (int)flTime)
 		{
 			i = 0;
-			*(float *)&buffer[i] = time;
+			*(float *)&buffer[i] = flTime;
 			i += sizeof(float);
 			Demo_WriteBuffer(TYPE_TIME, i, buffer);
-			m_flDemoSyncTime = time;
+			m_flDemoSyncTime = flTime;
 		}
 		// End time and AG version
 		if (m_bNeedWriteTimer)

@@ -512,7 +512,6 @@ class CHudTimer: public CHudBase
 public:
 	int Init(void);
 	int VidInit(void);
-	void Reset(void);
 	void Think(void);
 	int Draw(float flTime);
 
@@ -537,6 +536,8 @@ private:
 	};
 
 	void SyncTimer(float fTime);
+	void SyncTimerLocal(float fTime);
+	void SyncTimerRemote(unsigned int ip, unsigned short port, float fTime, double latency);
 	void DrawTimerInternal(int time, float ypos, int r, int g, int b, bool redOnLow);
 
 	float	m_flDemoSyncTime;
