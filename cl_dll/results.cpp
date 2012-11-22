@@ -215,7 +215,7 @@ void ResultsInit(void)
 	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_QUERY_VALUE, &rKey) == ERROR_SUCCESS)
 	{
 		if (RegQueryValueEx(rKey, "language", NULL, NULL, (unsigned char *)value, &valueSize) == ERROR_SUCCESS &&
-			strcmp(value, "english") &&
+			value[0] && strcmp(value, "english") &&
 			strlen(modDirectory) + strlen(value) + 1 < MAX_PATH - 1)
 		{
 			strcat(modDirectory, "_");
