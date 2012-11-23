@@ -20,7 +20,7 @@
 #include "appversion.h"
 
 // Version cvar
-// You can remove it, but remember that this will lower amout of people getting knowing about that HLSDK release.
+// You can remove it, but remember that this will lower amount of people getting knowing about that HLSDK release.
 // And thus reducing good comments, suggestion and bugfixes.
 char *ver = APP_VERSION;
 cvar_t	hlds_version = {"aghl.ru",ver, FCVAR_SERVER };
