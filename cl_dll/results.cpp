@@ -197,6 +197,7 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 
 	strcpy(filename, file);
 	strcpy(fullpath, path);
+	return true;
 }
 
 // Registers cvars
