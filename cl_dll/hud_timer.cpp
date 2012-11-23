@@ -407,7 +407,7 @@ void CHudTimer::CustomTimerCommand(void)
 
 	if (gEngfuncs.Cmd_Argc() <= 1)
 	{
-		gEngfuncs.Con_Printf( "usage:  customtimer <interval in seconds> [<timer number 1|2>]\n" );
+		gEngfuncs.Con_Printf( "usage:  customtimer <interval in seconds> [timer number 1|2]\n" );
 		return;
 	}
 
