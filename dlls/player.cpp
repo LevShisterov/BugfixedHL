@@ -196,6 +196,11 @@ int gmsgStatusIcon = 0;
 
 const char* const gCustomMessages[]  = {
 	"IconInfo",
+	"CheatCheck",
+	"Splash",
+	"Countdown",
+	"Timer",
+	"IconInfo",
 	NULL
 };
 
