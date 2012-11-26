@@ -1644,46 +1644,42 @@ int PM_CheckStuck (void)
 
 	VectorCopy (pmove->origin, base);
 
-	// Check if we are stuck in a satchel
+	// 
+	// Deal with precision error in network.
+	// Only an issue on the client.
+	// 
+	if (!pmove->server)
+	{
+		PM_ResetStuckOffsets( pmove->player_index, pmove->server );
+		do
+		{
+			i = PM_GetRandomStuckOffsets(pmove->player_index, pmove->server, offset);
+
+			VectorAdd(base, offset, test);
+			if (pmove->PM_TestPlayerPosition (test, &traceresult ) == -1)
+			{
+				PM_ResetStuckOffsets( pmove->player_index, pmove->server );
+	
+				VectorCopy ( test, pmove->origin );
+				return 0;
+			}
+		} while (i < 17);	// test only small oscillations
+	}
+
+	// Check if we are stuck in a satchel (commonly because spawned on it)
 	while ((hitent = pmove->PM_TestPlayerPosition(pmove->origin, NULL)) &&
 			hitent >= 0 && hitent < pmove->numphysent &&
 			!strcmp(pmove->physents[hitent].name, "models/w_satchel.mdl"))
 	{
-		// Remove satchel in which we are stuck from current player move step
+		// Remove satchel in which we are stuck from current player move iteration
 		memset(&(pmove->physents[hitent]), 0, sizeof(physent_t));
 	}
+	// If position is okay, exit
 	if (hitent == -1)
-		return 0;
-
-	// 
-	// Deal with precision error in network.
-	// 
-	if (!pmove->server)
 	{
-		// World or BSP model
-		if ( ( hitent == 0 ) ||
-			 ( pmove->physents[hitent].model != NULL ) )
-		{
-			int nReps = 0;
-			PM_ResetStuckOffsets( pmove->player_index, pmove->server );
-			do 
-			{
-				i = PM_GetRandomStuckOffsets(pmove->player_index, pmove->server, offset);
-
-				VectorAdd(base, offset, test);
-				if (pmove->PM_TestPlayerPosition (test, &traceresult ) == -1)
-				{
-					PM_ResetStuckOffsets( pmove->player_index, pmove->server );
-		
-					VectorCopy ( test, pmove->origin );
-					return 0;
-				}
-				nReps++;
-			} while (nReps < 54);
-		}
+		PM_ResetStuckOffsets( pmove->player_index, pmove->server );
+		return 0;
 	}
-
-	// Only an issue on the client.
 
 	if (pmove->server)
 		idx = 0;
@@ -1692,8 +1688,7 @@ int PM_CheckStuck (void)
 
 	fTime = pmove->Sys_FloatTime();
 	// Too soon?
-	if (rgStuckCheckTime[pmove->player_index][idx] >= 
-		( fTime - PM_CHECKSTUCK_MINTIME ) )
+	if (rgStuckCheckTime[pmove->player_index][idx] >= (fTime - PM_CHECKSTUCK_MINTIME))
 	{
 		return 1;
 	}
@@ -1718,7 +1713,8 @@ int PM_CheckStuck (void)
 
 	// If player is flailing while stuck in another player ( should never happen ), then see
 	//  if we can't "unstick" them forceably.
-	if ( pmove->cmd.buttons & ( IN_JUMP | IN_DUCK | IN_ATTACK ) && ( pmove->physents[ hitent ].player != 0 ) )
+	// Seems some rare conditions. Will check this only on server side, cos .player is bugged on clientside or I does't get a clue how it works.
+	if (pmove->server && pmove->cmd.buttons & (IN_JUMP | IN_DUCK | IN_ATTACK) && pmove->physents[hitent].player != 0)
 	{
 		float x, y, z;
 		float xystep = 8.0;
