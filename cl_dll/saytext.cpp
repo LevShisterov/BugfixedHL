@@ -170,13 +170,17 @@ void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIn
 	// Print to the console
 	time(&now);
 	current = localtime(&now);
-	// Prepend time for say messages
-	if (now && *pszBuf == 2 && clientIndex > 0)
+	// Prepend time for say messages from players and the server
+	if (now && (*pszBuf == 2 && clientIndex > 0 || *pszBuf == 1 && clientIndex == 0))
 	{
-		sprintf(time_buf, "(%00i:%00i:%00i) ", current->tm_hour, current->tm_min, current->tm_sec);
+		sprintf(time_buf, "[%02i:%02i:%02i] ", current->tm_hour, current->tm_min, current->tm_sec);
 		ConsolePrint(time_buf);
+		ConsolePrint(pszBuf + 1);
 	}
-	ConsolePrint(pszBuf);
+	else
+	{
+		ConsolePrint(pszBuf);
+	}
 
 	if ( gViewPort && gViewPort->AllowedToPrintText() == FALSE )
 	{
