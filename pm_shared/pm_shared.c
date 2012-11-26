@@ -1643,17 +1643,6 @@ int PM_CheckStuck (void)
 
 	VectorCopy (pmove->origin, base);
 
-	// Check if we are stuck in a satchel
-	while ((hitent = pmove->PM_TestPlayerPosition(pmove->origin, NULL)) &&
-			hitent >= 0 && hitent < pmove->numphysent &&
-			!strcmp(pmove->physents[hitent].name, "models/w_satchel.mdl"))
-	{
-		// Remove satchel in which we are stuck from current player move step
-		memset(&(pmove->physents[hitent]), 0, sizeof(physent_t));
-	}
-	if (hitent == -1)
-		return 0;
-
 	// 
 	// Deal with precision error in network.
 	// 
