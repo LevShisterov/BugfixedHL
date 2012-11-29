@@ -22,6 +22,7 @@ set version_maintenance=
 :: Check for SubWCRev.exe presence
 ::
 SubWCRev.exe 2>NUL >NUL
+set errlvl="%ERRORLEVEL%"
 
 ::
 :: Read old appversion.h, if present
@@ -35,7 +36,7 @@ IF EXIST "%srcdir%\appversion.h" (
 	)
 )
 
-IF NOT "%ERRORLEVEL%" == "1" (
+IF NOT %errlvl% == "1" (
 	echo can't locate SubWCRev.exe - auto-versioning step won't be performed
 
 	:: if we haven't appversion.h, we need to create it
