@@ -121,7 +121,7 @@ void Slider2::recomputeNobPosFromValue()
 
 	if (!_rangeWindowEnabled)
 	{
-		_rangeWindow = flength;
+		_rangeWindow = (int)flength;
 		frangewindow = flength;
 	}
 
@@ -132,7 +132,7 @@ void Slider2::recomputeNobPosFromValue()
 
 		if (_nobPos[1] > flength)
 		{
-			_nobPos[1] = flength;
+			_nobPos[1] = (int)flength;
 		}
 	}
 
@@ -160,7 +160,7 @@ void Slider2::recomputeValueFromNobPos()
 
 	if (!_rangeWindowEnabled)
 	{
-		_rangeWindow = flength;
+		_rangeWindow = (int)flength;
 		frangewindow = flength;
 	}
 
@@ -196,7 +196,7 @@ bool Slider2::hasFullRange()
 
 	if (!_rangeWindowEnabled)
 	{
-		_rangeWindow = flength;
+		_rangeWindow = (int)flength;
 		frangewindow = flength;
 	}
 

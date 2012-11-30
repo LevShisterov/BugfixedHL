@@ -326,22 +326,19 @@ void SpectatorPanel::EnableInsetView(bool isEnabled)
 	m_CamButton->setText( CHudTextMessage::BufferedLocaliseTextString( GetSpectatorLabel( g_iUser1 ) ) );
 }
 
-
-
-
 void SpectatorPanel::Update()
 {
-	int iTextWidth, iTextHeight;
-	int iTimeHeight, iTimeWidth;
-	int offset,j;
+	//int iTextWidth, iTextHeight;
+	//int iTimeHeight, iTimeWidth;
+	//int offset,j;
 
-	if ( m_insetVisible )
-		offset = gHUD.m_Spectator.m_OverviewData.insetWindowX + gHUD.m_Spectator.m_OverviewData.insetWindowWidth + 2;
-	else
-		offset = 0;
+	//if ( m_insetVisible )
+	//	offset = gHUD.m_Spectator.m_OverviewData.insetWindowX + gHUD.m_Spectator.m_OverviewData.insetWindowWidth + 2;
+	//else
+	//	offset = 0;
 
-	bool visible = gHUD.m_Spectator.m_drawstatus->value != 0;
-	
+	//bool visible = gHUD.m_Spectator.m_drawstatus->value != 0;
+
 	//m_ExtraInfo->setVisible( visible );
 	//m_TimerImage->setVisible( visible );
 	//m_CurrentTime->setVisible( visible );
@@ -350,19 +347,19 @@ void SpectatorPanel::Update()
 	//for ( j= 0; j < TEAM_NUMBER; j++ )
 	//	m_TeamScores[j]->setVisible( visible );
 
-	if ( !visible )
-		return;
-		
+	//if ( !visible )
+	//	return;
+
 	//m_ExtraInfo->getTextSize( iTextWidth, iTextHeight );
 	//m_CurrentTime->getTextSize( iTimeWidth, iTimeHeight );
 
-	iTimeWidth += XRES ( 14 ); // +timer icon
-	iTimeWidth += ( 4-(iTimeWidth%4) );
+	//iTimeWidth += XRES ( 14 ); // +timer icon
+	//iTimeWidth += ( 4-(iTimeWidth%4) );
 
-	if ( iTimeWidth > iTextWidth )
-		iTextWidth = iTimeWidth;
+	//if ( iTimeWidth > iTextWidth )
+	//	iTextWidth = iTimeWidth;
 
-	int xPos = ScreenWidth - ( iTextWidth + XRES ( 4 + offset ) );
+	//int xPos = ScreenWidth - ( iTextWidth + XRES ( 4 + offset ) );
 
 	//m_ExtraInfo->setBounds( xPos, YRES( 1 ), iTextWidth, iTextHeight );
 
