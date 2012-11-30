@@ -42,11 +42,14 @@ double g_flFrameTimeReminder = 0;
 cvar_t *m_pCvarEngineSnapshotHook = 0, *m_pCvarSnapshotJpeg = 0, *m_pCvarSnapshotJpegQuality = 0;
 int (*g_pEngineSnapshotCommandHandler)(void) = 0;
 int (*g_pEngineCreateSnapshot)(char *filename) = 0;
-int *g_piScreenWidth, *g_piScreenHeight;
-int (__stdcall **g_pGlReadPixels)(int x, int y, int width, int height, DWORD format, DWORD type, void *data);
+int *g_piScreenWidth = 0, *g_piScreenHeight = 0;
+int (__stdcall **g_pGlReadPixels)(int x, int y, int width, int height, DWORD format, DWORD type, void *data) = 0;
 #define GL_RGB				0x1907
 #define GL_UNSIGNED_BYTE	0x1401
 
+/* Commands variables */
+CommandLink **g_pCommandsList = 0;
+void (*g_pOldMotdWriteHandler)(void) = 0;
 
 bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleSize)
 {
@@ -59,7 +62,6 @@ bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &module
 	moduleSize = (size_t)moduleInfo.SizeOfImage;
 	return true;
 }
-
 // Searches for engine address in memory
 void GetEngineModuleAddress(void)
 {
@@ -71,7 +73,7 @@ void GetEngineModuleAddress(void)
 }
 
 // Converts HEX string containing pairs of symbols 0-9, A-F, a-f with possible space splitting into byte array
-size_t ConvertHexString(const char* srcHexString, unsigned char *outBuffer, size_t bufferSize)
+size_t ConvertHexString(const char *srcHexString, unsigned char *outBuffer, size_t bufferSize)
 {
 	unsigned char *in = (unsigned char *)srcHexString;
 	unsigned char *out = outBuffer;
@@ -102,8 +104,7 @@ size_t ConvertHexString(const char* srcHexString, unsigned char *outBuffer, size
 	}
 	return out - outBuffer;
 }
-
-size_t MemoryFindForward(size_t start, size_t end, const unsigned char* pattern, const unsigned char *mask, size_t pattern_len)
+size_t MemoryFindForward(size_t start, size_t end, const unsigned char *pattern, const unsigned char *mask, size_t pattern_len)
 {
 	// Ensure start is lower then the end
 	if (start > end)
@@ -155,8 +156,7 @@ size_t MemoryFindForward(size_t start, size_t end, const unsigned char* pattern,
 
 	return NULL;
 }
-
-size_t MemoryFindForward(size_t start, size_t end, const char* pattern, const char *mask)
+size_t MemoryFindForward(size_t start, size_t end, const char *pattern, const char *mask)
 {
 	unsigned char p[MAX_PATTERN];
 	unsigned char m[MAX_PATTERN];
@@ -164,8 +164,7 @@ size_t MemoryFindForward(size_t start, size_t end, const char* pattern, const ch
 	size_t ml = ConvertHexString(mask, m, sizeof(m));
 	return MemoryFindForward(start, end, p, m, pl >= ml ? pl : ml);
 }
-
-size_t MemoryFindBackward(size_t start, size_t end, const unsigned char* pattern, const unsigned char *mask, size_t pattern_len)
+size_t MemoryFindBackward(size_t start, size_t end, const unsigned char *pattern, const unsigned char *mask, size_t pattern_len)
 {
 	// Ensure start is higher then the end
 	if (start < end)
@@ -217,8 +216,7 @@ size_t MemoryFindBackward(size_t start, size_t end, const unsigned char* pattern
 
 	return NULL;
 }
-
-size_t MemoryFindBackward(size_t start, size_t end, const char* pattern, const char *mask)
+size_t MemoryFindBackward(size_t start, size_t end, const char *pattern, const char *mask)
 {
 	unsigned char p[MAX_PATTERN];
 	unsigned char m[MAX_PATTERN];
@@ -237,7 +235,6 @@ uint32_t HookDWord(size_t *origAddr, uint32_t newDWord)
 	VirtualProtect(origAddr, 4, oldProtect, &oldProtect);
 	return origDWord;
 }
-
 // Exchanges bytes between memory address and bytes array
 void ExchangeMemoryBytes(size_t *origAddr, size_t *dataAddr, uint32_t size)
 {
@@ -348,7 +345,6 @@ bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
 
 	return true;
 }
-
 // Unhooks requested SvcMessages functions
 bool UnHookSvcMessages(cl_enginemessages_t *pEngineMessages)
 {
@@ -447,13 +443,18 @@ void SnapshotCmdHandler(void)
 	}
 }
 
+void MotdWriteHandler(void)
+{
+	gEngfuncs.Con_Printf("motd_write command is blocked on the client to prevent slowhacking.\n");
+}
+
 // Applies engine patches
 void PatchEngine(void)
 {
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
 	if (!g_EngineModuleBase) return;
 
-	// Find place where FPS bug happen
+	// Find place where FPS bug happens
 	const char data1[] = "DD052834FA03 DC0DE8986603 83C408 E8D87A1000 89442424DB442424 DD5C242C DD05";
 	const char mask1[] = "FFFF00000000 FFFF00000000 FFFFFF FF00000000 FFFFFFFFFFFFFFFF FFFFFFFF FFFF";
 	size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
@@ -495,13 +496,53 @@ void PatchEngine(void)
 		g_piScreenWidth = (int *)*(size_t *)(addr4 + 14);
 		g_pGlReadPixels = (int (__stdcall **)(int, int, int, int, DWORD, DWORD, void*))*(size_t *)(addr4 + 35);
 	}
-}
 
+	// Find commands addresses list
+	const char data5[] = "83C4085F5E5B83C410C3 8B35486A0202 85F67417 8B46045053";
+	const char mask5[] = "FFFFFFFFFFFFFFFFFFFF FFFF00000000 FFFFFFFF FFFFFFFFFF";
+	size_t addr5 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data5, mask5);
+	if (addr5)
+	{
+		g_pCommandsList = (CommandLink **)*(size_t *)(addr5 + 12);
+
+		// Hook commands
+		CommandLink *cl = *g_pCommandsList;
+		while (cl != NULL)
+		{
+			if (!_stricmp(cl->commandName, "motd_write"))
+			{
+				g_pOldMotdWriteHandler = (void(*)())HookDWord((size_t*)&cl->handler, (uint32_t)MotdWriteHandler);
+				break;
+			}
+			cl = cl->nextCommand;
+		}
+	}
+}
 // Removes engine patches
 void UnPatchEngine(void)
 {
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
 	if (!g_EngineModuleBase) return;
+
+	// Unhook commands
+	if (g_pCommandsList)
+	{
+		CommandLink *cl = *g_pCommandsList;
+		while (cl != NULL)
+		{
+			// Search by address cos some commands has invalidated name references due to unloading process
+			if (cl->handler == MotdWriteHandler)
+			{
+				if (!_stricmp(cl->commandName, "motd_write"))
+				{
+					HookDWord((size_t*)&cl->handler, (uint32_t)g_pOldMotdWriteHandler);
+					g_pOldMotdWriteHandler = 0;
+					break;
+				}
+			}
+			cl = cl->nextCommand;
+		}
+	}
 
 	// Restore FPS engine block
 	if (g_FpsBugPlace)

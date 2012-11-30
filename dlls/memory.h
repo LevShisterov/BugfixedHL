@@ -106,6 +106,14 @@ struct UserMessage
 	UserMessage *nextMessage;
 };
 
+struct CommandLink
+{
+	CommandLink *nextCommand;
+	char *commandName;
+	void (*handler)(void);
+	int _zero;
+};
+
 
 bool HookSvcMessages(cl_enginemessages_t *pEngineMessages);
 bool UnHookSvcMessages(cl_enginemessages_t *pEngineMessages);
