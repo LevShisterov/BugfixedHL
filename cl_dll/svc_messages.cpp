@@ -69,6 +69,7 @@ bool IsCommandGood(const char *str)
 	// Block our filter from hacking
 	if (!_stricmp(com_token, m_pCvarClProtectBlock->name)) return false;
 	if (!_stricmp(com_token, m_pCvarClProtectAllow->name)) return false;
+	if (!_stricmp(com_token, m_pCvarClProtectBlockCvar->name)) return false;
 
 	// Check command name against block lists and whole command line against allow list
 	if ((RegexMatch(com_token, blockList) ||
@@ -84,8 +85,9 @@ bool IsCvarGood(const char *str)
 		return true;	// no cvar
 
 	// Block our filter from getting
-	if (!_stricmp(com_token, m_pCvarClProtectBlock->name)) return false;
-	if (!_stricmp(com_token, m_pCvarClProtectAllow->name)) return false;
+	if (!_stricmp(str, m_pCvarClProtectBlock->name)) return false;
+	if (!_stricmp(str, m_pCvarClProtectAllow->name)) return false;
+	if (!_stricmp(str, m_pCvarClProtectBlockCvar->name)) return false;
 
 	// Check cvar name against block lists
 	if (RegexMatch(str, blockListCvar) ||
