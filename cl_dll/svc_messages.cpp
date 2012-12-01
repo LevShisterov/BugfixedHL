@@ -10,6 +10,7 @@
 //
 
 #include <string.h>
+#include <time.h>
 
 #include "hud.h"
 #include "memory.h"
@@ -24,6 +25,7 @@
 
 cl_enginemessages_t pEngineMessages;
 cvar_t *m_pCvarClLogMessages = 0;
+cvar_t *m_pCvarClProtectLog = 0;
 cvar_t *m_pCvarClProtectBlock = 0;
 cvar_t *m_pCvarClProtectAllow = 0;
 cvar_t *m_pCvarClProtectBlockCvar = 0;
@@ -67,6 +69,7 @@ bool IsCommandGood(const char *str)
 		return true;	// no tokens
 
 	// Block our filter from hacking
+	if (!_stricmp(com_token, m_pCvarClProtectLog->name)) return false;
 	if (!_stricmp(com_token, m_pCvarClProtectBlock->name)) return false;
 	if (!_stricmp(com_token, m_pCvarClProtectAllow->name)) return false;
 	if (!_stricmp(com_token, m_pCvarClProtectBlockCvar->name)) return false;
@@ -85,6 +88,7 @@ bool IsCvarGood(const char *str)
 		return true;	// no cvar
 
 	// Block our filter from getting
+	if (!_stricmp(str, m_pCvarClProtectLog->name)) return false;
 	if (!_stricmp(str, m_pCvarClProtectBlock->name)) return false;
 	if (!_stricmp(str, m_pCvarClProtectAllow->name)) return false;
 	if (!_stricmp(str, m_pCvarClProtectBlockCvar->name)) return false;
@@ -125,11 +129,65 @@ bool SanitizeCommands(char *str)
 		// Check command
 		bool isGood = IsCommandGood(command);
 
+		// Log command
+		int log = m_pCvarClProtectLog->value;
+		if (log > 0)
+		{
+			/*
+			0  - log or not to console
+			1  - log to developer or to common console
+			2  - log only bad or all to console
+			8  - log or not to file
+			9  - log only bad or all to file
+			15 - log full command or only name
+			*/
+
+			// Full command or only command name
+			char *c = (log & (1 << 15)) ? command : com_token;
+
+			// Log destination
+			if (log & (1 << 0))	// console
+			{
+				// Log only bad or all
+				if (!isGood || log & (1 << 2))
+				{
+					// Action
+					char *a = isGood ? "Server executed command: %s\n" : "Server tried to execute bad command: %s\n";
+					// Common or developer console
+					void (*m)(char *,...) = (log & (1 << 1)) ? gEngfuncs.Con_Printf : gEngfuncs.Con_DPrintf;
+					// Log
+					m(a, c);
+				}
+			}
+			if (log & (1 << 8))	// file
+			{
+				// Log only bad or all
+				if (!isGood || log & (1 << 9))
+				{
+					FILE *f = fopen("svc_protect.log", "a+");
+					if (f != NULL)
+					{
+						// The time
+						time_t now;
+						time(&now);
+						struct tm *current = localtime(&now);
+						if (current != NULL)
+							fprintf(f, "[%04i-%02i-%02i %02i:%02i:%02i] ", current->tm_year + 1900, current->tm_mon, current->tm_mday, current->tm_hour, current->tm_min, current->tm_sec);
+						// Action
+						char *a = isGood ? "[allowed] " : "[blocked] ";
+						fputs(a, f);
+						// Command
+						fputs(c, f);
+						fputs("\n", f);
+						fclose(f);
+					}
+				}
+			}
+		}
+
 		len -= i;
 		if (!isGood)
 		{
-			gEngfuncs.Con_DPrintf("Server tried to execute bad command: %s\n", com_token);
-
 			// Trash command, but leave the splitter
 			strncpy(text, text + i, len);
 			text[len] = 0;
@@ -362,6 +420,7 @@ void SvcMessagesInit(void)
 	m_pCvarClLogMessages = gEngfuncs.pfnRegisterVariable("cl_messages_log", "0", FCVAR_ARCHIVE);
 	gEngfuncs.pfnAddCommand("cl_messages_dump", DumpUserMessages);
 
+	m_pCvarClProtectLog = gEngfuncs.pfnRegisterVariable("cl_protect_log", "1", FCVAR_ARCHIVE);
 	m_pCvarClProtectBlock = gEngfuncs.pfnRegisterVariable("cl_protect_block", "", FCVAR_ARCHIVE);
 	m_pCvarClProtectAllow = gEngfuncs.pfnRegisterVariable("cl_protect_allow", "", FCVAR_ARCHIVE);
 	m_pCvarClProtectBlockCvar = gEngfuncs.pfnRegisterVariable("cl_protect_block_cvar", "", FCVAR_ARCHIVE);
