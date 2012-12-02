@@ -19,6 +19,7 @@
 #include "jpge.h"
 #include "cl_util.h"
 #include "results.h"
+#include "parsemsg.h"
 
 #define MAX_PATTERN 64
 
@@ -50,6 +51,11 @@ int (__stdcall **g_pGlReadPixels)(int x, int y, int width, int height, DWORD for
 /* Commands variables */
 CommandLink **g_pCommandsList = 0;
 void (*g_pOldMotdWriteHandler)(void) = 0;
+
+/* Connectionless packets */
+void (*g_pEngineClConnectionlessPacketHandler)(void) = 0;
+size_t g_pEngineClConnectionlessPacketPlace = 0;
+uint32_t g_pEngineClConnectionlessPacketOffset = 0;
 
 bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleSize)
 {
@@ -448,6 +454,38 @@ void MotdWriteHandler(void)
 	gEngfuncs.Con_Printf("motd_write command is blocked on the client to prevent slowhacking.\n");
 }
 
+void CL_ConnectionlessPacket(void)
+{
+	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, 0);	// Zero to emulate RESET_READ
+	long ffffffff = READ_LONG();
+	char *line = READ_LINE();
+	char *s = line;
+	// Simulate command parsing
+	while (*s && *s <= ' ' && *s != '\n')
+		s++;
+	if (*s == 'L')
+	{
+		// Redirect packet received, sanitize it
+		s = (char*)*g_EngineBuf;
+		s += 5;	// skip FFFFFFFF65
+		char *end = (char*)*g_EngineBuf + *g_EngineBufSize;
+		while (*s && *s != -1 && *s != ';' && *s != '\n' && s < end)
+		{
+			s++;
+		}
+		if (*s == ';')
+		{
+			s++;
+		}
+		// Blank out any commands after ';'
+		while (*s && *s != -1 && *s != '\n' && s < end)
+		{
+			*s = ' ';
+			s++;
+		}
+	}
+	g_pEngineClConnectionlessPacketHandler();
+}
 // Applies engine patches
 void PatchEngine(void)
 {
@@ -511,11 +549,23 @@ void PatchEngine(void)
 		{
 			if (!_stricmp(cl->commandName, "motd_write"))
 			{
-				g_pOldMotdWriteHandler = (void(*)())HookDWord((size_t*)&cl->handler, (uint32_t)MotdWriteHandler);
+				g_pOldMotdWriteHandler = (void (*)())HookDWord((size_t*)&cl->handler, (uint32_t)MotdWriteHandler);
 				break;
 			}
 			cl = cl->nextCommand;
 		}
+	}
+
+	// Find CL_ConnectionlessPacket call
+	const char data6[] = "833AFF 750A E80DF3FFFF E9";
+	const char mask6[] = "FFFFFF FFFF FF00000000 FF";
+	size_t addr6 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data6, mask6);
+	if (addr6)
+	{
+		g_pEngineClConnectionlessPacketPlace = addr6 + 6;
+		size_t offset1 = (size_t)CL_ConnectionlessPacket - (g_pEngineClConnectionlessPacketPlace + 4);
+		g_pEngineClConnectionlessPacketOffset = HookDWord((size_t*)g_pEngineClConnectionlessPacketPlace, offset1);
+		g_pEngineClConnectionlessPacketHandler = (void (*)())((g_pEngineClConnectionlessPacketPlace + 4) + g_pEngineClConnectionlessPacketOffset);
 	}
 }
 // Removes engine patches
@@ -523,6 +573,15 @@ void UnPatchEngine(void)
 {
 	if (!g_EngineModuleBase) GetEngineModuleAddress();
 	if (!g_EngineModuleBase) return;
+
+	// Restore CL_ConnectionlessPacket call
+	if (g_pEngineClConnectionlessPacketHandler && g_pEngineClConnectionlessPacketPlace && g_pEngineClConnectionlessPacketOffset)
+	{
+		HookDWord((size_t*)g_pEngineClConnectionlessPacketPlace, g_pEngineClConnectionlessPacketOffset);
+		g_pEngineClConnectionlessPacketHandler = 0;
+		g_pEngineClConnectionlessPacketPlace = 0;
+		g_pEngineClConnectionlessPacketOffset = 0;
+	}
 
 	// Unhook commands
 	if (g_pCommandsList)
