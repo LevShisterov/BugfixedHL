@@ -26,6 +26,7 @@ int READ_WORD( void );
 int READ_LONG( void );
 float READ_FLOAT( void );
 char* READ_STRING( void );
+char* READ_LINE( void );
 float READ_COORD( void );
 float READ_ANGLE( void );
 float READ_HIRESANGLE( void );
