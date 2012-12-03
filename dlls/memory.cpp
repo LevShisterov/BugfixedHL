@@ -486,6 +486,7 @@ void CL_ConnectionlessPacket(void)
 	}
 	g_pEngineClConnectionlessPacketHandler();
 }
+
 // Applies engine patches
 void PatchEngine(void)
 {
