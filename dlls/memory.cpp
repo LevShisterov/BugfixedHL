@@ -24,13 +24,22 @@
 #define MAX_PATTERN 64
 
 
-/* messages variables */
+typedef void (__fastcall *ThisCallInt)(void *, int, int);
+typedef void (__fastcall *ThisCallIntInt)(void *, int, int, int);
+
+
+/* Engine addresses */
+size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
+
+/* GameUI addresses */
+size_t g_GameUiModuleBase = 0, g_GameUiModuleSize = 0, g_GameUiModuleEnd = 0;
+
+/* Messages variables */
+size_t g_SvcMessagesTable = 0;
 void **g_EngineBuf = 0;
 int *g_EngineBufSize = 0;
 int *g_EngineReadPos = 0;
 UserMessage **g_pUserMessages = 0;
-size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
-size_t g_SvcMessagesTable = 0;
 
 /* FPS bugfix variables */
 cvar_t *m_pCvarEngineFixFpsBug = 0;
@@ -57,6 +66,13 @@ void (*g_pEngineClConnectionlessPacketHandler)(void) = 0;
 size_t g_pEngineClConnectionlessPacketPlace = 0;
 uint32_t g_pEngineClConnectionlessPacketOffset = 0;
 
+/* GameUI fix variables */
+int g_iLinesCounter = 0;
+ThisCallInt g_pFunctionReplacedByCounter;
+ThisCallIntInt g_pFunctionReplacedBySubst;
+size_t (*g_pGet_VGUI_System009)(void);
+size_t *g_pSystem = 0;
+
 bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleSize)
 {
 	HANDLE hProcess = GetCurrentProcess();
@@ -76,6 +92,12 @@ void GetEngineModuleAddress(void)
 		!GetModuleAddress("hl.exe", g_EngineModuleBase, g_EngineModuleSize))	// Try Encrypted engine
 		return;
 	g_EngineModuleEnd = g_EngineModuleBase + g_EngineModuleSize - 1;
+}
+void GetGameUiModuleAddress(void)
+{
+	if (!GetModuleAddress("GameUI.dll", g_GameUiModuleBase, g_GameUiModuleSize))
+		return;
+	g_GameUiModuleEnd = g_GameUiModuleBase + g_GameUiModuleSize - 1;
 }
 
 // Converts HEX string containing pairs of symbols 0-9, A-F, a-f with possible space splitting into byte array
@@ -232,13 +254,13 @@ size_t MemoryFindBackward(size_t start, size_t end, const char *pattern, const c
 }
 
 // Replaces double word on specified address with new dword, returns old dword
-uint32_t HookDWord(size_t *origAddr, uint32_t newDWord)
+uint32_t HookDWord(size_t origAddr, uint32_t newDWord)
 {
 	DWORD oldProtect;
-	uint32_t origDWord = *origAddr;
-	VirtualProtect(origAddr, 4, PAGE_EXECUTE_READWRITE, &oldProtect);
-	*origAddr = newDWord;
-	VirtualProtect(origAddr, 4, oldProtect, &oldProtect);
+	uint32_t origDWord = *(size_t *)origAddr;
+	VirtualProtect((size_t *)origAddr, 4, PAGE_EXECUTE_READWRITE, &oldProtect);
+	*(size_t *)origAddr = newDWord;
+	VirtualProtect((size_t *)origAddr, 4, oldProtect, &oldProtect);
 	return origDWord;
 }
 // Exchanges bytes between memory address and bytes array
@@ -345,7 +367,7 @@ bool HookSvcMessages(cl_enginemessages_t *pEngineMessages)
 		if (((uint32_t *)pEngineMessages)[i] == NULL) continue;
 		size_t funcAddr = ((uint32_t *)pEngineMessages)[i];
 		size_t addr = g_SvcMessagesTable + i * 12 + 8;
-		size_t oldAddr = HookDWord((size_t*)addr, funcAddr);
+		size_t oldAddr = HookDWord(addr, funcAddr);
 		((uint32_t *)pEngineMessages)[i] = oldAddr;
 	}
 
@@ -487,6 +509,54 @@ void CL_ConnectionlessPacket(void)
 	g_pEngineClConnectionlessPacketHandler();
 }
 
+void __fastcall ConsoleCopyCount(void *pthis, int a, int add)
+{
+	g_iLinesCounter++;
+	g_pFunctionReplacedByCounter(pthis, a, add);
+}
+void __fastcall ConsoleCopySubst(void *pthis, int a, int pobj, int count)
+{
+	g_pFunctionReplacedBySubst(pthis, a, pobj, count + g_iLinesCounter);
+	g_iLinesCounter = 0;
+	HookDWord((size_t)g_pSystem + 32, (size_t)g_pFunctionReplacedBySubst);
+	g_pFunctionReplacedBySubst = 0;
+	g_pSystem = 0;
+}
+size_t __cdecl ConsoleCopyGetSystem(void)
+{
+	size_t *pSystem = (size_t *)g_pGet_VGUI_System009();
+	g_pSystem = (size_t *)*pSystem;
+	g_pFunctionReplacedBySubst = (ThisCallIntInt)HookDWord((size_t)g_pSystem + 32, (size_t)ConsoleCopySubst);
+	return (size_t)pSystem;
+}
+
+void PatchGameUi(void)
+{
+	if (!g_GameUiModuleBase) GetGameUiModuleAddress();
+	if (!g_GameUiModuleBase) return;
+
+	// Fix vgui__RichText__CopySelected function to copy all selected chars
+	// Find the place where \n is processed
+	const char data1[] = "66833C0F0A 752D6A018D4C2420 8BF0E8C6090000 6A0156 8D4C24";
+	const char mask1[] = "FFFFFF00FF FFFFFFFFFFFFFFFF FFFFFF00000000 FFFFFF FFFFFF";
+	size_t addr1 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data1, mask1);
+	if (!addr1) return;
+
+	// Inject counting function
+	size_t offset1 = (size_t)ConsoleCopyCount - (addr1 + 20);
+	g_pFunctionReplacedByCounter = (ThisCallInt)(HookDWord(addr1 + 16, offset1) + addr1 + 20);
+
+	// Find the place where Get_VGUI_System009 is get
+	const char data2[] = "508D147152 E8350A0000 83C408E8";
+	const char mask2[] = "FFFFFFFFFF FF00000000 FFFFFFFF";
+	size_t addr2 = MemoryFindForward(addr1, addr1 + 256, data2, mask2);
+	if (!addr2) return;
+
+	// Inject intercept function
+	size_t offset2 = (size_t)ConsoleCopyGetSystem - (addr2 + 18);
+	g_pGet_VGUI_System009 = (size_t (*)(void))(HookDWord(addr2 + 14, offset2) + addr2 + 18);
+}
+
 // Applies engine patches
 void PatchEngine(void)
 {
@@ -550,7 +620,7 @@ void PatchEngine(void)
 		{
 			if (!_stricmp(cl->commandName, "motd_write"))
 			{
-				g_pOldMotdWriteHandler = (void (*)())HookDWord((size_t*)&cl->handler, (uint32_t)MotdWriteHandler);
+				g_pOldMotdWriteHandler = (void (*)())HookDWord((size_t)&cl->handler, (uint32_t)MotdWriteHandler);
 				break;
 			}
 			cl = cl->nextCommand;
@@ -565,7 +635,7 @@ void PatchEngine(void)
 	{
 		g_pEngineClConnectionlessPacketPlace = addr6 + 6;
 		size_t offset1 = (size_t)CL_ConnectionlessPacket - (g_pEngineClConnectionlessPacketPlace + 4);
-		g_pEngineClConnectionlessPacketOffset = HookDWord((size_t*)g_pEngineClConnectionlessPacketPlace, offset1);
+		g_pEngineClConnectionlessPacketOffset = HookDWord(g_pEngineClConnectionlessPacketPlace, offset1);
 		g_pEngineClConnectionlessPacketHandler = (void (*)())((g_pEngineClConnectionlessPacketPlace + 4) + g_pEngineClConnectionlessPacketOffset);
 	}
 }
@@ -578,7 +648,7 @@ void UnPatchEngine(void)
 	// Restore CL_ConnectionlessPacket call
 	if (g_pEngineClConnectionlessPacketHandler && g_pEngineClConnectionlessPacketPlace && g_pEngineClConnectionlessPacketOffset)
 	{
-		HookDWord((size_t*)g_pEngineClConnectionlessPacketPlace, g_pEngineClConnectionlessPacketOffset);
+		HookDWord(g_pEngineClConnectionlessPacketPlace, g_pEngineClConnectionlessPacketOffset);
 		g_pEngineClConnectionlessPacketHandler = 0;
 		g_pEngineClConnectionlessPacketPlace = 0;
 		g_pEngineClConnectionlessPacketOffset = 0;
@@ -595,7 +665,7 @@ void UnPatchEngine(void)
 			{
 				if (!_stricmp(cl->commandName, "motd_write"))
 				{
-					HookDWord((size_t*)&cl->handler, (uint32_t)g_pOldMotdWriteHandler);
+					HookDWord((size_t)&cl->handler, (uint32_t)g_pOldMotdWriteHandler);
 					g_pOldMotdWriteHandler = 0;
 					break;
 				}
@@ -622,4 +692,7 @@ void MemoryPatcherInit(void)
 
 	// Hook snapshot command
 	gEngfuncs.pfnAddCommand("snapshot", SnapshotCmdHandler);
+
+	// Patch GameUI
+	PatchGameUi();
 }
