@@ -21,7 +21,7 @@
 #include "results.h"
 #include "parsemsg.h"
 
-#define MAX_PATTERN 64
+#define MAX_PATTERN 128
 
 
 typedef void (__fastcall *ThisCallInt)(void *, int, int);
@@ -184,6 +184,7 @@ size_t MemoryFindForward(size_t start, size_t end, const unsigned char *pattern,
 
 	return NULL;
 }
+// Signed char versions assume pattern and mask are in HEX string format and perform conversions
 size_t MemoryFindForward(size_t start, size_t end, const char *pattern, const char *mask)
 {
 	unsigned char p[MAX_PATTERN];
@@ -244,6 +245,7 @@ size_t MemoryFindBackward(size_t start, size_t end, const unsigned char *pattern
 
 	return NULL;
 }
+// Signed char versions assume pattern and mask are in HEX string format and perform conversions
 size_t MemoryFindBackward(size_t start, size_t end, const char *pattern, const char *mask)
 {
 	unsigned char p[MAX_PATTERN];
@@ -297,6 +299,7 @@ void FindSvcMessagesTable(void)
 
 	// Form a pattern to search for engine messages functions table
 	unsigned char data4[12 * 3 + 4];
+	memset(data4, 0, sizeof(data4));
 	*((uint32_t*)data4 + 0) = 0;
 	*((uint32_t*)data4 + 1) = svc_bad;
 	*((uint32_t*)data4 + 3) = 1;
