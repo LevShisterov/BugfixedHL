@@ -33,7 +33,7 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Force build to run Pre-Build event"
-				CommandLine="echo Empty Action"
+				CommandLine="echo Empty Action&#x0D;&#x0A;"
 				AdditionalDependencies="subversion.always.run"
 				Outputs="subversion.always.run"
 			/>
@@ -109,7 +109,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Automatic deployment script"
-				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (&#x0D;&#x0A;  CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
+				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (&#x0D;&#x0A;  CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(TargetExt)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -129,7 +129,7 @@
 			<Tool
 				Name="VCCustomBuildTool"
 				Description="Force build to run Pre-Build event"
-				CommandLine="echo Empty Action"
+				CommandLine="echo Empty Action&#x0D;&#x0A;"
 				AdditionalDependencies="subversion.always.run"
 				Outputs="subversion.always.run"
 			/>
@@ -206,7 +206,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Automatic deployment script"
-				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (&#x0D;&#x0A;  CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
+				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (&#x0D;&#x0A;  CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(TargetExt)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -2115,7 +2115,7 @@
 					RelativePath="..\..\dlls\pcre\ucp.h"
 					>
 				</File>
-		</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
