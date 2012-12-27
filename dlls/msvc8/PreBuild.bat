@@ -163,14 +163,14 @@ echo.>>"%srcdir%\appversion.h"
 echo // Version defines>>"%srcdir%\appversion.h"
 
 IF "%version_maintenance%" == "" (
-	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_revision%>>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_revision% >>"%srcdir%\appversion.h"
 	echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_revision%">>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_C %version_major%,%version_minor%,0,%version_revision%>>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_C %version_major%,%version_minor%,0,%version_revision% >>"%srcdir%\appversion.h"
 	echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, 0, %version_revision%">>"%srcdir%\appversion.h"
 ) ELSE (
-	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_maintenance%.%version_revision%>>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_maintenance%.%version_revision% >>"%srcdir%\appversion.h"
 	echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_maintenance%.%version_revision%">>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_C %version_major%,%version_minor%,%version_maintenance%,%version_revision%>>"%srcdir%\appversion.h"
+	echo #define APP_VERSION_C %version_major%,%version_minor%,%version_maintenance%,%version_revision% >>"%srcdir%\appversion.h"
 	echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, %version_maintenance%, %version_revision%">>"%srcdir%\appversion.h"
 )
 

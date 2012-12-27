@@ -72,12 +72,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "aghl.ru"
             VALUE "FileDescription", "Fixed and improved HLSDK hl.dll"
-            VALUE "FileVersion", APP_VERSION_STRCS
+            VALUE "FileVersion", APP_VERSION_STRD
             VALUE "InternalName", "hl.dll"
             VALUE "LegalCopyright", "Copyright aghl.ru (C) 2012"
             VALUE "OriginalFilename", "hl.dll"
             VALUE "ProductName", "Fixed and improved HLSDK"
-            VALUE "ProductVersion", APP_VERSION_STRCS
+            VALUE "ProductVersion", APP_VERSION_STRD
 #if APP_VERSION_FLAGS != 0x0L
             VALUE "SpecialBuild", APP_VERSION_SPECIALBUILD
 #endif
