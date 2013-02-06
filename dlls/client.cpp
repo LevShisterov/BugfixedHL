@@ -249,6 +249,7 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	CBasePlayer *client;
 	int		j;
 	char	*p;
+	char	*pc;
 	char	text[128];
 	char	szTemp[256];
 	const char *cpSay = "say";
@@ -306,17 +307,37 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	}
 	p = szTemp;
 
-	// remove quotes if present
-	if (*p == '"')
+	// remove empty spaces at the end
+	for ( pc = p + (int)strlen(p) - 1; pc != p; pc-- )
 	{
+		if ( (byte)(*pc) >= (byte)0x80 ||	// UTF-8 symbol
+			 !isspace( *pc ) )
+		{
+			break;
+		}
+		*pc = 0;
+	}
+
+	// remove surrounding quotes if present
+	int len = (int)strlen(p);
+	if (*p == '"' && p[len - 1] == '"')
+	{
+		p[len - 1] = 0;
 		p++;
-		int len = (int)strlen(p);
-		if (p[len - 1] == '"')
-			p[len - 1] = 0;
+	}
+
+	// remove empty spaces at the end
+	for ( pc = p + (int)strlen(p) - 1; pc != p; pc-- )
+	{
+		if ( (byte)(*pc) >= (byte)0x80 ||	// UTF-8 symbol
+			 !isspace( *pc ) )
+		{
+			break;
+		}
+		*pc = 0;
 	}
 
 	// make sure the text has content
-	char *pc;
 	for ( pc = p; pc != NULL && *pc != 0; pc++ )
 	{
 		if ( (byte)(*pc) >= (byte)0x80 ||	// UTF-8 symbol
@@ -338,17 +359,6 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	j = sizeof(text) - 2 - strlen(text);  // -2 for \n and null terminator
 	if ( (int)strlen(p) > j )
 		p[j] = 0;
-
-	// remove empty space at the end
- 	for ( pc = p + (int)strlen(p) - 1; pc != p; pc-- )
-	{
-		if ( (byte)(*pc) >= (byte)0x80 ||	// UTF-8 symbol
-			 !isspace( *pc ) )
-		{
-			break;
-		}
-		*pc = 0;
-	}
 
 	strcat( text, p );
 	strcat( text, "\n" );
