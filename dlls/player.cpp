@@ -2987,6 +2987,8 @@ int CBasePlayer::Restore( CRestore &restore )
 
 	int status = restore.ReadFields( "PLAYER", this, m_playerSaveData, HLARRAYSIZE(m_playerSaveData) );
 
+	m_bConnected = TRUE;
+
 	SAVERESTOREDATA *pSaveData = (SAVERESTOREDATA *)gpGlobals->pSaveData;
 	// landmark isn't present.
 	if ( !pSaveData->fUseLandmark )
