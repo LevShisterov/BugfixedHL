@@ -20,12 +20,12 @@
 // this class routes messages through titles.txt for localisation
 //
 
-#include "hud.h"
-#include "cl_util.h"
 #include <string.h>
 #include <stdio.h>
-#include "parsemsg.h"
 
+#include "hud.h"
+#include "cl_util.h"
+#include "parsemsg.h"
 #include "vgui_TeamFortressViewport.h"
 
 DECLARE_MESSAGE( m_TextMessage, TextMsg );
@@ -163,49 +163,81 @@ int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf
 
 	int msg_dest = READ_BYTE();
 
-	static char szBuf[6][128];
-	char *msg_text = LookupString( READ_STRING(), &msg_dest );
-	msg_text = strcpy( szBuf[0], msg_text );
+	const int MAX_PARAMS = 4;
+	const int MAX_TEXT = 127;
+	static char szBuf[MAX_PARAMS + 2][MAX_TEXT + 1];
+
+	char *msg_text = LookupString(READ_STRING(), &msg_dest);
+	msg_text = strncpy(szBuf[1], msg_text, MAX_TEXT);
+	szBuf[1][MAX_TEXT] = 0;
 
 	// keep reading strings and using C format strings for subsituting the strings into the localised text string
-	char *sstr1 = LookupString( READ_STRING() );
-	sstr1 = strcpy( szBuf[1], sstr1 );
-	StripEndNewlineFromString( sstr1 );  // these strings are meant for subsitution into the main strings, so cull the automatic end newlines
-	char *sstr2 = LookupString( READ_STRING() );
-	sstr2 = strcpy( szBuf[2], sstr2 );
-	StripEndNewlineFromString( sstr2 );
-	char *sstr3 = LookupString( READ_STRING() );
-	sstr3 = strcpy( szBuf[3], sstr3 );
-	StripEndNewlineFromString( sstr3 );
-	char *sstr4 = LookupString( READ_STRING() );
-	sstr4 = strcpy( szBuf[4], sstr4 );
-	StripEndNewlineFromString( sstr4 );
-	char *psz = szBuf[5];
+	for (int i = 2; i < MAX_PARAMS + 2; i++)
+	{
+		char *sstr = LookupString(READ_STRING());
+		strncpy(szBuf[i], sstr, MAX_TEXT);
+		szBuf[i][MAX_TEXT] = 0;
+		// these strings are meant for subsitution into the main string, so cull the automatic end newlines
+		StripEndNewlineFromString(szBuf[i]);
+	}
 
 	if ( gViewPort && gViewPort->AllowedToPrintText() == FALSE )
 		return 1;
 
-	switch ( msg_dest )
+	char *dst = szBuf[0];
+
+	if (msg_dest == HUD_PRINTNOTIFY)
 	{
-	case HUD_PRINTCENTER:
-		sprintf( psz, msg_text, sstr1, sstr2, sstr3, sstr4 );
-		CenterPrint( ConvertCRtoNL( psz ) );
-		break;
+		dst[0] = 1;  // mark this message to go into the notify buffer
+		dst++;
+	}
 
+	// Substitute substrings
+	//sprintf_s(psz, MAX_TEXT, msg_text, sstr1, sstr2, sstr3, sstr4);
+	int next_param = 0;
+	char *src = msg_text;
+	char *end = szBuf[0] + MAX_TEXT;
+	bool inParam = false;
+	while (*src && dst < end)
+	{
+		if (inParam)
+		{
+			inParam = false;
+			if (*src == 's' && next_param < MAX_PARAMS)
+			{
+				strncpy(dst, szBuf[next_param + 2], MAX_TEXT - (dst - szBuf[0]));
+				szBuf[0][MAX_TEXT] = 0;
+				dst += strlen(dst);
+				src++;
+				next_param++;
+				continue;
+			}
+		}
+		else if (*src == '%')
+		{
+			inParam = true;
+			src++;
+			continue;
+		}
+		*dst = *src;
+		dst++;
+		src++;
+	}
+	*dst = 0;
+
+	ConvertCRtoNL(szBuf[0]);
+
+	switch (msg_dest)
+	{
 	case HUD_PRINTNOTIFY:
-		psz[0] = 1;  // mark this message to go into the notify buffer
-		sprintf( psz+1, msg_text, sstr1, sstr2, sstr3, sstr4 );
-		ConsolePrint( ConvertCRtoNL( psz ) );
-		break;
-
-	case HUD_PRINTTALK:
-		sprintf( psz, msg_text, sstr1, sstr2, sstr3, sstr4 );
-		gHUD.m_SayText.SayTextPrint( ConvertCRtoNL( psz ), 128 );
-		break;
-
 	case HUD_PRINTCONSOLE:
-		sprintf( psz, msg_text, sstr1, sstr2, sstr3, sstr4 );
-		ConsolePrint( ConvertCRtoNL( psz ) );
+		ConsolePrint(szBuf[0]);
+		break;
+	case HUD_PRINTTALK:
+		gHUD.m_SayText.SayTextPrint(szBuf[0], 128);
+		break;
+	case HUD_PRINTCENTER:
+		CenterPrint(szBuf[0]);
 		break;
 	}
 
