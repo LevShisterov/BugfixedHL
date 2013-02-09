@@ -44,14 +44,15 @@ bool DoSubstitutions(char *filename, char *fullpath, const char *format, const c
 	_invalid_parameter_handler oldHandler = _set_invalid_parameter_handler(InvalidParameterHandler);
 	int oldMode = _CrtSetReportMode(_CRT_ASSERT, 0);
 	strftime(filename, MAX_PATH, frmt, pTm);
+	_CrtSetReportMode(_CRT_ASSERT, oldMode);
+	_set_invalid_parameter_handler(oldHandler);
+
 	// Use default pattern on format error
 	if (g_bFormatError)
 	{
 		g_bFormatError = false;
 		return false;
 	}
-	_CrtSetReportMode(_CRT_ASSERT, oldMode);
-	_set_invalid_parameter_handler(oldHandler);
 
 	// Perform filename validation
 	RemoveInvalidPathChars(filename, false);
@@ -132,6 +133,8 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 		gEngfuncs.Con_Printf("Couldn't construct filepath for game results file: check results_file_format, may be it is too long.\n");
 		filename[0] = 0;
 		fullpath[0] = 0;
+		_CrtSetReportMode(_CRT_ASSERT, oldMode);
+		_set_invalid_parameter_handler(oldHandler);
 		return false;
 	}
 	if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES)
@@ -178,6 +181,8 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 					gEngfuncs.Con_Printf("Couldn't construct filepath for game results file using default counter format.\n");
 					filename[0] = 0;
 					fullpath[0] = 0;
+					_CrtSetReportMode(_CRT_ASSERT, oldMode);
+					_set_invalid_parameter_handler(oldHandler);
 					return false;
 				}
 			}
@@ -189,6 +194,8 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 			gEngfuncs.Con_Printf("Couldn't construct filepath for game results file: counter exausted, fix results_file_format.\n");
 			filename[0] = 0;
 			fullpath[0] = 0;
+			_CrtSetReportMode(_CRT_ASSERT, oldMode);
+			_set_invalid_parameter_handler(oldHandler);
 			return false;
 		}
 	}
