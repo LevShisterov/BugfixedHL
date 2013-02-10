@@ -75,6 +75,8 @@ SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 #define TEAM_SPECTATORS		2
 #define TEAM_BLANK			3
 
+#define HIGHLIGHT_KILLER_TIME	10
+
 
 //-----------------------------------------------------------------------------
 // ScorePanel::HitTestPanel.
@@ -300,6 +302,7 @@ void ScorePanel::Configure(void)
 void ScorePanel::Initialize( void )
 {
 	// Clear out scoreboard data
+	m_iKillerRow = -1;
 	m_iLastKilledBy = 0;
 	m_fLastKillTime = 0;
 	m_iPlayerNum = 0;
@@ -904,11 +907,11 @@ void ScorePanel::FillGrid()
 //-----------------------------------------------------------------------------
 void ScorePanel::DeathMsg( int killer, int victim )
 {
-	// if we were the one killed,  or the world killed us, set the scoreboard to indicate suicide
-	if ( victim == m_iPlayerNum || killer == 0 )
+	if (victim == m_iPlayerNum)
 	{
+		// if we were the one killed, or the world killed us, set the scoreboard to indicate suicide
 		m_iLastKilledBy = killer ? killer : m_iPlayerNum;
-		m_fLastKillTime = gHUD.m_flTime + 10;	// display who we were killed by for 10 seconds
+		m_fLastKillTime = gHUD.m_flTime + HIGHLIGHT_KILLER_TIME;	// display who we were killed by for 10 seconds
 	}
 }
 
@@ -1041,17 +1044,27 @@ void CLabelHeader::paintBackground()
 {
 	Color oldBg;
 	getBgColor(oldBg);
+	ScorePanel *sbp = gViewPort->GetScoreBoard();
 
-	if (gViewPort->GetScoreBoard()->m_iHighlightRow == _row)
+	if (sbp->m_iHighlightRow == _row)
 	{
 		setBgColor(134, 91, 19, 0);
 	}
-	else if (gViewPort->GetScoreBoard()->m_iKillerRow == _row &&
-		gViewPort->GetScoreBoard()->m_fLastKillTime &&
-		gViewPort->GetScoreBoard()->m_fLastKillTime > gHUD.m_flTime)
+	// Killer's name
+	else if (sbp->m_iKillerRow == _row)
 	{
-		// Killer's name
-		setBgColor( 255,0,0, 255 - (int)(15.0 * (gViewPort->GetScoreBoard()->m_fLastKillTime - gHUD.m_flTime)) );
+		float lastKillTime = sbp->m_fLastKillTime;
+		if (lastKillTime >= gHUD.m_flTime &&
+			lastKillTime <= gHUD.m_flTime + HIGHLIGHT_KILLER_TIME)	// check in a window style to catch game time reset events
+		{
+			setBgColor( 255,0,0, 255 - (int)(15.0 * (lastKillTime - gHUD.m_flTime)) );
+		}
+		else
+		{
+			sbp->m_iKillerRow = -1;
+			sbp->m_iLastKilledBy = 0;
+			sbp->m_fLastKillTime = 0;
+		}
 	}
 
 	Panel::paintBackground();
