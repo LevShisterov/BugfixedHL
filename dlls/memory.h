@@ -115,11 +115,12 @@ struct CommandLink
 };
 
 
-bool HookSvcMessages(cl_enginemessages_t *pEngineMessages);
-bool UnHookSvcMessages(cl_enginemessages_t *pEngineMessages);
+void HookSvcMessages(cl_enginemessages_t *pEngineMessages);
+void UnHookSvcMessages(cl_enginemessages_t *pEngineMessages);
 void PatchEngine(void);
 void UnPatchEngine(void);
 void MemoryPatcherInit(void);
+void MemoryPatcherHudFrame(void);
 
 
 extern void **g_EngineBuf;
