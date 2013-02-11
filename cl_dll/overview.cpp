@@ -62,7 +62,7 @@ int CHudOverview::Draw(float flTime)
 	float scale = abs(x2 - x1);
 
 	// loop through all the players and draw them on the map
-	for (int i = 1; i < MAX_PLAYERS; i++)
+	for (int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		cl_entity_t *pl = gEngfuncs.GetEntityByIndex(i);
 

@@ -274,7 +274,7 @@ void SvcPrint(void)
 			{
 				str[len - 9] = 0;
 				gViewPort->GetAllPlayersInfo();
-				for (int i = 1; i < MAX_PLAYERS; i++)
+				for (int i = 1; i <= MAX_PLAYERS; i++)
 				{
 					if (g_PlayerInfoList[i].name != NULL &&
 						!strcmp(g_PlayerInfoList[i].name, str))
