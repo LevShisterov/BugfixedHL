@@ -358,7 +358,7 @@ void ScorePanel::Update()
 	gViewPort->GetAllPlayersInfo();
 
 	// Check SteamIds
-	for (int i = 1; i < MAX_PLAYERS; i++)
+	for (int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		if (g_PlayerInfoList[i].name != NULL &&
 			g_PlayerInfoList[i].name[0] &&
@@ -375,7 +375,7 @@ void ScorePanel::Update()
 		m_iSortedRows[i] = 0;
 		m_iIsATeam[i] = TEAM_NO;
 	}
-	for (int i = 1; i < MAX_PLAYERS; i++)
+	for (int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		m_bHasBeenSorted[i] = false;
 	}
@@ -418,7 +418,7 @@ void ScorePanel::SortTeams()
 	}
 
 	// recalc the team scores, then draw them
-	for ( i = 1; i < MAX_PLAYERS; i++ )
+	for ( i = 1; i <= MAX_PLAYERS; i++ )
 	{
 		if ( g_PlayerInfoList[i].name == NULL )
 			continue; // empty player slot, skip
@@ -522,7 +522,7 @@ void ScorePanel::SortPlayers( int iTeam, char *team )
 		int lowest_deaths = 99999;
 		int best_player = 0;
 
-		for ( int i = 1; i < MAX_PLAYERS; i++ )
+		for ( int i = 1; i <= MAX_PLAYERS; i++ )
 		{
 			if (m_bHasBeenSorted[i] || !g_PlayerInfoList[i].name || g_PlayerExtraInfo[i].frags < highest_frags) continue;
 
@@ -578,7 +578,7 @@ void ScorePanel::RebuildTeams()
 	// rebuild the team list
 	gViewPort->GetAllPlayersInfo();
 	m_iNumTeams = 0;
-	for ( i = 1; i < MAX_PLAYERS; i++ )
+	for ( i = 1; i <= MAX_PLAYERS; i++ )
 	{
 		if ( g_PlayerInfoList[i].name == NULL )
 			continue;
