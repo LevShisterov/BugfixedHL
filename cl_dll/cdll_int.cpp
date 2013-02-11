@@ -48,6 +48,7 @@ cl_enginefunc_t gEngfuncs;
 CHud gHUD;
 TeamFortressViewport *gViewPort = NULL;
 PVOID hVehHandler = NULL;
+bool g_bDllDetaching = false;
 
 void InitInput (void);
 void ShutdownInput (void);
@@ -162,7 +163,8 @@ LONG NTAPI VectoredExceptionsHandler(PEXCEPTION_POINTERS pExceptionInfo)
 
 	// We will handle all fatal unexpected exceptions, like STATUS_ACCESS_VIOLATION
 	// But skip DLL Not Found exception, which happen on old non-steam when steam is running
-	if ((exceptionCode & 0xF0000000L) == 0xC0000000L && exceptionCode != 0xC0000139)
+	// Also skip while detach is in process, cos we can't write files (not sure about message boxes, but anyway...)
+	if ((exceptionCode & 0xF0000000L) == 0xC0000000L && exceptionCode != 0xC0000139 && !g_bDllDetaching)
 	{
 		char buffer[1024];
 		long moduleBase, moduleSize;
@@ -261,6 +263,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	}
 	else if (fdwReason == DLL_PROCESS_DETACH)
 	{
+		g_bDllDetaching = true;
+
 		UnHookSvcMessages();
 		UnPatchEngine();
 
@@ -396,6 +400,8 @@ Called by engine every frame that client .dll is loaded
 
 void DLLEXPORT HUD_Frame( double time )
 {
+	MemoryPatcherHudFrame();
+
 	ServersThink( time );
 
 	GetClientVoiceMgr()->Frame(time);

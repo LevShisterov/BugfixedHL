@@ -204,81 +204,84 @@ bool SanitizeCommands(char *str)
 
 void SvcPrint(void)
 {
-	static bool processingUserRow = false;
-
-	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
-	char *str = READ_STRING();
-
-	if (!strncmp(str, "\"mp_timelimit\" changed to \"", 27) ||
-		!strncmp(str, "\"amx_nextmap\" changed to \"", 26))
+	if (g_EngineBuf && g_EngineBufSize && g_EngineReadPos)
 	{
-		gHUD.m_Timer.DoResync();
-	}
-	else if (gViewPort && gViewPort->m_pScoreBoard && gViewPort->m_pScoreBoard->m_iStatusRequestState != STATUS_REQUEST_IDLE)
-	{
-		// Proccess status command answer
-		if (str[0] == '#' && str[1] != 0 && str[2] != 0 && str[3] == ' ' ) // start of new player info row (or table header)
+		static bool processingUserRow = false;
+
+		BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
+		char *str = READ_STRING();
+
+		if (!strncmp(str, "\"mp_timelimit\" changed to \"", 27) ||
+			!strncmp(str, "\"amx_nextmap\" changed to \"", 26))
 		{
-			gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_PROCESSING; // players info table started
-			int slot = atoi(str + 1);
-			if (slot > 0)
+			gHUD.m_Timer.DoResync();
+		}
+		else if (gViewPort && gViewPort->m_pScoreBoard && gViewPort->m_pScoreBoard->m_iStatusRequestState != STATUS_REQUEST_IDLE)
+		{
+			// Proccess status command answer
+			if (str[0] == '#' && str[1] != 0 && str[2] != 0 && str[3] == ' ' ) // start of new player info row (or table header)
 			{
-				char *name = strchr(strchr(str + 2, ' '), '"');
-				if (name != NULL)
+				gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_PROCESSING; // players info table started
+				int slot = atoi(str + 1);
+				if (slot > 0)
 				{
-					name ++; // space
-					char *userid = strchr(name, '"');
-					if (userid != NULL)
+					char *name = strchr(strchr(str + 2, ' '), '"');
+					if (name != NULL)
 					{
-						userid += 2; // quote and space
-						char *steamid = strchr(userid, ' ');
-						if (steamid != NULL)
+						name ++; // space
+						char *userid = strchr(name, '"');
+						if (userid != NULL)
 						{
-							steamid++; // space
-							char *steamidend = strchr(steamid, ' ');
-							if (steamidend != NULL)
-								*steamidend = 0;
-							if (!strncmp(steamid, "STEAM_", 6) ||
-								!strncmp(steamid, "VALVE_", 6))
-								strncpy(g_PlayerSteamId[slot], steamid + 6, MAX_STEAMID); // cutout "STEAM_" or "VALVE_" start of the string
-							else
-								strncpy(g_PlayerSteamId[slot], steamid, MAX_STEAMID);
-							g_PlayerSteamId[slot][MAX_STEAMID] = 0;
+							userid += 2; // quote and space
+							char *steamid = strchr(userid, ' ');
+							if (steamid != NULL)
+							{
+								steamid++; // space
+								char *steamidend = strchr(steamid, ' ');
+								if (steamidend != NULL)
+									*steamidend = 0;
+								if (!strncmp(steamid, "STEAM_", 6) ||
+									!strncmp(steamid, "VALVE_", 6))
+									strncpy(g_PlayerSteamId[slot], steamid + 6, MAX_STEAMID); // cutout "STEAM_" or "VALVE_" start of the string
+								else
+									strncpy(g_PlayerSteamId[slot], steamid, MAX_STEAMID);
+								g_PlayerSteamId[slot][MAX_STEAMID] = 0;
+							}
 						}
 					}
 				}
+				if (strchr(str, '\n') == NULL)
+					processingUserRow = true;
 			}
-			if (strchr(str, '\n') == NULL)
-				processingUserRow = true;
-		}
-		else if (processingUserRow)
-		{
-			if (strchr(str, '\n') != NULL) // skip till the end of the row (new line)
-				processingUserRow = false;
-		}
-		else if (gViewPort->m_pScoreBoard->m_iStatusRequestState == STATUS_REQUEST_PROCESSING)
-		{
-			gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_IDLE;
-		}
-		// Suppress status output
-		*g_EngineReadPos += strlen(str) + 1;
-		return;
-	}
-	else
-	{
-		// Clear cached steam id for left player
-		int len = strlen(str);
-		if (!strcmp(str + len - 9, " dropped\n"))
-		{
-			str[len - 9] = 0;
-			gViewPort->GetAllPlayersInfo();
-			for (int i = 1; i < MAX_PLAYERS; i++)
+			else if (processingUserRow)
 			{
-				if (g_PlayerInfoList[i].name != NULL &&
-					!strcmp(g_PlayerInfoList[i].name, str))
+				if (strchr(str, '\n') != NULL) // skip till the end of the row (new line)
+					processingUserRow = false;
+			}
+			else if (gViewPort->m_pScoreBoard->m_iStatusRequestState == STATUS_REQUEST_PROCESSING)
+			{
+				gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_IDLE;
+			}
+			// Suppress status output
+			*g_EngineReadPos += strlen(str) + 1;
+			return;
+		}
+		else
+		{
+			// Clear cached steam id for left player
+			int len = strlen(str);
+			if (!strcmp(str + len - 9, " dropped\n"))
+			{
+				str[len - 9] = 0;
+				gViewPort->GetAllPlayersInfo();
+				for (int i = 1; i < MAX_PLAYERS; i++)
 				{
-					g_PlayerSteamId[i][0] = 0;
-					break;
+					if (g_PlayerInfoList[i].name != NULL &&
+						!strcmp(g_PlayerInfoList[i].name, str))
+					{
+						g_PlayerSteamId[i][0] = 0;
+						break;
+					}
 				}
 			}
 		}
@@ -288,93 +291,112 @@ void SvcPrint(void)
 }
 void SvcNewUserMsg(void)
 {
-	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
-	int id = READ_BYTE();
-	int len = READ_BYTE();
-	char name[16];
-	uint32_t value = READ_LONG();
-	memcpy(name, &(value), 4);
-	value = READ_LONG();
-	memcpy(name + 4, &(value), 4);
-	value = READ_LONG();
-	memcpy(name + 8, &(value), 4);
-	value = READ_LONG();
-	memcpy(name + 12, &(value), 4);
-	name[15] = 0;
-
-	pEngineMessages.pfnSvcNewUserMsg();
-
-	// Log user message to console
-	if (m_pCvarClLogMessages && m_pCvarClLogMessages->value)
-		gEngfuncs.Con_Printf("User Message: %d, %s, %d\n", id, name, len == 255 ? -1 : len);
-
-	// Fix engine bug that leads to duplicate user message ids in user messages chain
-	UserMessage *current = *g_pUserMessages;
-	while (current != 0)
+	if (g_EngineBuf && g_EngineBufSize && g_EngineReadPos)
 	{
-		if (current->messageId == id && strcmp(current->messageName, name))
-			current->messageId = 0;
-		current = current->nextMessage;
+		BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
+		int id = READ_BYTE();
+		int len = READ_BYTE();
+		char name[16];
+		uint32_t value = READ_LONG();
+		memcpy(name, &(value), 4);
+		value = READ_LONG();
+		memcpy(name + 4, &(value), 4);
+		value = READ_LONG();
+		memcpy(name + 8, &(value), 4);
+		value = READ_LONG();
+		memcpy(name + 12, &(value), 4);
+		name[15] = 0;
+
+		pEngineMessages.pfnSvcNewUserMsg();
+
+		// Log user message to console
+		if (m_pCvarClLogMessages && m_pCvarClLogMessages->value)
+			gEngfuncs.Con_Printf("User Message: %d, %s, %d\n", id, name, len == 255 ? -1 : len);
+
+		// Fix engine bug that leads to duplicate user message ids in user messages chain
+		if (g_pUserMessages)
+		{
+			UserMessage *current = *g_pUserMessages;
+			while (current != 0)
+			{
+				if (current->messageId == id && strcmp(current->messageName, name))
+					current->messageId = 0;
+				current = current->nextMessage;
+			}
+		}
+	}
+	else
+	{
+		pEngineMessages.pfnSvcNewUserMsg();
 	}
 }
 void SvcStuffText(void)
 {
-	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
-	char *commands = READ_STRING();
-
-	char str[1024];
-	strncpy(str, commands, sizeof(str));
-	str[sizeof(str) - 1] = 0;
-
-	if (SanitizeCommands(str))
+	if (g_EngineBuf && g_EngineBufSize && g_EngineReadPos)
 	{
-		// Some commands were removed, put cleaned command line back to stream
-		int l1 = strlen(commands);
-		int l2 = strlen(str);
-		if (l2 == 0)
+		BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
+		char *commands = READ_STRING();
+
+		char str[1024];
+		strncpy(str, commands, sizeof(str));
+		str[sizeof(str) - 1] = 0;
+
+		if (SanitizeCommands(str))
 		{
-			// Suppress commands if they are all removed
-			*g_EngineReadPos += l1 + 1;
-			return;
+			// Some commands were removed, put cleaned command line back to stream
+			int l1 = strlen(commands);
+			int l2 = strlen(str);
+			if (l2 == 0)
+			{
+				// Suppress commands if they are all removed
+				*g_EngineReadPos += l1 + 1;
+				return;
+			}
+			int diff = l1 - l2;
+			strncpy(commands + diff, str, l2);
+			*g_EngineReadPos += diff;
 		}
-		int diff = l1 - l2;
-		strncpy(commands + diff, str, l2);
-		*g_EngineReadPos += diff;
 	}
 
 	pEngineMessages.pfnSvcStuffText();
 }
 void SvcSendCvarValue(void)
 {
-	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
-	char *cvar = READ_STRING();
-
-	// Check cvar
-	bool isGood = IsCvarGood(cvar);
-	if (!isGood)
+	if (g_EngineBuf && g_EngineBufSize && g_EngineReadPos)
 	{
-		gEngfuncs.Con_DPrintf("Server tried to request blocked cvar: %s\n", cvar);
-		*g_EngineReadPos += strlen(cvar) + 1;
-		// At now we will silently block the request
-		return;
+		BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
+		char *cvar = READ_STRING();
+
+		// Check cvar
+		bool isGood = IsCvarGood(cvar);
+		if (!isGood)
+		{
+			gEngfuncs.Con_DPrintf("Server tried to request blocked cvar: %s\n", cvar);
+			*g_EngineReadPos += strlen(cvar) + 1;
+			// At now we will silently block the request
+			return;
+		}
 	}
 
 	pEngineMessages.pfnSvcSendCvarValue();
 }
 void SvcSendCvarValue2(void)
 {
-	BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
-	long l = READ_LONG();
-	char *cvar = READ_STRING();
-
-	// Check cvar
-	bool isGood = IsCvarGood(cvar);
-	if (!isGood)
+	if (g_EngineBuf && g_EngineBufSize && g_EngineReadPos)
 	{
-		gEngfuncs.Con_DPrintf("Server tried to request blocked cvar: %s\n", cvar);
-		*g_EngineReadPos += 4 + strlen(cvar) + 1;
-		// At now we will silently block the request
-		return;
+		BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
+		long l = READ_LONG();
+		char *cvar = READ_STRING();
+
+		// Check cvar
+		bool isGood = IsCvarGood(cvar);
+		if (!isGood)
+		{
+			gEngfuncs.Con_DPrintf("Server tried to request blocked cvar: %s\n", cvar);
+			*g_EngineReadPos += 4 + strlen(cvar) + 1;
+			// At now we will silently block the request
+			return;
+		}
 	}
 
 	pEngineMessages.pfnSvcSendCvarValue2();
@@ -397,12 +419,19 @@ void UnHookSvcMessages(void)
 
 void DumpUserMessages(void)
 {
-	// Dump all user messages to console
-	UserMessage *current = *g_pUserMessages;
-	while (current != 0)
+	if (g_pUserMessages)
 	{
-		gEngfuncs.Con_Printf("User Message: %d, %s, %d\n", current->messageId, current->messageName, current->messageLen);
-		current = current->nextMessage;
+		// Dump all user messages to console
+		UserMessage *current = *g_pUserMessages;
+		while (current != 0)
+		{
+			gEngfuncs.Con_Printf("User Message: %d, %s, %d\n", current->messageId, current->messageName, current->messageLen);
+			current = current->nextMessage;
+		}
+	}
+	else
+	{
+		gEngfuncs.Con_Printf("Can't dump user messages: engine wasn't hooked properly.\n");
 	}
 }
 void ProtectHelp(void)
