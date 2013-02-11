@@ -30,10 +30,10 @@
 #include "..\game_shared\vgui_loadtga.h"
 #include "vgui_SpectatorPanel.h"
 
-hud_player_info_t	 g_PlayerInfoList[MAX_PLAYERS+1];	   // player info from the engine
-extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS+1];   // additional player info sent directly to the client dll
-team_info_t			 g_TeamInfo[MAX_TEAMS+1];
-int					 g_IsSpectator[MAX_PLAYERS+1];
+hud_player_info_t	g_PlayerInfoList[MAX_PLAYERS + 1];	// player info from the engine
+extra_player_info_t	g_PlayerExtraInfo[MAX_PLAYERS + 1];	// additional player info sent directly to the client dll
+team_info_t			g_TeamInfo[MAX_TEAMS + 1];
+int					g_IsSpectator[MAX_PLAYERS + 1];
 
 int HUD_IsGame( const char *game );
 int EV_TFC_IsAllyTeam( int iTeam1, int iTeam2 );
@@ -251,7 +251,7 @@ bool HACK_GetPlayerUniqueID( int iPlayer, char playerID[16] )
 {
 	return !!gEngfuncs.GetPlayerUniqueID( iPlayer, playerID );
 }
-		
+
 //-----------------------------------------------------------------------------
 // Purpose: Recalculate the internal scoreboard data
 //-----------------------------------------------------------------------------
@@ -289,11 +289,11 @@ void ScorePanel::Update()
 
 	if ( gViewPort->m_pSpectatorPanel->m_menuVisible )
 	{
-		 m_pCloseButton->setVisible ( true );
+		m_pCloseButton->setVisible ( true );
 	}
-	else 
+	else
 	{
-		 m_pCloseButton->setVisible ( false );
+		m_pCloseButton->setVisible ( false );
 	}
 }
 
@@ -312,7 +312,7 @@ void ScorePanel::SortTeams()
 	}
 
 	// recalc the team scores, then draw them
-	for ( i = 1; i < MAX_PLAYERS; i++ )
+	for ( i = 1; i <= MAX_PLAYERS; i++ )
 	{
 		if ( g_PlayerInfoList[i].name == NULL )
 			continue; // empty player slot, skip
@@ -407,7 +407,7 @@ void ScorePanel::SortPlayers( int iTeam, char *team )
 {
 	bool bCreatedTeam = false;
 
-	// draw the players, in order,  and restricted to team if set
+	// draw the players, in order, and restricted to team if set
 	while ( 1 )
 	{
 		// Find the top ranking player
@@ -415,23 +415,23 @@ void ScorePanel::SortPlayers( int iTeam, char *team )
 		int best_player;
 		best_player = 0;
 
-		for ( int i = 1; i < MAX_PLAYERS; i++ )
+		for ( int i = 1; i <= MAX_PLAYERS; i++ )
 		{
 			if ( m_bHasBeenSorted[i] == false && g_PlayerInfoList[i].name && g_PlayerExtraInfo[i].frags >= highest_frags )
 			{
 				cl_entity_t *ent = gEngfuncs.GetEntityByIndex( i );
 
-				if ( ent && !(team && _stricmp(g_PlayerExtraInfo[i].teamname, team)) )  
+			if ( ent && !(team && _stricmp(g_PlayerExtraInfo[i].teamname, team)) )
+			{
+				extra_player_info_t *pl_info = &g_PlayerExtraInfo[i];
+				if ( pl_info->frags > highest_frags || pl_info->deaths < lowest_deaths )
 				{
-					extra_player_info_t *pl_info = &g_PlayerExtraInfo[i];
-					if ( pl_info->frags > highest_frags || pl_info->deaths < lowest_deaths )
-					{
-						best_player = i;
-						lowest_deaths = pl_info->deaths;
-						highest_frags = pl_info->frags;
-					}
+					best_player = i;
+					lowest_deaths = pl_info->deaths;
+					highest_frags = pl_info->frags;
 				}
 			}
+		}
 		}
 
 		if ( !best_player )
@@ -473,7 +473,7 @@ void ScorePanel::RebuildTeams()
 	// rebuild the team list
 	gViewPort->GetAllPlayersInfo();
 	m_iNumTeams = 0;
-	for ( i = 1; i < MAX_PLAYERS; i++ )
+	for ( i = 1; i <= MAX_PLAYERS; i++ )
 	{
 		if ( g_PlayerInfoList[i].name == NULL )
 			continue;
@@ -575,7 +575,7 @@ void ScorePanel::FillGrid()
 			pLabel->setImage(NULL);
 			pLabel->setFont(sfont);
 			pLabel->setTextOffset(0, 0);
-			
+
 			int rowheight = 13;
 			if (ScreenHeight > 480)
 			{
@@ -588,7 +588,7 @@ void ScorePanel::FillGrid()
 			}
 			pLabel->setSize(pLabel->getWide(), rowheight);
 			pLabel->setBgColor(0, 0, 0, 255);
-			
+
 			char sz[128];
 			hud_player_info_t *pl_info = NULL;
 			team_info_t *team_info = NULL;
@@ -668,9 +668,9 @@ void ScorePanel::FillGrid()
 					// Killer's name
 					pLabel->setBgColor( 255,0,0, 255 - ((float)15 * (float)(m_fLastKillTime - gHUD.m_flTime)) );
 				}
-			}				
+			}
 
-			// Align 
+			// Align
 			if (col == COLUMN_NAME || col == COLUMN_CLASS)
 			{
 				pLabel->setContentAlignment( vgui::Label::a_west );
@@ -724,15 +724,15 @@ void ScorePanel::FillGrid()
 					break;
 				case COLUMN_KILLS:
 					if ( m_iIsATeam[row] == TEAM_YES )
-						sprintf(sz, "%d",  team_info->frags );
+						sprintf(sz, "%d", team_info->frags );
 					break;
 				case COLUMN_DEATHS:
 					if ( m_iIsATeam[row] == TEAM_YES )
-						sprintf(sz, "%d",  team_info->deaths );
+						sprintf(sz, "%d", team_info->deaths );
 					break;
 				case COLUMN_LATENCY:
 					if ( m_iIsATeam[row] == TEAM_YES )
-						sprintf(sz, "%d", team_info->ping );
+							sprintf(sz, "%d", team_info->ping);
 					break;
 				default:
 					break;
@@ -745,7 +745,7 @@ void ScorePanel::FillGrid()
 				switch (col)
 				{
 				case COLUMN_NAME:
-					sprintf(sz, "%s  ", pl_info->name);
+					sprintf(sz, "%s", pl_info->name);
 					break;
 				case COLUMN_VOICE:
 					sz[0] = 0;
@@ -787,13 +787,13 @@ void ScorePanel::FillGrid()
 				case COLUMN_TRACKER:
 					break;
 				case COLUMN_KILLS:
-					sprintf(sz, "%d",  g_PlayerExtraInfo[ m_iSortedRows[row] ].frags );
+					sprintf(sz, "%d", g_PlayerExtraInfo[ m_iSortedRows[row] ].frags);
 					break;
 				case COLUMN_DEATHS:
-					sprintf(sz, "%d",  g_PlayerExtraInfo[ m_iSortedRows[row] ].deaths );
+					sprintf(sz, "%d", g_PlayerExtraInfo[ m_iSortedRows[row] ].deaths);
 					break;
 				case COLUMN_LATENCY:
-					sprintf(sz, "%d", g_PlayerInfoList[ m_iSortedRows[row] ].ping );
+						sprintf(sz, "%d", g_PlayerInfoList[ m_iSortedRows[row] ].ping);
 					break;
 				default:
 					break;
@@ -966,7 +966,7 @@ void CLabelHeader::paintBackground()
 
 	setBgColor(oldBg);
 }
-		
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Label paint functions - take into account current highligh status
