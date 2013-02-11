@@ -1455,14 +1455,13 @@ void EV_EgonFire( event_args_t *args )
 				r /= 100.0f;
 				g /= 100.0f;
 			}
-				
-		
-			pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b );
+
+			pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 999999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b );
 
 			if ( pBeam )
 				 pBeam->flags |= ( FBEAM_SINENOISE );
  
-			pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 5.0, 0.08, 0.7, 25, 0, 0, r, g, b );
+			pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 999999, 5.0, 0.08, 0.7, 25, 0, 0, r, g, b );
 		}
 	}
 }

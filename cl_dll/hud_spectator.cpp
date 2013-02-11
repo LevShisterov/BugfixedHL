@@ -932,7 +932,7 @@ bool CHudSpectator::ParseOverviewFile( )
 
 	if (!pfile)
 	{
-		gEngfuncs.Con_Printf("Couldn't open file %s. Using default values for overiew mode.\n", filename );
+		gEngfuncs.Con_DPrintf("Couldn't open file %s. Using default values for overview mode.\n", filename );
 		return false;
 	}
 	
@@ -950,7 +950,7 @@ bool CHudSpectator::ParseOverviewFile( )
 			pfile = gEngfuncs.COM_ParseFile(pfile, token);
 			if ( _stricmp( token, "{" ) ) 
 			{
-				gEngfuncs.Con_Printf("Error parsing overview file %s. (expected { )\n", filename );
+				gEngfuncs.Con_DPrintf("Error parsing overview file %s. (expected { )\n", filename );
 				return false;
 			}
 
@@ -991,7 +991,7 @@ bool CHudSpectator::ParseOverviewFile( )
 				}
 				else
 				{
-					gEngfuncs.Con_Printf("Error parsing overview file %s. (%s unkown)\n", filename, token );
+					gEngfuncs.Con_DPrintf("Error parsing overview file %s. (%s unkown)\n", filename, token );
 					return false;
 				}
 
@@ -1005,7 +1005,7 @@ bool CHudSpectator::ParseOverviewFile( )
 
 			if ( m_OverviewData.layers == OVERVIEW_MAX_LAYERS )
 			{
-				gEngfuncs.Con_Printf("Error parsing overview file %s. ( too many layers )\n", filename );
+				gEngfuncs.Con_DPrintf("Error parsing overview file %s. ( too many layers )\n", filename );
 				return false;
 			}
 
@@ -1014,7 +1014,7 @@ bool CHudSpectator::ParseOverviewFile( )
 				
 			if ( _stricmp( token, "{" ) ) 
 			{
-				gEngfuncs.Con_Printf("Error parsing overview file %s. (expected { )\n", filename );
+				gEngfuncs.Con_DPrintf("Error parsing overview file %s. (expected { )\n", filename );
 				return false;
 			}
 
@@ -1037,7 +1037,7 @@ bool CHudSpectator::ParseOverviewFile( )
 				}
 				else
 				{
-					gEngfuncs.Con_Printf("Error parsing overview file %s. (%s unkown)\n", filename, token );
+					gEngfuncs.Con_DPrintf("Error parsing overview file %s. (%s unkown)\n", filename, token );
 					return false;
 				}
 
