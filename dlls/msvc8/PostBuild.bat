@@ -17,15 +17,17 @@ IF NOT EXIST "%projectDir%\PublishPath.txt" (
 )
 
 FOR /f "tokens=* delims= usebackq" %%a IN ("%projectDir%\PublishPath.txt") DO (
+	ECHO Deploying to: %%a
 	IF NOT "%%a" == "" (
 		copy /Y "%targetDir%%targetName%%targetExt%" "%%a"
-		IF EXIST "%targetDir%%targetName%.pdb" (
+		IF NOT ERRORLEVEL 1 IF EXIST "%targetDir%%targetName%.pdb" (
 			copy /Y "%targetDir%%targetName%.pdb" "%%a"
 		)
 	)
 )
 
-IF "%destination%" == "" (
+IF "%%a" == "" (
 	ECHO 	No deployment path specified.
-	exit /B 0
 )
+
+exit /B 0
