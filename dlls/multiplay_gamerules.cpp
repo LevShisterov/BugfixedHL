@@ -448,9 +448,12 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 	MESSAGE_END();
 
 	// notify other clients of player joining the game
-	const char *name = pl->pev->netname ? STRING(pl->pev->netname) : "";
-	if (name[0] == 0) name = "unconnected";
-	UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "+ %s has joined the game\n", name ) );
+	if (((int)mp_notify_player_status.value & 2) == 2)
+	{
+		const char *name = pl->pev->netname ? STRING(pl->pev->netname) : "";
+		if (name[0] == 0) name = "unconnected";
+		UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "+ %s has joined the game\n", name ) );
+	}
 
 	// team match?
 	if ( g_teamplay )
@@ -551,9 +554,12 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 		return;
 
 	// notify other clients of player leaving the game
-	const char *name = pPlayer->pev->netname ? STRING(pPlayer->pev->netname) : "";
-	if (name[0] == 0) name = "unconnected";
-	UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "- %s has left the game\n", name ) );
+	if (((int)mp_notify_player_status.value & 1) == 1)
+	{
+		const char *name = pPlayer->pev->netname ? STRING(pPlayer->pev->netname) : "";
+		if (name[0] == 0) name = "unconnected";
+		UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "- %s has left the game\n", name ) );
+	}
 
 	FireTargets( "game_playerleave", pPlayer, pPlayer, USE_TOGGLE, 0 );
 
