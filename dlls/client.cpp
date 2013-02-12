@@ -448,9 +448,12 @@ void ClientCommand( edict_t *pEntity )
 				{
 					pPlayer->StartObserver();
 
-					// notify other clients of player switched to spectators
-					UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s switched to spectator mode\n", 
-						( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+					if (((int)mp_notify_player_status.value & 4) == 4)
+					{
+						// notify other clients of player switched to spectators
+						UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s switched to spectator mode\n", 
+							( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+					}
 
 					// team match?
 					if ( g_teamplay )
@@ -478,9 +481,13 @@ void ClientCommand( edict_t *pEntity )
 			else
 			{
 				pPlayer->StopObserver();
-				// notify other clients of player left spectators
-				UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s has left spectator mode\n", 
-					( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+
+				if (((int)mp_notify_player_status.value & 4) == 4)
+				{
+					// notify other clients of player left spectators
+					UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s has left spectator mode\n", 
+						( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+				}
 
 				// team match?
 				if ( g_teamplay )
