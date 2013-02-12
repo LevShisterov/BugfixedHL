@@ -20,8 +20,12 @@ FOR /f "tokens=* delims= usebackq" %%a IN ("%projectDir%\PublishPath.txt") DO (
 	ECHO Deploying to: %%a
 	IF NOT "%%a" == "" (
 		copy /Y "%targetDir%%targetName%%targetExt%" "%%a"
-		IF NOT ERRORLEVEL 1 IF EXIST "%targetDir%%targetName%.pdb" (
-			copy /Y "%targetDir%%targetName%.pdb" "%%a"
+		IF NOT ERRORLEVEL 1 (
+			IF EXIST "%targetDir%%targetName%.pdb" (
+				copy /Y "%targetDir%%targetName%.pdb" "%%a"
+			)
+		) ELSE (
+			ECHO PostBuild.bat ^(27^) : warning : Can't copy '%targetName%%targetExt%' to deploy path '%%a'
 		)
 	)
 )
