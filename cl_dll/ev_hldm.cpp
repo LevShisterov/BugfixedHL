@@ -35,11 +35,16 @@
 #include "r_studioint.h"
 #include "com_model.h"
 
+extern "C"
+{
+#include "pm_shared.h"
+}
+
+#define IS_FIRSTPERSON_SPEC ( g_iUser1 == OBS_IN_EYE || (g_iUser1 && (gHUD.m_Spectator.m_pip->value == INSET_IN_EYE)) )
+
 extern engine_studio_api_t IEngineStudio;
 
 static int tracerCount[ 32 ];
-
-extern "C" char PM_FindTextureType( char *name );
 
 void V_PunchAxis( int axis, float punch );
 void VectorAngles( const float *forward, float *angles );
@@ -889,8 +894,7 @@ void EV_FireGauss( event_args_t *args )
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( GAUSS_FIRE2, 2 );
 
 		if ( m_fPrimaryFire == false )
-			 g_flApplyVel = flDamage;	
-			 
+			 g_flApplyVel = flDamage;
 	}
 
 	gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", 0.5 + flDamage * (1.0 / 400.0), ATTN_NORM, 0, 85 + gEngfuncs.pfnRandomLong( 0, 0x1f ) );
@@ -905,7 +909,7 @@ void EV_FireGauss( event_args_t *args )
 		gEngfuncs.pEventAPI->EV_PushPMStates();
 	
 		// Now add in all of the players.
-		gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
+		gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );
 
 		gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
 		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecDest, PM_STUDIO_BOX, -1, &tr );
@@ -924,8 +928,15 @@ void EV_FireGauss( event_args_t *args )
 			}
 			fFirstBeam = 0;
 
+			// Use index of local player if spectating from eyes so gauss beam will out from a gun
+			int idx2 = idx;
+			if (g_iUser1 == OBS_IN_EYE && g_iUser2 == idx)
+			{
+				idx2 = gEngfuncs.GetLocalPlayer()->index;
+			}
+
 			gEngfuncs.pEfxAPI->R_BeamEntPoint( 
-				idx | 0x1000,
+				idx2 | 0x1000,
 				tr.endpos,
 				m_iBeam,
 				0.1,
@@ -1414,7 +1425,7 @@ void EV_EgonFire( event_args_t *args )
 	if ( EV_IsLocal( idx ) )
 		gEngfuncs.pEventAPI->EV_WeaponAnimation ( g_fireAnims1[ gEngfuncs.pfnRandomLong( 0, 3 ) ], 1 );
 
-	if ( iStartup == 1 && EV_IsLocal( idx ) && !pBeam && !pBeam2 && cl_lw->value ) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
+	if ( iStartup == 1 && EV_IsLocal( idx ) && !IS_FIRSTPERSON_SPEC && !pBeam && !pBeam2 && cl_lw->value ) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 	{
 		vec3_t vecSrc, vecEnd, origin, angles, forward, right, up;
 		pmtrace_t tr;
@@ -1424,20 +1435,20 @@ void EV_EgonFire( event_args_t *args )
 		if ( pl )
 		{
 			VectorCopy( gHUD.m_vecAngles, angles );
-			
+
 			AngleVectors( angles, forward, right, up );
 
 			EV_GetGunPosition( args, vecSrc, pl->origin );
 
 			VectorMA( vecSrc, 2048, forward, vecEnd );
 
-			gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );	
-				
+			gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );
+
 			// Store off the old count
 			gEngfuncs.pEventAPI->EV_PushPMStates();
-			
+
 			// Now add in all of the players.
-			gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
+			gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );
 
 			gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
 			gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );

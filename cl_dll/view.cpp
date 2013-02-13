@@ -295,7 +295,7 @@ void V_DriftPitch ( struct ref_params_s *pparams )
 {
 	float		delta, move;
 
-	if ( gEngfuncs.IsNoClipping() || !pparams->onground || pparams->demoplayback || pparams->spectator )
+	if ( gEngfuncs.IsNoClipping() || !pparams->onground || pparams->demoplayback || pparams->spectator || g_iUser1 == OBS_IN_EYE )
 	{
 		pd.driftmove = 0;
 		pd.pitchvel = 0;
@@ -503,7 +503,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 
 	V_DriftPitch ( pparams );
 
-	if ( gEngfuncs.IsSpectateOnly() )
+	if ( gEngfuncs.IsSpectateOnly() || g_iUser1 == OBS_IN_EYE )
 	{
 		ent = gEngfuncs.GetEntityByIndex( g_iUser2 );
 	}
@@ -1531,21 +1531,21 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 			case OBS_CHASE_LOCKED:	V_GetChasePos( g_iUser2, NULL, v_origin, v_angles );
 									break;
 
-			case OBS_CHASE_FREE:	V_GetChasePos( g_iUser2, v_cl_angles, v_origin, v_angles );
+			case OBS_CHASE_FREE	:	V_GetChasePos( g_iUser2, v_cl_angles, v_origin, v_angles );
 									break;
 
 			case OBS_ROAMING	:	VectorCopy (v_cl_angles, v_angles);
 									VectorCopy (v_sim_org, v_origin);
 									break;
 
-			case OBS_IN_EYE		:   V_CalcNormalRefdef ( pparams );
+			case OBS_IN_EYE		:	V_CalcNormalRefdef ( pparams );
 									break;
-				
-			case OBS_MAP_FREE  :	pparams->onlyClientDraw = true;
+
+			case OBS_MAP_FREE	:	pparams->onlyClientDraw = true;
 									V_GetMapFreePosition( v_cl_angles, v_origin, v_angles );
 									break;
 
-			case OBS_MAP_CHASE  :	pparams->onlyClientDraw = true;
+			case OBS_MAP_CHASE	:	pparams->onlyClientDraw = true;
 									V_GetMapChasePosition( g_iUser2, v_cl_angles, v_origin, v_angles );
 									break;
 		}
@@ -1554,7 +1554,6 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 			pparams->nextView = 1;	// force a second renderer view
 
 		gHUD.m_Spectator.m_iDrawCycle = 0;
-
 	}
 	else
 	{
@@ -1597,7 +1596,6 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 	VectorCopy ( v_cl_angles, pparams->cl_viewangles );
 	VectorCopy ( v_angles, pparams->viewangles )
 	VectorCopy ( v_origin, pparams->vieworg );
-
 }
 
 
