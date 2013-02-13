@@ -1172,6 +1172,12 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 	if ( ent->v.aiment )
 	{
 		state->aiment = ENTINDEX( ent->v.aiment );
+		// Change ent for egon beam for spectators to look like it goes from the client weapon if in first person mode
+		if (state->entityType == ENTITY_BEAM && host->v.iuser1 == OBS_IN_EYE && host->v.iuser2 == state->aiment)
+		{
+			state->aiment = ENTINDEX( host );
+			state->skin = (state->aiment & 0x0FFF) | (state->skin & 0xF000);
+		}
 	}
 
 	state->owner = 0;
@@ -1182,7 +1188,7 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		// Only care if owned by a player
 		if ( owner >= 1 && owner <= gpGlobals->maxClients )
 		{
-			state->owner = owner;	
+			state->owner = owner;
 		}
 	}
 
