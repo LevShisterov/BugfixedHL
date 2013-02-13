@@ -50,9 +50,15 @@ int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *mode
 {
 	switch ( type )
 	{
+	case ET_BEAM:
+		// Change beam ent end to local player so beam will go from the gun viewmodel
+		if (g_iUser1 == OBS_IN_EYE && (ent->curstate.skin & 0x0FFF) == g_iUser2)
+		{
+			ent->curstate.skin = (gEngfuncs.GetLocalPlayer()->index & 0x0FFF) | (ent->curstate.skin & 0xF000);
+		}
+		break;
 	case ET_NORMAL:
 	case ET_PLAYER:
-	case ET_BEAM:
 	case ET_TEMPENTITY:
 	case ET_FRAGMENTED:
 	default:
@@ -67,7 +73,7 @@ int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *mode
 	{
 		gHUD.m_Spectator.AddOverviewEntity( type, ent, modelname );
 
-		if ( (	g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator.m_pip->value == INSET_IN_EYE ) &&
+		if ( ( g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator.m_pip->value == INSET_IN_EYE ) &&
 				ent->index == g_iUser2 )
 			return 0;	// don't draw the player we are following in eye
 
