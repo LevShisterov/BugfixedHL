@@ -4524,8 +4524,9 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 		else
 		{
 			// pack half of the ammo
-			pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] / 2 );
-			m_rgAmmo[ iAmmoIndex ] /= 2;
+			int ammoDrop = m_rgAmmo[ iAmmoIndex ] / 2;
+			pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), ammoDrop );
+			m_rgAmmo[ iAmmoIndex ] -= ammoDrop;
 		}
 	}
 }
