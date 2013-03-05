@@ -910,7 +910,7 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 	// Tell Ammo Hud that the player is dead
 	MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
 		WRITE_BYTE(0);
-		WRITE_BYTE(0XFF);
+		WRITE_BYTE(0xFF);
 		WRITE_BYTE(0xFF);
 	MESSAGE_END();
 
@@ -2578,10 +2578,10 @@ void CBasePlayer::PostThink()
 
 	UpdatePlayerSound();
 
+pt_end:
 	// Track button info so we can detect 'pressed' and 'released' buttons next frame
 	m_afButtonLast = pev->button;
 
-pt_end:
 #if defined( CLIENT_WEAPONS )
 		// Decay timers on weapons
 	// go through all of the weapons and make a list of the ones to pack
@@ -4126,7 +4126,6 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 	}
 
-
 	SendAmmoUpdate(pPlayer);
 
 	// Update all the items
@@ -4134,6 +4133,52 @@ void CBasePlayer :: UpdateClientData( void )
 	{
 		if ( m_rgpPlayerItems[i] )  // each item updates it's successors
 			m_rgpPlayerItems[i]->UpdateClientData( this );
+	}
+
+	if (m_pClientActiveItem != pPlayer->m_pActiveItem)
+	{
+		if (pPlayer->m_pActiveItem == NULL)
+		{
+			// If no weapon, we have to send update here
+			CBasePlayer *plr;
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+				if ( !plr || !plr->IsObserver() || plr->m_hObserverTarget != pPlayer )
+					continue;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, plr->pev );
+					WRITE_BYTE(0);
+					WRITE_BYTE(0);
+					WRITE_BYTE(0);
+				MESSAGE_END();
+			}
+
+			MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pPlayer->pev );
+				WRITE_BYTE(0);
+				WRITE_BYTE(0);
+				WRITE_BYTE(0);
+			MESSAGE_END();
+		}
+		else if (this != pPlayer)
+		{
+			// Special case for spectator
+			CBasePlayerWeapon *gun = (CBasePlayerWeapon *)pPlayer->m_pActiveItem->GetWeaponPtr();
+			if (gun)
+			{
+				int state;
+				if ( pPlayer->m_fOnTarget )
+					state = WEAPON_IS_ONTARGET;
+				else
+					state = 1;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
+					WRITE_BYTE( state );
+					WRITE_BYTE( gun->m_iId );
+					WRITE_BYTE( gun->m_iClip );
+				MESSAGE_END();
+			}
+		}
 	}
 
 	// Cache fov and client weapon change

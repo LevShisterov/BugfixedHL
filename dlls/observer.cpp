@@ -24,7 +24,7 @@
 #include	"player.h"
 #include	"weapons.h"
 
-#define NEXT_OBSERVER_INPUT_DELAY	0.2
+#define NEXT_OBSERVER_INPUT_DELAY	0.02
 
 extern int gmsgCurWeapon;
 extern int gmsgSetFOV;
@@ -59,7 +59,7 @@ void CBasePlayer::StartObserver( void )
 	// Tell Ammo Hud that the player is dead
 	MESSAGE_BEGIN(MSG_ONE, gmsgCurWeapon, NULL, pev);
 		WRITE_BYTE(0);
-		WRITE_BYTE(0XFF);
+		WRITE_BYTE(0xFF);
 		WRITE_BYTE(0xFF);
 	MESSAGE_END();
 
@@ -156,8 +156,7 @@ void CBasePlayer::Observer_SetMode(int iMode)
 	if (iMode == OBS_ROAMING && m_hObserverTarget)
 	{
 		// Set view point at same place where we may be looked in First Person mode
-		// Fix angles
-		pev->v_angle = pev->angles = m_hObserverTarget->pev->v_angle;
+		pev->angles = m_hObserverTarget->pev->v_angle;
 		pev->fixangle = TRUE;
 		// Compensate view offset
 		UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin + m_hObserverTarget->pev->view_ofs);
@@ -277,7 +276,7 @@ void CBasePlayer::Observer_FindNextSpot(bool bReverse)
 	CBaseEntity *pSpot = m_hObserverTarget, *pResultSpot = NULL;
 	vec_t iResultSpotOffset;
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < classesCount; i++)
 	{
 		int current = iStartClass + (bReverse ? -i : i);
 		if (current >= classesCount)
@@ -398,8 +397,7 @@ void CBasePlayer::Observer_CheckTarget()
 				!UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict())))
 			{
 				// Set view point at same place where we may be looked in First Person mode
-				// Fix angles
-				pev->v_angle = pev->angles = m_hObserverTarget->pev->v_angle;
+				pev->angles = m_hObserverTarget->pev->v_angle;
 				pev->fixangle = TRUE;
 				// Compensate view offset
 				UTIL_SetOrigin(pev, m_hObserverTarget->pev->origin + m_hObserverTarget->pev->view_ofs);
@@ -425,4 +423,3 @@ void CBasePlayer::Observer_CheckTarget()
 		pev->iuser2 = 0;
 	}
 }
-
