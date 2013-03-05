@@ -4177,7 +4177,6 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 	}
 
-
 	SendAmmoUpdate(pPlayer);
 
 	// Update all the items
@@ -4185,6 +4184,52 @@ void CBasePlayer :: UpdateClientData( void )
 	{
 		if ( m_rgpPlayerItems[i] )  // each item updates it's successors
 			m_rgpPlayerItems[i]->UpdateClientData( this );
+	}
+
+	if (m_pClientActiveItem != pPlayer->m_pActiveItem)
+	{
+		if (pPlayer->m_pActiveItem == NULL)
+		{
+			// If no weapon, we have to send update here
+			CBasePlayer *plr;
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+				if ( !plr || !plr->IsObserver() || plr->m_hObserverTarget != pPlayer )
+					continue;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, plr->pev );
+					WRITE_BYTE(0);
+					WRITE_BYTE(0);
+					WRITE_BYTE(0);
+				MESSAGE_END();
+			}
+
+			MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pPlayer->pev );
+				WRITE_BYTE(0);
+				WRITE_BYTE(0);
+				WRITE_BYTE(0);
+			MESSAGE_END();
+		}
+		else if (this != pPlayer)
+		{
+			// Special case for spectator
+			CBasePlayerWeapon *gun = (CBasePlayerWeapon *)pPlayer->m_pActiveItem->GetWeaponPtr();
+			if (gun)
+			{
+				int state;
+				if ( pPlayer->m_fOnTarget )
+					state = WEAPON_IS_ONTARGET;
+				else
+					state = 1;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
+					WRITE_BYTE( state );
+					WRITE_BYTE( gun->m_iId );
+					WRITE_BYTE( gun->m_iClip );
+				MESSAGE_END();
+			}
+		}
 	}
 
 	// Cache fov and client weapon change
