@@ -2581,11 +2581,11 @@ void CBasePlayer::PostThink()
 
 	UpdatePlayerSound();
 
+pt_end:
 	// Track button info so we can detect 'pressed' and 'released' buttons next frame
 	m_afButtonLast = pev->button;
 
-pt_end:
-	if (pev->deadflag == DEAD_NO)
+	if (pev->deadflag == DEAD_NO || pev->fixangle)
 		m_vecLastViewAngles = pev->angles;
 	else
 		pev->angles = m_vecLastViewAngles;
@@ -2652,10 +2652,6 @@ pt_end:
 		if ( m_flAmmoStartCharge < -0.001 )
 			m_flAmmoStartCharge = -0.001;
 	}
-	
-
-#else
-	return;
 #endif
 }
 
