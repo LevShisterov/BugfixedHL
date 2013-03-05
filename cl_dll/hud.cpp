@@ -264,7 +264,7 @@ int __MsgFunc_AllowSpec(const char *pszName, int iSize, void *pbuf)
 		return gViewPort->MsgFunc_AllowSpec( pszName, iSize, pbuf );
 	return 0;
 }
- 
+
 // This is called every time the DLL is loaded
 void CHud :: Init( void )
 {
@@ -312,11 +312,11 @@ void CHud :: Init( void )
 	default_fov = CVAR_CREATE( "default_fov", "90", 0 );
 	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );
 	m_pCvarDraw = CVAR_CREATE( "hud_draw", "1", FCVAR_ARCHIVE );
-	m_pCvarDim = CVAR_CREATE( "hud_dim", "1", 0 );
-	m_pCvarColor = CVAR_CREATE( "hud_color", "255 160 0", 0 );
-	m_pCvarColor1 = CVAR_CREATE( "hud_color1", "0 255 0", 0 );
-	m_pCvarColor2 = CVAR_CREATE( "hud_color2", "255 160 0", 0 );
-	m_pCvarColor3 = CVAR_CREATE( "hud_color3", "255 96 0", 0 );
+	m_pCvarDim = CVAR_CREATE( "hud_dim", "1", FCVAR_ARCHIVE );
+	m_pCvarColor = CVAR_CREATE( "hud_color", "255 160 0", FCVAR_ARCHIVE );
+	m_pCvarColor1 = CVAR_CREATE( "hud_color1", "0 255 0", FCVAR_ARCHIVE );
+	m_pCvarColor2 = CVAR_CREATE( "hud_color2", "255 160 0", FCVAR_ARCHIVE );
+	m_pCvarColor3 = CVAR_CREATE( "hud_color3", "255 96 0", FCVAR_ARCHIVE );
 	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
 
 	m_pSpriteList = NULL;
@@ -336,6 +336,11 @@ void CHud :: Init( void )
 
 	// In case we get messages before the first update -- time will be valid
 	m_flTime = 1.0;
+
+	m_hudColor.Set(255, 160, 0);
+	m_hudColor1.Set(0, 255, 0);
+	m_hudColor2.Set(255, 160, 0);
+	m_hudColor3.Set(255, 96, 0);
 
 	m_Ammo.Init();
 	m_Health.Init();
@@ -682,26 +687,38 @@ float CHud::GetSensitivity( void )
 	return m_flMouseSensitivity;
 }
 
-void GetHudColorFromCvar( char *cvar, int &r, int &g, int &b )
+void ParseColor( char *string, RGBA &rgba )
 {
-	char *value = cvar;
+	unsigned char r,g,b;
+	char *value = string;
+	while (*value == ' ') value++;
+	if (*value < '0' || *value > '9') return;
 	r = atoi(value);
 	value = strchr(value, ' ');
-	if (value == NULL) { g = b = 0; return; }
+	if (value == NULL) return;
+	while (*value == ' ') value++;
+	if (*value < '0' || *value > '9') return;
 	g = atoi(value);
-	value = strchr(value + 1, ' ');
-	if (value == NULL) { b = 0; return; }
+	value = strchr(value, ' ');
+	if (value == NULL) return;
+	while (*value == ' ') value++;
+	if (*value < '0' || *value > '9') return;
 	b = atoi(value);
+	rgba.Set(r, g, b);
 }
 
 // hudPart: 0 - common hud, 1 - health points, 2 - armor points
 void CHud::GetHudColor( int hudPart, int value, int &r, int &g, int &b )
 {
-	if (hudPart == 0) { GetHudColorFromCvar(m_pCvarColor->string, r, g, b); }
-	else if (value >= 90) { GetHudColorFromCvar(m_pCvarColor1->string, r, g, b); }
-	else if (value >= 50 && value <= 90) { GetHudColorFromCvar(m_pCvarColor2->string, r, g, b); }
-	else if (value > 25 && value < 50 || hudPart == 2) { GetHudColorFromCvar(m_pCvarColor3->string, r, g, b); }
-	else { r = 255; g = 0; b = 0; }	// UnpackRGB(r, g, b, RGB_REDISH);
+	RGBA *c;
+	if (hudPart == 0) { ParseColor(m_pCvarColor->string, m_hudColor); c = &m_hudColor; }
+	else if (value >= 90) { ParseColor(m_pCvarColor1->string, m_hudColor1); c = &m_hudColor1; }
+	else if (value >= 50 && value <= 90) { ParseColor(m_pCvarColor2->string, m_hudColor2); c = &m_hudColor2; }
+	else if (value > 25 && value < 50 || hudPart == 2) { ParseColor(m_pCvarColor3->string, m_hudColor3); c = &m_hudColor3; }
+	else { r = 255; g = 0; b = 0; return; }	// UnpackRGB(r, g, b, RGB_REDISH);
+	r = c->r;
+	g = c->g;
+	b = c->b;
 }
 
 float CHud::GetHudTransparency()

@@ -51,9 +51,10 @@ enum
 	MAX_TEAM_NAME = 16,
 };
 
-typedef struct {
+struct RGBA {
 	unsigned char r,g,b,a;
-} RGBA;
+	void Set(unsigned char r1, unsigned char g1, unsigned char b1) { r = r1; g = g1; b = b1; a = 0; }
+};
 
 typedef struct cvar_s cvar_t;
 
@@ -134,11 +135,10 @@ public:
 	void _cdecl UserCmd_PrevWeapon( void );
 
 private:
-	float m_fFade;
-	RGBA  m_rgba;
-	WEAPON *m_pWeapon;
-	int	m_HUD_bucket0;
-	int m_HUD_selection;
+	float	m_fFade;
+	WEAPON	*m_pWeapon;
+	int		m_HUD_bucket0;
+	int		m_HUD_selection;
 
 };
 
@@ -565,6 +565,11 @@ private:
 	cvar_t	*m_pCvarColor1;
 	cvar_t	*m_pCvarColor2;
 	cvar_t	*m_pCvarColor3;
+
+	RGBA	m_hudColor;
+	RGBA	m_hudColor1;
+	RGBA	m_hudColor2;
+	RGBA	m_hudColor3;
 
 public:
 
