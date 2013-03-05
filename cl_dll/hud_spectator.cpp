@@ -1524,28 +1524,27 @@ void CHudSpectator::CheckSettings()
 		}
 	}
 
-	// HL/TFC has no oberserver corsshair, so set it client side
-	if ( (g_iUser1 == OBS_IN_EYE) || (g_iUser1 == OBS_ROAMING) ) 
+	if ( gEngfuncs.IsSpectateOnly() )
 	{
-		m_crosshairRect.left	 = 24;
-		m_crosshairRect.top	 = 0;
-		m_crosshairRect.right	 = 48;
-		m_crosshairRect.bottom = 24;
-					
-		SetCrosshair( m_hCrosshair, m_crosshairRect, 255, 255, 255 );
+		// HL/TFC has no oberserver corsshair, so set it client side
+		if ( (g_iUser1 == OBS_IN_EYE) || (g_iUser1 == OBS_ROAMING) )
+		{
+			m_crosshairRect.left = 24;
+			m_crosshairRect.top = 0;
+			m_crosshairRect.right = 48;
+			m_crosshairRect.bottom = 24;
+			SetCrosshair( m_hCrosshair, m_crosshairRect, 255, 255, 255 );
+		}
+		else
+		{
+			memset( &m_crosshairRect,0,sizeof(m_crosshairRect) );
+			SetCrosshair( 0, m_crosshairRect, 0, 0, 0 );
+		}
 	}
-	else
-	{
-		memset( &m_crosshairRect,0,sizeof(m_crosshairRect) );
-		SetCrosshair( 0, m_crosshairRect, 0, 0, 0 );
-	} 
-
-
 
 	// if we are a real player on server don't allow inset window
 	// in First Person mode since this is our resticted forcecamera mode 2
 	// team number 3 = SPECTATOR see player.h
-
 	if ( ( (g_iTeamNumber == 1) || (g_iTeamNumber == 2)) && (g_iUser1 == OBS_IN_EYE) )
 		m_pip->value = INSET_OFF;
 
