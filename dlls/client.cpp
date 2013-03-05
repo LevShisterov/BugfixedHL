@@ -193,12 +193,26 @@ void ClientKill( edict_t *pEntity )
 {
 	entvars_t *pev = &pEntity->v;
 
+	// prevent death in spectator mode
+	if ( pev->iuser1 != OBS_NONE)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide while in spectator mode!\n" ) );
+		return;
+	}
+
+	// prevent death if already dead
+	if ( pev->deadflag != DEAD_NO)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide -- already dead!\n" ) );
+		return;
+	}
+
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 
+	// prevent suiciding too often
 	if ( pl->m_fNextSuicideTime > gpGlobals->time )
-		return;  // prevent suiciding too ofter
-
-	pl->m_fNextSuicideTime = gpGlobals->time + 1;  // don't let them suicide for 5 seconds after suiciding
+		return;
+	pl->m_fNextSuicideTime = gpGlobals->time + 1;
 
 	// have the player kill themself
 	pev->health = 0;
