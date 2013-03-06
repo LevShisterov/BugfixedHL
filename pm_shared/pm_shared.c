@@ -136,7 +136,9 @@ typedef struct hull_s
 
 #define CONTENTS_TRANSLUCENT	-15
 
-static vec3_t rgv3tStuckTable[54];
+#define MAX_STUCKTABLE_ENTRIES	52
+static vec3_t rgv3tStuckTable[MAX_STUCKTABLE_ENTRIES];
+static int g_iBigMovesOffsetInStuckTable;
 static int rgStuckLast[MAX_CLIENTS][2];
 
 // Texture names
@@ -1600,9 +1602,9 @@ int PM_GetRandomStuckOffsets(int nIndex, int server, vec3_t offset)
 	int idx;
 	idx = rgStuckLast[nIndex][server]++;
 
-	VectorCopy(rgv3tStuckTable[idx % 54], offset);
+	VectorCopy(rgv3tStuckTable[idx % MAX_STUCKTABLE_ENTRIES], offset);
 
-	return (idx % 54);
+	return (idx % MAX_STUCKTABLE_ENTRIES);
 }
 
 void PM_ResetStuckOffsets(int nIndex, int server)
@@ -1619,7 +1621,7 @@ try nudging slightly on all axis to
 allow for the cut precision of the net coordinates
 =================
 */
-#define PM_CHECKSTUCK_MINTIME 0.05  // Don't check again too quickly.
+#define PM_CHECKSTUCK_MINTIME 0.02  // Don't check again too quickly.
 
 int PM_CheckStuck (void)
 {
@@ -1627,7 +1629,6 @@ int PM_CheckStuck (void)
 	vec3_t  offset;
 	vec3_t  test;
 	int     hitent;
-	int		idx;
 	float	fTime;
 	int i;
 	pmtrace_t traceresult;
@@ -1644,26 +1645,22 @@ int PM_CheckStuck (void)
 
 	VectorCopy (pmove->origin, base);
 
-	// 
 	// Deal with precision error in network.
 	// Only an issue on the client.
-	// 
 	if (!pmove->server)
 	{
-		PM_ResetStuckOffsets( pmove->player_index, pmove->server );
+		i = 0;
 		do
 		{
-			i = PM_GetRandomStuckOffsets(pmove->player_index, pmove->server, offset);
-
-			VectorAdd(base, offset, test);
+			VectorAdd(base, rgv3tStuckTable[i], test);
 			if (pmove->PM_TestPlayerPosition (test, &traceresult ) == -1)
 			{
 				PM_ResetStuckOffsets( pmove->player_index, pmove->server );
-	
 				VectorCopy ( test, pmove->origin );
 				return 0;
 			}
-		} while (i < 17);	// test only small oscillations
+			i++;
+		} while (i < g_iBigMovesOffsetInStuckTable);	// test only small oscillations
 	}
 
 	// Check if we are stuck in a satchel (commonly because spawned on it)
@@ -1681,33 +1678,21 @@ int PM_CheckStuck (void)
 		return 0;
 	}
 
-	if (pmove->server)
-		idx = 0;
-	else
-		idx = 1;
-
 	fTime = pmove->Sys_FloatTime();
 	// Too soon?
-	if (rgStuckCheckTime[pmove->player_index][idx] >= (fTime - PM_CHECKSTUCK_MINTIME))
-	{
+	if (rgStuckCheckTime[pmove->player_index][pmove->server] >= fTime)
 		return 1;
-	}
-	rgStuckCheckTime[pmove->player_index][idx] = fTime;
+	rgStuckCheckTime[pmove->player_index][pmove->server] = fTime + PM_CHECKSTUCK_MINTIME;
 
 	pmove->PM_StuckTouch( hitent, &traceresult );
 
 	i = PM_GetRandomStuckOffsets(pmove->player_index, pmove->server, offset);
-
 	VectorAdd(base, offset, test);
-	if ( ( hitent = pmove->PM_TestPlayerPosition ( test, NULL ) ) == -1 )
+	if ((hitent = pmove->PM_TestPlayerPosition(test, NULL)) == -1)
 	{
 		//Con_DPrintf("Nudged\n");
-
 		PM_ResetStuckOffsets( pmove->player_index, pmove->server );
-
-		if (i >= 27)
-			VectorCopy ( test, pmove->origin );
-
+		VectorCopy ( test, pmove->origin );
 		return 0;
 	}
 
@@ -3174,31 +3159,32 @@ void PM_CreateStuckTable( void )
 	int i;
 	float zi[3];
 
-	memset(rgv3tStuckTable, 0, 54 * sizeof(vec3_t));
+	memset(rgv3tStuckTable, 0, MAX_STUCKTABLE_ENTRIES * sizeof(vec3_t));
+
+	// Little Moves.
 
 	idx = 0;
-	// Little Moves.
-	x = y = 0;
 	// Z moves
-	for (z = -0.125 ; z <= 0.125 ; z += 0.125)
+	x = y = 0;
+	for (z = -0.125 ; z <= 0.125 ; z += 0.250)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
 		rgv3tStuckTable[idx][2] = z;
 		idx++;
 	}
-	x = z = 0;
 	// Y moves
-	for (y = -0.125 ; y <= 0.125 ; y += 0.125)
+	x = z = 0;
+	for (y = -0.125 ; y <= 0.125 ; y += 0.250)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
 		rgv3tStuckTable[idx][2] = z;
 		idx++;
 	}
-	y = z = 0;
 	// X moves
-	for (x = -0.125 ; x <= 0.125 ; x += 0.125)
+	y = z = 0;
+	for (x = -0.125 ; x <= 0.125 ; x += 0.250)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -3206,13 +3192,19 @@ void PM_CreateStuckTable( void )
 		idx++;
 	}
 
+	// idx == 6
 	// Remaining multi axis nudges.
-	for ( x = - 0.125; x <= 0.125; x += 0.250 )
+	for ( x = - 0.125; x <= 0.125; x += 0.125 )
 	{
-		for ( y = - 0.125; y <= 0.125; y += 0.250 )
+		for ( y = - 0.125; y <= 0.125; y += 0.125 )
 		{
-			for ( z = - 0.125; z <= 0.125; z += 0.250 )
+			for ( z = - 0.125; z <= 0.125; z += 0.125 )
 			{
+				if ((x == 0 && y == 0 && z == 0) ||
+					(x == 0 && y == 0) ||
+					(x == 0 && z == 0) ||
+					(y == 0 && z == 0))
+					continue;
 				rgv3tStuckTable[idx][0] = x;
 				rgv3tStuckTable[idx][1] = y;
 				rgv3tStuckTable[idx][2] = z;
@@ -3222,14 +3214,16 @@ void PM_CreateStuckTable( void )
 	}
 
 	// Big Moves.
-	x = y = 0;
-	zi[0] = 0.0f;
-	zi[1] = 1.0f;
-	zi[2] = 6.0f;
+	g_iBigMovesOffsetInStuckTable = idx;
+	zi[0] = 0.0;
+	zi[1] = 1.0;
+	zi[2] = 6.0;
 
-	for (i = 0; i < 3; i++)
+	// idx == 26
+	// Y moves
+	x = y = 0;
+	for (i = 1; i < 3; i++)
 	{
-		// Z moves
 		z = zi[i];
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -3237,19 +3231,10 @@ void PM_CreateStuckTable( void )
 		idx++;
 	}
 
-	x = z = 0;
-
+	// idx == 28
 	// Y moves
-	for (y = -2.0f ; y <= 2.0f ; y += 2.0)
-	{
-		rgv3tStuckTable[idx][0] = x;
-		rgv3tStuckTable[idx][1] = y;
-		rgv3tStuckTable[idx][2] = z;
-		idx++;
-	}
-	y = z = 0;
-	// X moves
-	for (x = -2.0f ; x <= 2.0f ; x += 2.0f)
+	x = z = 0;
+	for (y = -2.0 ; y <= 2.0 ; y += 4.0)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -3257,15 +3242,32 @@ void PM_CreateStuckTable( void )
 		idx++;
 	}
 
+	// idx == 30
+	// X moves
+	y = z = 0;
+	for (x = -2.0 ; x <= 2.0 ; x += 4.0)
+	{
+		rgv3tStuckTable[idx][0] = x;
+		rgv3tStuckTable[idx][1] = y;
+		rgv3tStuckTable[idx][2] = z;
+		idx++;
+	}
+
+	// idx == 32
 	// Remaining multi axis nudges.
 	for (i = 0 ; i < 3; i++)
 	{
 		z = zi[i];
-		
-		for (x = -2.0f ; x <= 2.0f ; x += 2.0f)
+
+		for (x = -2.0 ; x <= 2.0 ; x += 2.0)
 		{
-			for (y = -2.0f ; y <= 2.0f ; y += 2.0)
+			for (y = -2.0 ; y <= 2.0 ; y += 2.0)
 			{
+				if ((x == 0 && y == 0 && z == 0) ||
+					(x == 0 && y == 0) ||
+					(x == 0 && z == 0) ||
+					(y == 0 && z == 0))
+					continue;
 				rgv3tStuckTable[idx][0] = x;
 				rgv3tStuckTable[idx][1] = y;
 				rgv3tStuckTable[idx][2] = z;
@@ -3273,6 +3275,9 @@ void PM_CreateStuckTable( void )
 			}
 		}
 	}
+
+	// idx == 52
+	assert(idx == MAX_STUCKTABLE_ENTRIES);
 }
 
 

@@ -107,6 +107,7 @@ public:
 	void Think(void);
 	void Reset(void);
 	int DrawWList(float flTime);
+	void UpdateCrosshair();
 	int MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_WeaponList(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_AmmoX(const char *pszName, int iSize, void *pbuf);
@@ -133,7 +134,6 @@ public:
 
 private:
 	float	m_fFade;
-	RGBA	m_rgba;
 	WEAPON	*m_pWeapon;
 	int		m_HUD_bucket0;
 	int		m_HUD_selection;
