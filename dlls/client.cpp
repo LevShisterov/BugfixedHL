@@ -220,6 +220,9 @@ void ClientPutInServer( edict_t *pEntity )
 
 	pPlayer->Spawn();
 
+	// Setup some fields initially
+	pPlayer->m_fNextSuicideTime = 0;
+
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
 }
