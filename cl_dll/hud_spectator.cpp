@@ -860,20 +860,19 @@ void CHudSpectator::SetModes(int iNewMainMode, int iNewInsetMode)
 									break;
 		}
 
-		if ( (g_iUser1 == OBS_IN_EYE) || (g_iUser1 == OBS_ROAMING) ) 
+		if (g_iUser1 == OBS_IN_EYE)
 		{
-			m_crosshairRect.left	 = 24;
-			m_crosshairRect.top	 = 0;
-			m_crosshairRect.right	 = 48;
+			m_crosshairRect.left = 24;
+			m_crosshairRect.top = 0;
+			m_crosshairRect.right = 48;
 			m_crosshairRect.bottom = 24;
-						
 			SetCrosshair( m_hCrosshair, m_crosshairRect, 255, 255, 255 );
 		}
 		else
 		{
 			memset( &m_crosshairRect,0,sizeof(m_crosshairRect) );
 			SetCrosshair( 0, m_crosshairRect, 0, 0, 0 );
-		} 
+		}
 
 		char string[128];
 		sprintf(string, "#Spec_Mode%d", g_iUser1 );
@@ -1524,10 +1523,11 @@ void CHudSpectator::CheckSettings()
 		}
 	}
 
+	static wrect_t nullrc;
 	if ( gEngfuncs.IsSpectateOnly() )
 	{
-		// HL/TFC has no oberserver corsshair, so set it client side
-		if ( (g_iUser1 == OBS_IN_EYE) || (g_iUser1 == OBS_ROAMING) )
+		// HL/TFC has no observer corsshair, so set it client side
+		if (g_iUser1 == OBS_IN_EYE)
 		{
 			m_crosshairRect.left = 24;
 			m_crosshairRect.top = 0;
@@ -1537,8 +1537,19 @@ void CHudSpectator::CheckSettings()
 		}
 		else
 		{
-			memset( &m_crosshairRect,0,sizeof(m_crosshairRect) );
-			SetCrosshair( 0, m_crosshairRect, 0, 0, 0 );
+			SetCrosshair( 0, nullrc, 0, 0, 0 );
+		}
+	}
+	else
+	{
+		// Show crosshair only for First Person mode
+		if (g_iUser1 == OBS_IN_EYE)
+		{
+			gHUD.m_Ammo.UpdateCrosshair();
+		}
+		else
+		{
+			SetCrosshair( 0, nullrc, 0, 0, 0 );
 		}
 	}
 
