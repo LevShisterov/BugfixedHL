@@ -301,6 +301,8 @@ int CHudAmmo::Init(void)
 void CHudAmmo::Reset(void)
 {
 	m_fFade = 0;
+	m_pWeapon = NULL;
+	m_fOnTarget = FALSE;
 	m_iFlags |= HUD_ACTIVE; //!!!
 
 	gpActiveSel = NULL;
@@ -550,8 +552,7 @@ int CHudAmmo::MsgFunc_HideWeapon( const char *pszName, int iSize, void *pbuf )
 	}
 	else
 	{
-		if ( m_pWeapon )
-			SetCrosshair( m_pWeapon->hCrosshair, m_pWeapon->rcCrosshair, 255, 255, 255 );
+		UpdateCrosshair();
 	}
 
 	return 1;
@@ -565,7 +566,6 @@ int CHudAmmo::MsgFunc_HideWeapon( const char *pszName, int iSize, void *pbuf )
 int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 {
 	static wrect_t nullrc;
-	int fOnTarget = FALSE;
 
 	BEGIN_READ( pbuf, iSize );
 
@@ -576,7 +576,7 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 	// detect if we're also on target
 	if ( iState > 1 )
 	{
-		fOnTarget = TRUE;
+		m_fOnTarget = TRUE;
 	}
 
 	if ( iId < 1 )
@@ -614,26 +614,32 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 
 	m_pWeapon = pWeapon;
 
-	if ( gHUD.m_iFOV >= 90 )
+	UpdateCrosshair();
+
+	m_fFade = 200.0f; //!!!
+	m_iFlags |= HUD_ACTIVE;
+
+	return 1;
+}
+
+void CHudAmmo::UpdateCrosshair()
+{
+	if (m_pWeapon == NULL) return;
+
+	if (gHUD.m_iFOV >= 90)
 	{ // normal crosshairs
-		if (fOnTarget && m_pWeapon->hAutoaim)
+		if (m_fOnTarget && m_pWeapon->hAutoaim)
 			SetCrosshair(m_pWeapon->hAutoaim, m_pWeapon->rcAutoaim, 255, 255, 255);
 		else
 			SetCrosshair(m_pWeapon->hCrosshair, m_pWeapon->rcCrosshair, 255, 255, 255);
 	}
 	else
 	{ // zoomed crosshairs
-		if (fOnTarget && m_pWeapon->hZoomedAutoaim)
+		if (m_fOnTarget && m_pWeapon->hZoomedAutoaim)
 			SetCrosshair(m_pWeapon->hZoomedAutoaim, m_pWeapon->rcZoomedAutoaim, 255, 255, 255);
 		else
 			SetCrosshair(m_pWeapon->hZoomedCrosshair, m_pWeapon->rcZoomedCrosshair, 255, 255, 255);
-
 	}
-
-	m_fFade = 200.0f; //!!!
-	m_iFlags |= HUD_ACTIVE;
-	
-	return 1;
 }
 
 //

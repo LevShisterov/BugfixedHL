@@ -1508,7 +1508,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		}
 	}
 
-	m_flSpectatorPanelLastUpdated = gHUD.m_flTime + 1.0; // update every seconds
+	m_flSpectatorPanelLastUpdated = gHUD.m_flTime + 0.5;	// next update interval
 }
 
 //======================================================================
