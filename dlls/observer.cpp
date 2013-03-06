@@ -33,8 +33,6 @@ extern int gmsgSpectator;
 
 extern int g_teamplay;
 
-extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
-
 //=========================================================
 // Player has become a spectator. Set it up.
 //=========================================================
@@ -121,7 +119,7 @@ void CBasePlayer::StopObserver(void)
 	pev->iuser1 = pev->iuser2 = 0; 
 	m_iHideHUD = 0;
 
-	respawn(pev, false);	// don't copy a corpse
+	GetClassPtr((CBasePlayer *)pev)->Spawn();
 	pev->nextthink = -1;
 
 	// Send Spectator message (it is not used in client dll)

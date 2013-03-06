@@ -48,7 +48,6 @@ extern DLL_GLOBAL int		g_iSkillLevel, gDisplayTitle;
 BOOL gInitHUD = TRUE;
 
 extern void CopyToBodyQue(entvars_t* pev);
-extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 extern Vector VecBModelOrigin(entvars_t *pevBModel );
 extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 
@@ -1346,8 +1345,20 @@ void CBasePlayer::PlayerDeathThink(void)
 	m_iRespawnFrames = 0;
 
 	//ALERT(at_console, "Respawn\n");
-
-	respawn(pev, !(m_afPhysicsFlags & PFLAG_OBSERVER) );// don't copy a corpse if we're in deathcam.
+	if (gpGlobals->coop || gpGlobals->deathmatch)
+	{
+		if (!(m_afPhysicsFlags & PFLAG_OBSERVER))	// don't copy a corpse if we're in deathcam.
+		{
+			// make a copy of the dead body for appearances sake
+			CopyToBodyQue(pev);
+		}
+		// respawn player
+		GetClassPtr( (CBasePlayer *)pev)->Spawn();
+	}
+	else
+	{	// restart the entire server
+		SERVER_COMMAND("reload\n");
+	}
 	pev->nextthink = -1;
 }
 
