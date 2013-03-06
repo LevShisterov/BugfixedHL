@@ -213,7 +213,10 @@ void ClientPutInServer( edict_t *pEntity )
 	pPlayer->SetCustomDecalFrames(-1); // Assume none;
 
 	// Allocate a CBasePlayer for pev, and call spawn
-	pPlayer->Spawn() ;
+	pPlayer->Spawn();
+
+	// Setup some fields initially
+	pPlayer->m_fNextSuicideTime = 0;
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
