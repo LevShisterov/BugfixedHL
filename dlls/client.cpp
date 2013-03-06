@@ -46,7 +46,6 @@ extern DLL_GLOBAL BOOL		g_fGameOver;
 extern DLL_GLOBAL int		g_iSkillLevel;
 extern DLL_GLOBAL ULONG		g_ulFrameCount;
 
-extern void CopyToBodyQue(entvars_t* pev);
 extern int giPrecacheGrunt;
 extern int gmsgSayText;
 
@@ -160,26 +159,6 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 	}
 }
 
-// called by ClientKill and DeadThink
-void respawn(entvars_t* pev, BOOL fCopyCorpse)
-{
-	if (gpGlobals->coop || gpGlobals->deathmatch)
-	{
-		if ( fCopyCorpse )
-		{
-			// make a copy of the dead body for appearances sake
-			CopyToBodyQue(pev);
-		}
-
-		// respawn player
-		GetClassPtr( (CBasePlayer *)pev)->Spawn( );
-	}
-	else
-	{       // restart the entire server
-		SERVER_COMMAND("reload\n");
-	}
-}
-
 /*
 ============
 ClientKill
@@ -217,10 +196,6 @@ void ClientKill( edict_t *pEntity )
 	// have the player kill themself
 	pev->health = 0;
 	pl->Killed( pev, GIB_NEVER );
-
-//	pev->modelindex = g_ulModelIndexPlayer;
-//	pev->frags -= 2;		// extra penalty
-//	respawn( pev );
 }
 
 /*
@@ -529,8 +504,12 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmd, "spectate"))
 	{
 		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		// Block too offten spectator command usage
-		if (pPlayer->m_flNextSpectatorCommand < gpGlobals->time)
+		// Block too offten spectator command usage and no observer in singleplayer
+		if (!gpGlobals->coop && !gpGlobals->deathmatch)
+		{
+			ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "No spectator mode in singleplayer.\n" ) );
+		}
+		else if (pPlayer->m_flNextSpectatorCommand < gpGlobals->time)
 		{
 			pPlayer->m_flNextSpectatorCommand = gpGlobals->time + (spectator_cmd_delay.value < 1.0 ? 1.0 : spectator_cmd_delay.value);
 			if (!pPlayer->IsObserver())
