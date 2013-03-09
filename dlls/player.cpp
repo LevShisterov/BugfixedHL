@@ -1320,6 +1320,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	StopAnimation();
 
 	pev->effects |= EF_NOINTERP;
+	pev->effects &= ~EF_DIMLIGHT;
 
 	BOOL fAnyButtonDown = (pev->button & ~IN_SCORE );
 	
