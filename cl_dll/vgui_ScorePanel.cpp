@@ -909,9 +909,9 @@ void ScorePanel::DeathMsg( int killer, int victim )
 {
 	if (victim == m_iPlayerNum)
 	{
-		// if we were the one killed, or the world killed us, set the scoreboard to indicate suicide
+		// if we were the one killed, set the scoreboard to indicate killer
 		m_iLastKilledBy = killer ? killer : m_iPlayerNum;
-		m_fLastKillTime = gHUD.m_flTime + HIGHLIGHT_KILLER_TIME;	// display who we were killed by for 10 seconds
+		m_fLastKillTime = gHUD.m_flTime;
 	}
 }
 
@@ -1048,16 +1048,16 @@ void CLabelHeader::paintBackground()
 
 	if (sbp->m_iHighlightRow == _row)
 	{
+		// Row under mouse pointer in squelch mode
 		setBgColor(134, 91, 19, 0);
 	}
-	// Killer's name
 	else if (sbp->m_iKillerRow == _row)
 	{
-		float lastKillTime = sbp->m_fLastKillTime;
-		if (lastKillTime >= gHUD.m_flTime &&
-			lastKillTime <= gHUD.m_flTime + HIGHLIGHT_KILLER_TIME)	// check in a window style to catch game time reset events
+		// Killer's name
+		float time = gHUD.m_flTime - sbp->m_fLastKillTime;
+		if (time >= 0 && time <= HIGHLIGHT_KILLER_TIME)	// check time window to catch game time reset events
 		{
-			setBgColor( 255,0,0, 255 - (int)(15.0 * (lastKillTime - gHUD.m_flTime)) );
+			setBgColor( 255,0,0, 105 + (int)(150.0 / HIGHLIGHT_KILLER_TIME * time) );
 		}
 		else
 		{
