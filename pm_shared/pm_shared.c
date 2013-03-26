@@ -1838,11 +1838,7 @@ void PM_SpectatorMove (void)
 		// move
 		VectorMA (pmove->origin, pmove->frametime, pmove->velocity, pmove->origin);
 	}
-#ifdef CLIENT_DLL
-	else if (pmove->iuser1 != OBS_IN_EYE) // do this for first person mode only on server-side
-#else
 	else
-#endif // CLIENT_DLL
 	{
 		// all other modes just track some kind of target, so spectator PVS = target PVS
 
