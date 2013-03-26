@@ -507,12 +507,8 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmd, "spectate"))
 	{
 		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		// Block too offten spectator command usage and no observer in singleplayer
-		if (!gpGlobals->coop && !gpGlobals->deathmatch)
-		{
-			ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "No spectator mode in singleplayer.\n" ) );
-		}
-		else if (pPlayer->m_flNextSpectatorCommand < gpGlobals->time)
+		// Block too offten spectator command usage
+		if (pPlayer->m_flNextSpectatorCommand < gpGlobals->time)
 		{
 			pPlayer->m_flNextSpectatorCommand = gpGlobals->time + (spectator_cmd_delay.value < 1.0 ? 1.0 : spectator_cmd_delay.value);
 			if (!pPlayer->IsObserver())
