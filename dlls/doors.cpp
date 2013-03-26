@@ -756,6 +756,8 @@ void CBaseDoor::Blocked( CBaseEntity *pOther )
 							}
 						}
 
+						if ( !FBitSet( pDoor->pev->spawnflags, SF_DOOR_SILENT ) )
+							STOP_SOUND(ENT(pDoor->pev), CHAN_STATIC, (char*)STRING(pDoor->pev->noiseMoving) );
 						if ( pDoor->m_toggle_state == TS_GOING_DOWN)
 							pDoor->DoorGoUp();
 						else
