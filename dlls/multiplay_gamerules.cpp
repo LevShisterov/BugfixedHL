@@ -334,6 +334,12 @@ BOOL CHalfLifeMultiplay::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBasePlayerI
 		return TRUE;
 	}
 
+	if ( !(pPlayer->m_iAutoWeaponSwitch & (1 << 0)) )
+	{
+		// player disabled auto weapon switching
+		return FALSE;
+	}
+
 	if ( !pPlayer->m_pActiveItem->CanHolster() )
 	{
 		// can't put away the active item.
@@ -646,8 +652,11 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 	BOOL		addDefault;
 	CBaseEntity	*pWeaponEntity = NULL;
 
+	int aws = pPlayer->m_iAutoWeaponSwitch;
+	pPlayer->m_iAutoWeaponSwitch = 1;
+
 	pPlayer->pev->weapons |= (1<<WEAPON_SUIT);
-	
+
 	addDefault = TRUE;
 
 	while ( pWeaponEntity = UTIL_FindEntityByClassname( pWeaponEntity, "game_player_equip" ))
@@ -662,6 +671,8 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 		pPlayer->GiveNamedItem( "weapon_9mmhandgun" );
 		pPlayer->GiveAmmo( 68, "9mm", _9MM_MAX_CARRY );// 4 full reloads
 	}
+
+	pPlayer->m_iAutoWeaponSwitch = aws;
 }
 
 //=========================================================

@@ -222,6 +222,7 @@ void ClientPutInServer( edict_t *pEntity )
 
 	// Setup some fields initially
 	pPlayer->m_fNextSuicideTime = 0;
+	pPlayer->m_iAutoWeaponSwitch = 1;
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
@@ -685,6 +686,10 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 				g_engfuncs.pfnInfoKeyValue( infobuffer, "name" ) );
 		}
 	}
+
+	// Get weapon switching vars
+	char *autowepswitch = g_engfuncs.pfnInfoKeyValue( infobuffer, "cl_autowepswitch" );
+	pPlayer->m_iAutoWeaponSwitch = autowepswitch[0] == 0 ? 1 : atoi(autowepswitch);
 
 	g_pGameRules->ClientUserInfoChanged(pPlayer, infobuffer);
 }

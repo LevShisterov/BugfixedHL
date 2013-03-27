@@ -333,6 +333,8 @@ public:
 	void Disconnect() { m_bConnected = FALSE; }
 
 	Vector m_vecLastViewAngles;
+
+	int m_iAutoWeaponSwitch;
 };
 
 #define AUTOAIM_2DEGREES  0.0348994967025
