@@ -188,6 +188,9 @@ void ClientPutInServer( edict_t *pEntity )
 	// Allocate a CBasePlayer for pev, and call spawn
 	pPlayer->Spawn() ;
 
+	// Setup some fields initially
+	pPlayer->m_iAutoWeaponSwitch = 1;
+
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
 }
@@ -506,6 +509,7 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 	// Is the client spawned yet?
 	if ( !pEntity->pvPrivateData )
 		return;
+	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	if ( pEntity->v.netname && STRING(pEntity->v.netname)[0] != 0 && !FStrEq( STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" )) )
@@ -554,7 +558,11 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 		}
 	}
 
-	g_pGameRules->ClientUserInfoChanged( GetClassPtr((CBasePlayer *)&pEntity->v), infobuffer );
+	// Get weapon switching vars
+	char *autowepswitch = g_engfuncs.pfnInfoKeyValue( infobuffer, "cl_autowepswitch" );
+	pPlayer->m_iAutoWeaponSwitch = autowepswitch[0] == 0 ? 1 : atoi(autowepswitch);
+
+	g_pGameRules->ClientUserInfoChanged( pPlayer, infobuffer );
 }
 
 static int g_serveractive = 0;

@@ -315,6 +315,8 @@ public:
 	float m_flNextChatTime;
 
 	float m_flNextFullupdate[2];
+
+	int m_iAutoWeaponSwitch;
 };
 
 #define AUTOAIM_2DEGREES  0.0348994967025
