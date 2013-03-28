@@ -2136,14 +2136,26 @@ int TeamFortressViewport::MsgFunc_TeamNames(const char *pszName, int iSize, void
 	BEGIN_READ( pbuf, iSize );
 	
 	m_iNumberOfTeams = READ_BYTE();
-	if (m_iNumberOfTeams > MAX_TEAMS)
-		m_iNumberOfTeams = MAX_TEAMS;
 
 	for (int i = 0; i < m_iNumberOfTeams; i++)
 	{
+		// Throw away invalid team numbers
+		if (m_iNumberOfTeams > MAX_TEAMS)
+		{
+			READ_STRING();
+			continue;
+		}
+
 		int teamNum = i + 1;
 
 		gHUD.m_TextMessage.LocaliseTextString( READ_STRING(), m_sTeamNames[teamNum], MAX_TEAM_NAME );
+
+		// Parse the model and remove any %'s
+		for (char *c = m_sTeamNames[teamNum]; *c != 0; c++)
+		{
+			// Replace it with a space
+			if (*c == '%') *c = ' ';
+		}
 
 		if (i < MAX_TEAMS_IN_MENU)
 		{

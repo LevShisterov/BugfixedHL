@@ -17,15 +17,18 @@ bool IsValidFilename(const char *path)
 	if (path[0] == 0) return false;
 	const char *c = path;
 	const char *d = path;
+	bool haschars = false;
 	while (*c)
 	{
 		if (*c <= 31  || *c == '<' || *c == '>' || *c == '"' ||
 			*c == '/' || *c == '|' || *c == '?' || *c == '*' ||
 			*c == ':' || *c == '\\')
 			return false;
+		if (*c != ' ')
+			haschars = true;
 		c++;
 	}
-	return true;
+	return haschars;
 }
 
 void RemoveInvalidFilenameChars(char *path)

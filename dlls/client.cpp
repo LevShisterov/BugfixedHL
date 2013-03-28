@@ -142,11 +142,22 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 	int clientIndex = pPlayer->entindex();
 	char *prevModel = g_checkedPlayerModels[clientIndex - 1];
 
-	// Check for incorrect player model
+	// Detect model change
 	char *mdls = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
 	if (prevModel[0] == 0 || _stricmp(mdls, prevModel))
 	{
-		if (strlen(mdls) > MAX_TEAM_NAME - 1 || !IsValidFilename(mdls))
+		// First parse the model and remove any %'s
+		bool changed = false;
+		for (char *c = mdls; *c != 0; c++)
+		{
+			if (*c != '%') continue;
+			// Replace it with a space
+			*c = ' ';
+			changed = true;
+		}
+
+		// Check for incorrect player model
+		if (mdls[0] == 0 || strlen(mdls) > MAX_TEAM_NAME - 1 || !IsValidFilename(mdls))
 		{
 			if (prevModel[0] == 0)
 				strcpy(prevModel, "gordon");	// default model if empty
@@ -157,12 +168,16 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 			// Inform player
 			sprintf(text, "* Model should be non-empty, less then %d characters and can't contain special characters like: <>:\"/\\|?*\n* Your current model remains: \"%s\"\n", MAX_TEAM_NAME - 1, prevModel);
 			UTIL_SayText(text, pPlayer);
+
+			return;
 		}
-		else
-		{
-			// Remember model player has set
-			strcpy(prevModel, mdls);
-		}
+
+		// Set changed model back into info buffer
+		if (changed)
+			g_engfuncs.pfnSetClientKeyValue(clientIndex, infobuffer, "model", mdls);
+
+		// Remember model player has set
+		strcpy(prevModel, mdls);
 	}
 }
 
