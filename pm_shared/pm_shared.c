@@ -2075,15 +2075,22 @@ void PM_LadderMove( physent_t *pLadder )
 		float forward = 0, right = 0;
 		vec3_t vpn, v_right;
 
+		float climbSpeed = MAX_CLIMB_SPEED;
+		if (pmove->maxspeed < MAX_CLIMB_SPEED)
+			climbSpeed = pmove->maxspeed;
+		if (pmove->flags & FL_DUCKING)
+			climbSpeed *= 0.333;
+
 		AngleVectors( pmove->angles, vpn, v_right, NULL );
+
 		if ( pmove->cmd.buttons & IN_BACK )
-			forward -= MAX_CLIMB_SPEED;
+			forward -= climbSpeed;
 		if ( pmove->cmd.buttons & IN_FORWARD )
-			forward += MAX_CLIMB_SPEED;
+			forward += climbSpeed;
 		if ( pmove->cmd.buttons & IN_MOVELEFT )
-			right -= MAX_CLIMB_SPEED;
+			right -= climbSpeed;
 		if ( pmove->cmd.buttons & IN_MOVERIGHT )
-			right += MAX_CLIMB_SPEED;
+			right += climbSpeed;
 
 		if ( pmove->cmd.buttons & IN_JUMP )
 		{
@@ -2104,21 +2111,18 @@ void PM_LadderMove( physent_t *pLadder )
 				VectorScale( vpn, forward, velocity );
 				VectorMA( velocity, right, v_right, velocity );
 
-				
 				// Perpendicular in the ladder plane
-	//					Vector perp = CrossProduct( Vector(0,0,1), trace.vecPlaneNormal );
-	//					perp = perp.Normalize();
+				//Vector perp = CrossProduct( Vector(0,0,1), trace.vecPlaneNormal );
+				//perp = perp.Normalize();
 				VectorClear( tmp );
 				tmp[2] = 1;
 				CrossProduct( tmp, trace.plane.normal, perp );
 				VectorNormalize( perp );
 
-
 				// decompose velocity into ladder plane
 				normal = DotProduct( velocity, trace.plane.normal );
 				// This is the velocity into the face of the ladder
 				VectorScale( trace.plane.normal, normal, cross );
-
 
 				// This is the player's additional velocity
 				VectorSubtract( velocity, cross, lateral );
