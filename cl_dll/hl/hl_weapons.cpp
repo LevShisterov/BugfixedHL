@@ -682,10 +682,11 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	CBasePlayerWeapon *pCurrent;
 	weapon_data_t nulldata, *pfrom, *pto;
 	static int lasthealth;
+	static bool weapChange = false;
 
 	memset( &nulldata, 0, sizeof( nulldata ) );
 
-	HUD_InitClientWeapons();	
+	HUD_InitClientWeapons();
 
 	// Get current clock
 	gpGlobals->time = time;
@@ -697,15 +698,15 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		case WEAPON_CROWBAR:
 			pWeapon = &g_Crowbar;
 			break;
-		
+
 		case WEAPON_GLOCK:
 			pWeapon = &g_Glock;
 			break;
-		
+
 		case WEAPON_PYTHON:
 			pWeapon = &g_Python;
 			break;
-			
+
 		case WEAPON_MP5:
 			pWeapon = &g_Mp5;
 			break;
@@ -763,7 +764,6 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		if ( to->client.health <= 0 && lasthealth > 0 )
 		{
 			player.Killed( NULL, 0 );
-			
 		}
 		else if ( to->client.health > 0 && lasthealth <= 0 )
 		{
@@ -786,7 +786,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		}
 
 		pfrom = &from->weapondata[ i ];
-		
+
 		pCurrent->m_fInReload			= pfrom->m_fInReload;
 		pCurrent->m_fInSpecialReload	= pfrom->m_fInSpecialReload;
 //		pCurrent->m_flPumpTime			= pfrom->m_flPumpTime;
@@ -807,38 +807,46 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		player.m_rgAmmo[ pCurrent->m_iSecondaryAmmoType ]	= (int)from->client.vuser4[ 2 ];
 	}
 
+	// Remember weapon change to force animation later
+	if (player.pev->viewmodel != from->client.viewmodel)
+	{
+		weapChange = true;
+	}
+
 	// For random weapon events, use this seed to seed random # generator
-	player.random_seed = random_seed;
+	player.random_seed			= random_seed;
 
 	// Get old buttons from previous state.
-	player.m_afButtonLast = from->playerstate.oldbuttons;
+	player.m_afButtonLast		= from->playerstate.oldbuttons;
 
 	// Which buttsons chave changed
-	buttonsChanged = (player.m_afButtonLast ^ cmd->buttons);	// These buttons have changed this frame
-	
+	buttonsChanged				= (player.m_afButtonLast ^ cmd->buttons);	// These buttons have changed this frame
+
 	// Debounced button codes for pressed/released
 	// The changed ones still down are "pressed"
-	player.m_afButtonPressed =  buttonsChanged & cmd->buttons;	
+	player.m_afButtonPressed	= buttonsChanged & cmd->buttons;	
 	// The ones not down are "released"
-	player.m_afButtonReleased = buttonsChanged & (~cmd->buttons);
+	player.m_afButtonReleased	= buttonsChanged & (~cmd->buttons);
 
 	// Set player variables that weapons code might check/alter
-	player.pev->button = cmd->buttons;
+	player.pev->button			= cmd->buttons;
 
-	player.pev->velocity = from->client.velocity;
-	player.pev->flags = from->client.flags;
+	player.pev->velocity		= from->client.velocity;
+	player.pev->flags			= from->client.flags;
 
-	player.pev->deadflag = from->client.deadflag;
-	player.pev->waterlevel = from->client.waterlevel;
-	player.pev->maxspeed    = from->client.maxspeed;
-	player.pev->fov = from->client.fov;
-	player.pev->weaponanim = from->client.weaponanim;
-	player.pev->viewmodel = from->client.viewmodel;
-	player.m_flNextAttack = from->client.m_flNextAttack;
-	player.m_flNextAmmoBurn = from->client.fuser2;
-	player.m_flAmmoStartCharge = from->client.fuser3;
+	player.pev->deadflag		= from->client.deadflag;
+	player.pev->waterlevel		= from->client.waterlevel;
+	player.pev->maxspeed		= from->client.maxspeed;
 
-	//Stores all our ammo info, so the client side weapons can use them.
+	player.pev->fov				= from->client.fov;
+	player.pev->weaponanim		= from->client.weaponanim;
+	player.pev->viewmodel		= from->client.viewmodel;
+
+	player.m_flNextAttack		= from->client.m_flNextAttack;
+	player.m_flNextAmmoBurn		= from->client.fuser2;
+	player.m_flAmmoStartCharge	= from->client.fuser3;
+
+	// Stores all our ammo info, so the client side weapons can use them.
 	player.ammo_9mm			= (int)from->client.vuser1[0];
 	player.ammo_357			= (int)from->client.vuser1[1];
 	player.ammo_argrens		= (int)from->client.vuser1[2];
@@ -848,7 +856,6 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	player.ammo_hornets		= (int)from->client.vuser2[0];
 	player.ammo_rockets		= (int)from->client.ammo_rockets;
 
-	
 	// Point to current weapon object
 	if ( from->client.m_iId )
 	{
@@ -857,10 +864,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	if ( player.m_pActiveItem->m_iId == WEAPON_RPG )
 	{
-		 ( ( CRpg * )player.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
-		 ( ( CRpg * )player.m_pActiveItem)->m_cActiveRockets = (int)from->client.vuser2[ 2 ];
+		( ( CRpg * )player.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
+		( ( CRpg * )player.m_pActiveItem)->m_cActiveRockets = (int)from->client.vuser2[ 2 ];
 	}
-	
+
 	// Don't go firing anything if we have died.
 	// Or if we don't have a weapon model deployed
 	if ( ( player.pev->deadflag != ( DEAD_DISCARDBODY + 1 ) ) && 
@@ -887,7 +894,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 				// Put away old weapon
 				if (player.m_pActiveItem)
 					player.m_pActiveItem->Holster( );
-				
+
 				player.m_pLastItem = player.m_pActiveItem;
 				player.m_pActiveItem = pNew;
 
@@ -912,7 +919,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	to->client.fuser3					= player.m_flAmmoStartCharge;
 	to->client.maxspeed					= player.pev->maxspeed;
 
-	//HL Weapons
+	// HL Weapons
 	to->client.vuser1[0]				= player.ammo_9mm;
 	to->client.vuser1[1]				= player.ammo_357;
 	to->client.vuser1[2]				= player.ammo_argrens;
@@ -925,24 +932,26 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	if ( player.m_pActiveItem->m_iId == WEAPON_RPG )
 	{
-		 from->client.vuser2[ 1 ] = ( ( CRpg * )player.m_pActiveItem)->m_fSpotActive;
-		 from->client.vuser2[ 2 ] = ( ( CRpg * )player.m_pActiveItem)->m_cActiveRockets;
+		to->client.vuser2[ 1 ] = ( ( CRpg * )player.m_pActiveItem)->m_fSpotActive;
+		to->client.vuser2[ 2 ] = ( ( CRpg * )player.m_pActiveItem)->m_cActiveRockets;
 	}
 
 	// Make sure that weapon animation matches what the game .dll is telling us
 	//  over the wire ( fixes some animation glitches )
-	if ( g_runfuncs && ( HUD_GetWeaponAnim() != to->client.weaponanim ) )
+	if ( g_runfuncs && ( HUD_GetWeaponAnim() != to->client.weaponanim || weapChange ) )
 	{
-		int body = 2;
+		weapChange = false;
 
-		//Pop the model to body 0.
+		int body = 0;
+
+		// Pop the model to body 0.
 		if ( pWeapon == &g_Tripmine )
 			 body = 0;
 
-		//Show laser sight/scope combo
+		// Show laser sight/scope combo
 		if ( pWeapon == &g_Python && bIsMultiplayer() )
 			 body = 1;
-		
+
 		// Force a fixed anim down to viewmodel
 		HUD_SendWeaponAnim( to->client.weaponanim, body, 1 );
 	}
@@ -958,7 +967,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 			memset( pto, 0, sizeof( weapon_data_t ) );
 			continue;
 		}
-	
+
 		pto->m_fInReload				= pCurrent->m_fInReload;
 		pto->m_fInSpecialReload			= pCurrent->m_fInSpecialReload;
 //		pto->m_flPumpTime				= pCurrent->m_flPumpTime;
@@ -986,7 +995,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		to->client.vuser4[1]				= player.m_rgAmmo[ pCurrent->m_iPrimaryAmmoType ];
 		to->client.vuser4[2]				= player.m_rgAmmo[ pCurrent->m_iSecondaryAmmoType ];
 
-/*		if ( pto->m_flPumpTime != -9999 )
+		/*if ( pto->m_flPumpTime != -9999 )
 		{
 			pto->m_flPumpTime -= cmd->msec / 1000.0;
 			if ( pto->m_flPumpTime < -0.001 )
@@ -1036,7 +1045,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	{
 		to->client.fuser2 = -0.001;
 	}
-	
+
 	to->client.fuser3 -= cmd->msec / 1000.0;
 	if ( to->client.fuser3 < -0.001 )
 	{
