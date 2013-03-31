@@ -651,7 +651,7 @@ void CBaseDoor::DoorHitTop( void )
 //
 void CBaseDoor::DoorGoDown( void )
 {
-	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) && m_toggle_state != TS_GOING_DOWN && m_toggle_state != TS_GOING_UP¸ )
+	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) && m_toggle_state != TS_GOING_DOWN && m_toggle_state != TS_GOING_UP )
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
 	
 #ifdef DOOR_ASSERT
