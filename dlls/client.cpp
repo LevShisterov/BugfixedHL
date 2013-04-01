@@ -233,6 +233,14 @@ void ClientPutInServer( edict_t *pEntity )
 	// Check player model before spawn
 	CheckPlayerModel(pPlayer, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()));
 
+	// Check if bot
+	const char *auth;
+	if ((pPlayer->pev->flags & FL_FAKECLIENT) == FL_FAKECLIENT ||
+		(auth = GETPLAYERAUTHID(pPlayer->edict())) && strcmp(auth, "BOT") == 0)
+	{
+		pPlayer->m_bIsBot = true;
+	}
+
 	pPlayer->Spawn();
 
 	// Setup some fields initially
@@ -241,6 +249,9 @@ void ClientPutInServer( edict_t *pEntity )
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
+
+	// Mark as PutInServer
+	pPlayer->m_bPutInServer = TRUE;
 }
 
 #include "voice_gamemgr.h"
