@@ -209,10 +209,18 @@ void ClientPutInServer( edict_t *pEntity )
 
 	entvars_t *pev = &pEntity->v;
 
+	// Allocate a CBasePlayer for pev, and call spawn
 	pPlayer = GetClassPtr((CBasePlayer *)pev);
 	pPlayer->SetCustomDecalFrames(-1); // Assume none;
 
-	// Allocate a CBasePlayer for pev, and call spawn
+	// Check if bot
+	const char *auth;
+	if ((pPlayer->pev->flags & FL_FAKECLIENT) == FL_FAKECLIENT ||
+		(auth = GETPLAYERAUTHID(pPlayer->edict())) && strcmp(auth, "BOT") == 0)
+	{
+		pPlayer->m_bIsBot = true;
+	}
+
 	pPlayer->Spawn();
 
 	// Setup some fields initially
@@ -220,6 +228,9 @@ void ClientPutInServer( edict_t *pEntity )
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
+
+	// Mark as PutInServer
+	pPlayer->m_bPutInServer = TRUE;
 }
 
 #include "voice_gamemgr.h"
