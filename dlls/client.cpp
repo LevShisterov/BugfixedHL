@@ -214,6 +214,8 @@ void ClientPutInServer( edict_t *pEntity )
 		pPlayer->m_bIsBot = true;
 	}
 
+	pPlayer->Spawn();
+
 	// Setup some fields initially
 	pPlayer->m_fNextSuicideTime = 0;
 	pPlayer->m_iAutoWeaponSwitch = 1;
