@@ -1475,7 +1475,7 @@ qboolean PM_CheckWater ()
 	point[0] = pmove->origin[0] + (pmove->player_mins[pmove->usehull][0] + pmove->player_maxs[pmove->usehull][0]) * 0.5;
 	point[1] = pmove->origin[1] + (pmove->player_mins[pmove->usehull][1] + pmove->player_maxs[pmove->usehull][1]) * 0.5;
 	point[2] = pmove->origin[2] + pmove->player_mins[pmove->usehull][2] + 1;
-	
+
 	// Assume that we are not in water at all.
 	pmove->waterlevel = 0;
 	pmove->watertype = CONTENTS_EMPTY;
@@ -1524,6 +1524,15 @@ qboolean PM_CheckWater ()
 
 			VectorMA (pmove->basevelocity, 50.0*pmove->waterlevel, current_table[CONTENTS_CURRENT_0 - truecont], pmove->basevelocity);
 		}
+	}
+	else if (pmove->movetype == MOVETYPE_NOCLIP || pmove->iuser1 == OBS_ROAMING)
+	{
+		// check the eye position.  (view_ofs is relative to the origin)
+		point[2] = pmove->origin[2] + pmove->view_ofs[2];
+
+		cont = pmove->PM_PointContents (point, NULL );
+		if (cont <= CONTENTS_WATER && cont > CONTENTS_TRANSLUCENT ) 
+			pmove->waterlevel = 3;  // In over our eyes
 	}
 
 	return pmove->waterlevel > 1;
@@ -1575,7 +1584,8 @@ void PM_CatagorizePosition (void)
 			// Then we are not in water jump sequence
 			pmove->waterjumptime = 0;
 			// If we could make the move, drop us down that 1 pixel
-			if ( pmove->iuser1 != OBS_ROAMING )	// Skip for roaming mode so observer will not stick to a floor
+			// Skip for noclip move type and roaming observer mode so we will not stick to a floor
+			if ( pmove->movetype != MOVETYPE_NOCLIP && pmove->iuser1 != OBS_ROAMING )
 				if (pmove->waterlevel < 2 && !tr.startsolid && !tr.allsolid)
 					VectorCopy (tr.endpos, pmove->origin);
 		}
