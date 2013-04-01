@@ -507,18 +507,25 @@ int UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &cente
 
 CBaseEntity *UTIL_FindEntityInSphere( CBaseEntity *pStartEntity, const Vector &vecCenter, float flRadius )
 {
-	edict_t	*pentEntity;
+	CBaseEntity *resultEntity = NULL;
+	edict_t *pentEntity;
 
 	if (pStartEntity)
 		pentEntity = pStartEntity->edict();
 	else
 		pentEntity = NULL;
 
-	pentEntity = FIND_ENTITY_IN_SPHERE( pentEntity, vecCenter, flRadius);
+	while (true)
+	{
+		pentEntity = FIND_ENTITY_IN_SPHERE(pentEntity, vecCenter, flRadius);
+		if (pentEntity == NULL) return NULL;
+		if (FNullEnt(pentEntity)) return NULL;
+		resultEntity = CBaseEntity::Instance(pentEntity);
+		// If we will find edict that doesn't have class we will skip it
+		if (resultEntity != NULL) break;
+	}
 
-	if (!FNullEnt(pentEntity))
-		return CBaseEntity::Instance(pentEntity);
-	return NULL;
+	return resultEntity;
 }
 
 
@@ -573,22 +580,26 @@ CBaseEntity *UTIL_FindEntityGeneric( const char *szWhatever, Vector &vecSrc, flo
 }
 
 
-// returns a CBaseEntity pointer to a player by index.  Only returns if the player is spawned and connected
-// otherwise returns NULL
-// Index is 1 based
-CBaseEntity	*UTIL_PlayerByIndex( int playerIndex )
+// Returns a CBaseEntity pointer to a player by index.
+// Only returns if the player is connected and was spawned, otherwise returns NULL.
+// Index is 1 based.
+CBaseEntity *UTIL_PlayerByIndex( int playerIndex )
 {
-	CBaseEntity *pPlayer = NULL;
+	CBasePlayer *pPlayer = NULL;
 
 	if ( playerIndex > 0 && playerIndex <= gpGlobals->maxClients )
 	{
 		edict_t *pPlayerEdict = INDEXENT( playerIndex );
 		if ( pPlayerEdict && !pPlayerEdict->free )
 		{
-			pPlayer = CBaseEntity::Instance( pPlayerEdict );
+			pPlayer = (CBasePlayer *)CBaseEntity::Instance( pPlayerEdict );
+			if ( pPlayer && !pPlayer->IsConnected() )
+			{
+				pPlayer = NULL;
+			}
 		}
 	}
-	
+
 	return pPlayer;
 }
 

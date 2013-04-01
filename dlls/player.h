@@ -17,6 +17,7 @@
 
 
 #include "pm_materials.h"
+#include "pm_shared.h"
 
 
 #define PLAYER_FATAL_FALL_SPEED		1024// approx 60 feet
@@ -179,7 +180,7 @@ public:
 	Vector				m_vecAutoAim;
 	BOOL				m_fOnTarget;
 	int					m_iDeaths;
-	float				m_iRespawnFrames;	// used in PlayerDeathThink() to make sure players can always respawn
+	float				m_flDeathAnimationStartTime;	// used in PlayerDeathThink() to make sure players can always respawn
 
 	int m_lastx, m_lasty;  // These are the previous update's crosshair angles, DON"T SAVE/RESTORE
 
@@ -315,6 +316,15 @@ public:
 	float m_flNextChatTime;
 
 	float m_flNextFullupdate[2];
+
+
+	BOOL m_bConnected;		// we set it in Spawn() so it will be TRUE only after player was spawned
+	BOOL m_bPutInServer;	// we set it after PutInServer finished
+	BOOL m_bIsBot;			// we set it at PutInServer start
+	BOOL IsConnected() { return m_bConnected; }
+	void Disconnect() { m_bConnected = FALSE; m_bPutInServer = FALSE; m_bIsBot = FALSE; }
+
+	Vector m_vecLastViewAngles;
 
 	int m_iAutoWeaponSwitch;
 };

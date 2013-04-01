@@ -114,9 +114,15 @@ void ClientDisconnect( edict_t *pEntity )
 	// since the edict doesn't get deleted, fix it so it doesn't interfere.
 	pEntity->v.takedamage = DAMAGE_NO;	// don't attract autoaim
 	pEntity->v.solid = SOLID_NOT;		// nonsolid
+	pEntity->v.flags = 0;	// clear client flags, because engine doesn't clear them before calling ClientConnect, but only before ClientPutInServer, on next connection to this slot
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
 
 	g_pGameRules->ClientDisconnected( pEntity );
+
+	// Mark player as disconnected
+	entvars_t *pev = &pEntity->v;
+	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
+	pl->Disconnect();
 }
 
 
@@ -155,10 +161,24 @@ void ClientKill( edict_t *pEntity )
 
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 
+	// prevent suiciding too often
 	if ( pl->m_fNextSuicideTime > gpGlobals->time )
-		return;  // prevent suiciding too ofter
+		return;
+	pl->m_fNextSuicideTime = gpGlobals->time + 1;
 
-	pl->m_fNextSuicideTime = gpGlobals->time + 1;  // don't let them suicide for 5 seconds after suiciding
+	// prevent death in spectator mode
+	if ( pev->iuser1 != OBS_NONE)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide while in spectator mode!\n" ) );
+		return;
+	}
+
+	// prevent death if already dead
+	if ( pev->deadflag != DEAD_NO)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide -- already dead!\n" ) );
+		return;
+	}
 
 	// have the player kill themself
 	pev->health = 0;
@@ -182,17 +202,27 @@ void ClientPutInServer( edict_t *pEntity )
 
 	entvars_t *pev = &pEntity->v;
 
+	// Allocate a CBasePlayer for pev, and call spawn
 	pPlayer = GetClassPtr((CBasePlayer *)pev);
 	pPlayer->SetCustomDecalFrames(-1); // Assume none;
 
-	// Allocate a CBasePlayer for pev, and call spawn
-	pPlayer->Spawn() ;
+	// Check if bot
+	const char *auth;
+	if ((pPlayer->pev->flags & FL_FAKECLIENT) == FL_FAKECLIENT ||
+		(auth = GETPLAYERAUTHID(pPlayer->edict())) && strcmp(auth, "BOT") == 0)
+	{
+		pPlayer->m_bIsBot = true;
+	}
 
 	// Setup some fields initially
+	pPlayer->m_fNextSuicideTime = 0;
 	pPlayer->m_iAutoWeaponSwitch = 1;
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
+
+	// Mark as PutInServer
+	pPlayer->m_bPutInServer = TRUE;
 }
 
 #include "voice_gamemgr.h"
@@ -510,6 +540,8 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 	if ( !pEntity->pvPrivateData )
 		return;
 	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
+	if (!pPlayer->IsConnected())
+		return;
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	if ( pEntity->v.netname && STRING(pEntity->v.netname)[0] != 0 && !FStrEq( STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" )) )
@@ -588,6 +620,7 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 	CBaseEntity		*pClass;
 
 	// Every call to ServerActivate should be matched by a call to ServerDeactivate
+	ASSERT( g_serveractive == 0 );
 	g_serveractive = 1;
 
 	// Clients have not been initialized yet

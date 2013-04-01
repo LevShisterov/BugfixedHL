@@ -167,6 +167,7 @@ void CItem::Materialize( void )
 	}
 
 	SetTouch( &CItem::ItemTouch );
+	SetThink( NULL );
 }
 
 #define SF_SUIT_SHORTLOGON		0x0001
