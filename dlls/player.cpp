@@ -1144,7 +1144,7 @@ void CBasePlayer::WaterMove()
 {
 	int air;
 
-	if (pev->movetype == MOVETYPE_NOCLIP)
+	if (pev->movetype == MOVETYPE_NOCLIP || pev->iuser1 != OBS_NONE)
 		return;
 
 	if (pev->health < 0)
