@@ -189,8 +189,17 @@ int gmsgStatusValue = 0;
 
 int gmsgViewMode = 0;
 int gmsgVGUIMenu = 0;
+int gmsgStatusIcon = 0;
 
-
+const char* const gCustomMessages[]  = {
+	"IconInfo",
+	"CheatCheck",
+	"Splash",
+	"Countdown",
+	"Timer",
+	"IconInfo",
+	NULL
+};
 
 void LinkUserMessages( void )
 {
@@ -239,6 +248,13 @@ void LinkUserMessages( void )
 
 	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
 	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);		// Opens team selection menu with map briefing
+	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);	// Displays specified status icon sprite in hud
+
+	// Register messages from some custom mods to prevent "Host_Error: UserMsg: Not Present on Client"
+	for (int i = 0; gCustomMessages[i] != NULL; i++)
+	{
+		REG_USER_MSG(gCustomMessages[i], 0);
+	}
 }
 
 LINK_ENTITY_TO_CLASS( player, CBasePlayer );
@@ -827,7 +843,8 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 		while (m_pActiveItem)
 		{
 			pPendingItem = m_pActiveItem->m_pNext;
-			m_pActiveItem->Drop( );
+			m_pActiveItem->m_pPlayer = NULL;
+			m_pActiveItem->Kill();
 			m_pActiveItem = pPendingItem;
 		}
 	}
@@ -1286,12 +1303,11 @@ void CBasePlayer::PlayerDeathThink(void)
 
 
 	if (pev->modelindex && (!m_fSequenceFinished) && (pev->deadflag == DEAD_DYING))
-	{
 		StudioFrameAdvance( );
 
-		if (gpGlobals->time < m_flDeathAnimationStartTime + 1.5)	// time given to animate corpse
-			return;
-	}
+	// time given to animate corpse and don't allow to respawn till this time ends
+	if (gpGlobals->time < m_flDeathAnimationStartTime + 1.5)
+		return;
 
 	// once we're done animating our death and we're on the ground, we want to set movetype to None so our dead body won't do collisions and stuff anymore
 	// this prevents a bug where the dead body would go to a player's head if he walked over it while the dead player was clicking their button to respawn
@@ -1304,6 +1320,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	StopAnimation();
 
 	pev->effects |= EF_NOINTERP;
+	pev->effects &= ~EF_DIMLIGHT;
 
 	BOOL fAnyButtonDown = (pev->button & ~IN_SCORE );
 	
@@ -2564,10 +2581,16 @@ void CBasePlayer::PostThink()
 
 	UpdatePlayerSound();
 
+pt_end:
 	// Track button info so we can detect 'pressed' and 'released' buttons next frame
 	m_afButtonLast = pev->button;
 
-pt_end:
+	// Don't allow dead model to rotate until DeathCam or Spawn happen (CopyToBodyQue)
+	if (pev->deadflag == DEAD_NO || (m_afPhysicsFlags & PFLAG_OBSERVER) || pev->fixangle)
+		m_vecLastViewAngles = pev->angles;
+	else
+		pev->angles = m_vecLastViewAngles;
+
 #if defined( CLIENT_WEAPONS )
 		// Decay timers on weapons
 	// go through all of the weapons and make a list of the ones to pack
@@ -2630,10 +2653,6 @@ pt_end:
 		if ( m_flAmmoStartCharge < -0.001 )
 			m_flAmmoStartCharge = -0.001;
 	}
-	
-
-#else
-	return;
 #endif
 }
 
@@ -2926,6 +2945,8 @@ int CBasePlayer::Restore( CRestore &restore )
 		return 0;
 
 	int status = restore.ReadFields( "PLAYER", this, m_playerSaveData, HLARRAYSIZE(m_playerSaveData) );
+
+	m_bConnected = TRUE;
 
 	SAVERESTOREDATA *pSaveData = (SAVERESTOREDATA *)gpGlobals->pSaveData;
 	// landmark isn't present.
@@ -3668,16 +3689,17 @@ int CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 
 
 
-int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem, bool bCallHolster )
+int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 {
 	pItem->pev->nextthink = 0;// crowbar may be trying to swing again, etc.
 	pItem->SetThink( NULL );
+	pItem->SetTouch( NULL );
 
 	if (m_pActiveItem == pItem)
 	{
 		ResetAutoaim( );
-		if ( bCallHolster )
-			pItem->Holster( );
+		if (pItem->m_pPlayer)	// Ugly way to distinguish between calls from PackWeapon and DestroyItem
+			pItem->Holster();
 		m_pActiveItem = NULL;
 		pev->viewmodel = 0;
 		pev->weaponmodel = 0;
@@ -3685,11 +3707,15 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem, bool bCallHolster )
 	else if ( m_pLastItem == pItem )
 		m_pLastItem = NULL;
 
-	CBasePlayerItem *pPrev = m_rgpPlayerItems[pItem->iItemSlot()];
+	pItem->m_pPlayer = NULL;
+
+	int slotId = pItem->iItemSlot();
+	CBasePlayerItem *pPrev = m_rgpPlayerItems[slotId];
 
 	if (pPrev == pItem)
 	{
-		m_rgpPlayerItems[pItem->iItemSlot()] = pItem->m_pNext;
+		pev->weapons &= ~(1 << pItem->m_iId);	// take item off hud
+		m_rgpPlayerItems[slotId] = pItem->m_pNext;
 		return TRUE;
 	}
 	else
@@ -3700,6 +3726,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem, bool bCallHolster )
 		}
 		if (pPrev)
 		{
+			pev->weapons &= ~(1 << pItem->m_iId);	// take item off hud
 			pPrev->m_pNext = pItem->m_pNext;
 			return TRUE;
 		}
@@ -4437,87 +4464,66 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 		return;
 	}
 
-	if ( !strlen( pszItemName ) )
+	CBasePlayerItem *pWeapon;
+	if (!strlen(pszItemName))
 	{
 		// if this string has no length, the client didn't type a name!
 		// assume player wants to drop the active item.
-		// make the string null to make future operations in this function easier
-		pszItemName = NULL;
-	} 
-
-	CBasePlayerItem *pWeapon;
-	int i;
-
-	for ( i = 0 ; i < MAX_ITEM_TYPES ; i++ )
+		pWeapon = m_pActiveItem;
+	}
+	else
 	{
-		pWeapon = m_rgpPlayerItems[ i ];
-
-		while ( pWeapon )
+		// try to match by name.
+		bool match = false;
+		for (int  i = 0; i < MAX_ITEM_TYPES && !match; i++)
 		{
-			if ( pszItemName )
+			pWeapon = m_rgpPlayerItems[ i ];
+			while (pWeapon)
 			{
-				// try to match by name. 
-				if ( !strcmp( pszItemName, STRING( pWeapon->pev->classname ) ) )
+				if (!strcmp(pszItemName, STRING(pWeapon->pev->classname)))
 				{
-					// match! 
+					match = true;
 					break;
 				}
-			}
-			else
-			{
-				// trying to drop active item
-				if ( pWeapon == m_pActiveItem )
-				{
-					// active item!
-					break;
-				}
-			}
 
-			pWeapon = pWeapon->m_pNext; 
+				pWeapon = pWeapon->m_pNext; 
+			}
 		}
+		if (!match)
+			return;
+	}
 
-		
-		// if we land here with a valid pWeapon pointer, that's because we found the 
-		// item we want to drop and hit a BREAK;  pWeapon is the item.
-		if ( pWeapon )
+	// Return if we didn't find a weapon to drop
+	if (!pWeapon) return;
+
+	g_pGameRules->GetNextBestWeapon( this, pWeapon );
+
+	UTIL_MakeVectors ( pev->angles );
+
+	CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", pev->origin + gpGlobals->v_forward * 10, pev->angles, edict() );
+	pWeaponBox->pev->angles.x = 0;
+	pWeaponBox->pev->angles.z = 0;
+	pWeaponBox->PackWeapon( pWeapon );
+	pWeaponBox->pev->velocity = gpGlobals->v_forward * 300 + gpGlobals->v_forward * 100;
+
+	// drop half of the ammo for this weapon.
+	int iAmmoIndex = GetAmmoIndex( pWeapon->pszAmmo1() ); // ???
+
+	if ( iAmmoIndex != -1 )
+	{
+		// this weapon weapon uses ammo, so pack an appropriate amount.
+		if ( pWeapon->iFlags() & ITEM_FLAG_EXHAUSTIBLE )
 		{
-			g_pGameRules->GetNextBestWeapon( this, pWeapon );
-
-			UTIL_MakeVectors ( pev->angles ); 
-
-			pev->weapons &= ~(1<<pWeapon->m_iId);// take item off hud
-
-			CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", pev->origin + gpGlobals->v_forward * 10, pev->angles, edict() );
-			pWeaponBox->pev->angles.x = 0;
-			pWeaponBox->pev->angles.z = 0;
-			pWeaponBox->PackWeapon( pWeapon );
-			pWeaponBox->pev->velocity = gpGlobals->v_forward * 300 + gpGlobals->v_forward * 100;
-			
-			// drop half of the ammo for this weapon.
-			int	iAmmoIndex;
-
-			iAmmoIndex = GetAmmoIndex ( pWeapon->pszAmmo1() ); // ???
-			
-			if ( iAmmoIndex != -1 )
-			{
-				// this weapon weapon uses ammo, so pack an appropriate amount.
-				if ( pWeapon->iFlags() & ITEM_FLAG_EXHAUSTIBLE )
-				{
-					// pack up all the ammo, this weapon is its own ammo type
-					pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] );
-					m_rgAmmo[ iAmmoIndex ] = 0; 
-
-				}
-				else
-				{
-					// pack half of the ammo
-					pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] / 2 );
-					m_rgAmmo[ iAmmoIndex ] /= 2; 
-				}
-
-			}
-
-			return;// we're done, so stop searching with the FOR loop.
+			// pack up all the ammo, this weapon is its own ammo type
+			pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] );
+			m_rgAmmo[ iAmmoIndex ] = 0;
+		}
+		else
+		{
+			// pack half of the ammo
+			int ammoDrop = m_rgAmmo[ iAmmoIndex ] / 2;
+			pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), ammoDrop );
+			m_rgAmmo[ iAmmoIndex ] -= ammoDrop;
 		}
 	}
 }

@@ -216,10 +216,24 @@ void ClientKill( edict_t *pEntity )
 
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
 
+	// prevent suiciding too often
 	if ( pl->m_fNextSuicideTime > gpGlobals->time )
-		return;  // prevent suiciding too ofter
+		return;
+	pl->m_fNextSuicideTime = gpGlobals->time + 1;
 
-	pl->m_fNextSuicideTime = gpGlobals->time + 1;  // don't let them suicide for 5 seconds after suiciding
+	// prevent death in spectator mode
+	if ( pev->iuser1 != OBS_NONE)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide while in spectator mode!\n" ) );
+		return;
+	}
+
+	// prevent death if already dead
+	if ( pev->deadflag != DEAD_NO)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide -- already dead!\n" ) );
+		return;
+	}
 
 	// have the player kill themself
 	pev->health = 0;
@@ -250,10 +264,24 @@ void ClientPutInServer( edict_t *pEntity )
 	// Check player model before spawn
 	CheckPlayerModel(pPlayer, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()));
 
+	// Check if bot
+	const char *auth;
+	if ((pPlayer->pev->flags & FL_FAKECLIENT) == FL_FAKECLIENT ||
+		(auth = GETPLAYERAUTHID(pPlayer->edict())) && strcmp(auth, "BOT") == 0)
+	{
+		pPlayer->m_bIsBot = true;
+	}
+
 	pPlayer->Spawn();
+
+	// Setup some fields initially
+	pPlayer->m_fNextSuicideTime = 0;
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
+
+	// Mark as PutInServer
+	pPlayer->m_bPutInServer = TRUE;
 }
 
 #include "voice_gamemgr.h"

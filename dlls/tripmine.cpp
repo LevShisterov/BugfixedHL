@@ -416,15 +416,16 @@ void CTripmine::Holster( int skiplocal /* = 0 */ )
 	pev->body = 3;
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 
-	if (!m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
+	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
+
+	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0)
 	{
-		// out of mines
-		m_pPlayer->pev->weapons &= ~(1<<WEAPON_TRIPMINE);
+		SendWeaponAnim( TRIPMINE_HOLSTER );
+	}
+	else
+	{
 		DestroyItem();
 	}
-
-	SendWeaponAnim( TRIPMINE_HOLSTER );
-	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 }
 
 void CTripmine::PrimaryAttack( void )
@@ -463,9 +464,9 @@ void CTripmine::PrimaryAttack( void )
 			// player "shoot" animation
 			m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 			
-			if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )
+			if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 			{
-				// no more mines! 
+				// no more mines!
 				RetireWeapon();
 				return;
 			}
@@ -489,13 +490,13 @@ void CTripmine::WeaponIdle( void )
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
-	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0 )
+	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0)
 	{
 		SendWeaponAnim( TRIPMINE_DRAW );
 	}
 	else
 	{
-		RetireWeapon(); 
+		RetireWeapon();
 		return;
 	}
 
