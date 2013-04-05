@@ -180,6 +180,13 @@ void ClientKill( edict_t *pEntity )
 		return;
 	}
 
+	// prevent death in welcome cam
+	if (pl->m_bInWelcomeCam)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide while in welcome cam mode!\n" ) );
+		return;
+	}
+
 	// have the player kill themself
 	pev->health = 0;
 	pl->Killed( pev, GIB_NEVER );
