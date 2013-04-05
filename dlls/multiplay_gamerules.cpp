@@ -652,6 +652,13 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 	BOOL		addDefault;
 	CBaseEntity	*pWeaponEntity = NULL;
 
+	// Start welcome cam for new players
+	if (!pPlayer->m_bPutInServer && !pPlayer->m_bIsBot && mp_welcomecam.value != 0)
+	{
+		pPlayer->StartWelcomeCam();
+		return;
+	}
+
 	int aws = pPlayer->m_iAutoWeaponSwitch;
 	pPlayer->m_iAutoWeaponSwitch = 1;
 

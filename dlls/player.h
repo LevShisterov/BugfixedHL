@@ -337,6 +337,10 @@ public:
 	Vector m_vecLastViewAngles;
 
 	int m_iAutoWeaponSwitch;
+
+	BOOL m_bInWelcomeCam;
+	void StartWelcomeCam( void );
+	void StopWelcomeCam( void );
 };
 
 #define AUTOAIM_2DEGREES  0.0348994967025

@@ -1445,6 +1445,75 @@ void CBasePlayer::StartDeathCam( void )
 	//pev->modelindex = 0;				// Commented to let view point be moved
 }
 
+void CBasePlayer::StartWelcomeCam( void )
+{
+	if ( m_bInWelcomeCam )
+	{
+		return;
+	}
+
+	m_bInWelcomeCam = TRUE;
+
+	edict_t *pSpot, *pNewSpot;
+	pSpot = FIND_ENTITY_BY_CLASSNAME( NULL, "info_intermission");
+	if ( !FNullEnt( pSpot ) )
+	{
+		// at least one intermission spot in the world.
+		int iRand = RANDOM_LONG( 0, 3 );
+
+		while ( iRand > 0 )
+		{
+			pNewSpot = FIND_ENTITY_BY_CLASSNAME( pSpot, "info_intermission");
+			
+			if ( pNewSpot )
+			{
+				pSpot = pNewSpot;
+			}
+
+			iRand--;
+		}
+
+		UTIL_SetOrigin( pev, pSpot->v.origin );
+		// Find target for intermission
+		edict_t *pTarget = FIND_ENTITY_BY_TARGETNAME( NULL, STRING(pSpot->v.target) );
+		if (pTarget && !FNullEnt(pTarget))
+		{
+			// Calculate angles to look at camera target
+			pev->angles = UTIL_VecToAngles( pTarget->v.origin - pSpot->v.origin );
+			pev->angles.x = -pev->angles.x;
+		}
+		else
+		{
+			pev->angles = pSpot->v.v_angle;
+		}
+	}
+	else
+	{
+		// no intermission spot. Push them up in the air, looking down
+		TraceResult tr;
+		UTIL_TraceLine( pev->origin, pev->origin + Vector( 0, 0, 128 ), ignore_monsters, edict(), &tr );
+		UTIL_SetOrigin( pev, tr.vecEndPos - Vector( 0, 0, 10 ) );
+		pev->angles.x = pev->v_angle.x = 30;
+	}
+
+	m_afPhysicsFlags |= PFLAG_OBSERVER;
+	pev->view_ofs = g_vecZero;
+	pev->fixangle = TRUE;
+	pev->solid = SOLID_NOT;
+	pev->takedamage = DAMAGE_NO;
+	pev->movetype = MOVETYPE_NOCLIP;	// HACK HACK: Player fall down with MOVETYPE_NONE
+	pev->health = 1;					// Let player stay vertically, not lie on a side
+	pev->effects = EF_NODRAW;			// Hide model. This is used instead of pev->modelindex = 0
+}
+
+void CBasePlayer::StopWelcomeCam( void )
+{
+	m_bInWelcomeCam = FALSE;
+
+	Spawn();
+	pev->nextthink = -1;
+}
+
 // 
 // PlayerUse - handles USE keypress
 //
@@ -1834,6 +1903,16 @@ void CBasePlayer::PreThink(void)
 	CheckTimeBasedDamage();
 
 	CheckSuitUpdate();
+
+	// Welcome cam buttons handling
+	if (m_bInWelcomeCam)
+	{
+		if (m_afButtonPressed & IN_ATTACK)
+		{
+			StopWelcomeCam();
+		}
+		return;
+	}
 
 	// Observer Button Handling
 	if ( IsObserver() )
@@ -2525,7 +2604,7 @@ void CBasePlayer::PostThink()
 	if ( g_fGameOver )
 		goto pt_end;         // intermission or finale
 
-	if (!IsAlive())
+	if (!IsAlive() || m_bInWelcomeCam)
 		goto pt_end;
 
 	// Handle Tank controlling

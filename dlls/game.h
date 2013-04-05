@@ -41,6 +41,7 @@ extern cvar_t	teamoverride;
 extern cvar_t	defaultteam;
 extern cvar_t	allowmonsters;
 extern cvar_t	mp_notify_player_status;
+extern cvar_t	mp_welcomecam;
 
 // Engine Cvars
 extern cvar_t	*g_psv_gravity;
