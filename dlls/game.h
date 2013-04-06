@@ -20,7 +20,6 @@ extern void GameDLLInit( void );
 
 
 extern cvar_t	displaysoundlist;
-extern cvar_t	allow_spectators;
 
 // multiplayer server rules
 extern cvar_t	teamplay;

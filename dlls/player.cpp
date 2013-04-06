@@ -1165,7 +1165,7 @@ void CBasePlayer::WaterMove()
 {
 	int air;
 
-	if (pev->movetype == MOVETYPE_NOCLIP || pev->iuser1 != OBS_NONE)
+	if (pev->movetype == MOVETYPE_NOCLIP)
 		return;
 
 	if (pev->health < 0)
@@ -1351,10 +1351,6 @@ void CBasePlayer::PlayerDeathThink(void)
 		StartDeathCam();
 	}
 
-	// return if player is spectating
-	if (pev->iuser1)
-		return;
-
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	if (!fAnyButtonDown 
 		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.value > 0 && (gpGlobals->time > (m_fDeadTime + 5))) )
@@ -1404,8 +1400,7 @@ void CBasePlayer::StartDeathCam( void )
 		}
 
 		CopyToBodyQue( pev );
-		UTIL_SetOrigin( pev, pSpot->v.origin );
-		pev->angles = pev->v_angle = pSpot->v.v_angle;
+		StartObserver( pSpot->v.origin, pSpot->v.v_angle );
 	}
 	else
 	{
@@ -1413,17 +1408,23 @@ void CBasePlayer::StartDeathCam( void )
 		TraceResult tr;
 		CopyToBodyQue( pev );
 		UTIL_TraceLine( pev->origin, pev->origin + Vector( 0, 0, 128 ), ignore_monsters, edict(), &tr );
-		UTIL_SetOrigin( pev, tr.vecEndPos );
-		pev->angles = pev->v_angle = UTIL_VecToAngles( tr.vecEndPos - pev->origin );
+		StartObserver( tr.vecEndPos, UTIL_VecToAngles( tr.vecEndPos - pev->origin  ) );
+		return;
 	}
+}
 
+void CBasePlayer::StartObserver( Vector vecPosition, Vector vecViewAngle )
+{
 	m_afPhysicsFlags |= PFLAG_OBSERVER;
+
 	pev->view_ofs = g_vecZero;
+	pev->angles = pev->v_angle = vecViewAngle;
 	pev->fixangle = TRUE;
 	pev->solid = SOLID_NOT;
 	pev->takedamage = DAMAGE_NO;
 	pev->movetype = MOVETYPE_NONE;
 	pev->modelindex = 0;
+	UTIL_SetOrigin( pev, vecPosition );
 }
 
 void CBasePlayer::StartWelcomeCam( void )
@@ -1884,16 +1885,6 @@ void CBasePlayer::PreThink(void)
 	CheckTimeBasedDamage();
 
 	CheckSuitUpdate();
-
-	// Observer Button Handling
-	if ( IsObserver() )
-	{
-		Observer_HandleButtons();
-		Observer_CheckTarget();
-		Observer_CheckProperties();
-		pev->impulse = 0;
-		return;
-	}
 
 	// Welcome cam buttons handling
 	if (m_bInWelcomeCam)
@@ -4015,7 +4006,6 @@ void CBasePlayer :: UpdateClientData( void )
 
 			g_pGameRules->InitHUD( this );
 			m_fGameHUDInitialized = TRUE;
-			m_iObserverMode = OBS_ROAMING;
 			if ( g_pGameRules->IsMultiplayer() )
 			{
 				FireTargets( "game_playerjoin", this, this, USE_TOGGLE, 0 );

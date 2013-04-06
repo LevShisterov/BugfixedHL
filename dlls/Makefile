@@ -101,7 +101,6 @@ OBJ = \
 	$(DLL_OBJDIR)/mp5.o \
 	$(DLL_OBJDIR)/mpstubb.o \
 	$(DLL_OBJDIR)/multiplay_gamerules.o \
-	$(DLL_OBJDIR)/observer.o \
 	$(DLL_OBJDIR)/pathcorner.o \
 	$(DLL_OBJDIR)/plane.o \
 	$(DLL_OBJDIR)/plats.o \

@@ -507,39 +507,12 @@ void ClientCommand( edict_t *pEntity )
 	{
 		GetClassPtr((CBasePlayer *)pev)->SelectLastItem();
 	}
-	else if (FStrEq(pcmd, "spectate"))
+	else if ( FStrEq( pcmd, "spectate" ) && (pev->flags & FL_PROXY) )	// added for proxy support
 	{
-		if ((pev->flags & FL_PROXY) || allow_spectators.value != 0.0)
-		{
-			CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
+		CBasePlayer * pPlayer = GetClassPtr((CBasePlayer *)pev);
 
-			edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
-			pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles);
-
-			// notify other clients of player switched to spectators
-			UTIL_ClientPrintAll( HUD_PRINTNOTIFY, UTIL_VarArgs( "%s switched to spectator mode\n", 
-				( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
-		}
-		else
-		{
-			ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Spectator mode is disabled.\n" ) );
-		}
-	}
-	else if (FStrEq(pcmd, "specmode"))
-	{
-		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		if (pPlayer->pev->iuser1)
-		{
-			pPlayer->Observer_SetMode(atoi(CMD_ARGV(1)));
-		}
-	}
-	else if (FStrEq(pcmd, "follownext"))
-	{
-		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
-		if (pPlayer->pev->iuser1)
-		{
-			pPlayer->Observer_FindNextPlayer(atoi(CMD_ARGV(1)) != 0);
-		}
+		edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
+		pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles);
 	}
 	else if ( g_pGameRules->ClientCommand( GetClassPtr((CBasePlayer *)pev), pcmd ) )
 	{
@@ -556,7 +529,7 @@ void ClientCommand( edict_t *pEntity )
 		command[127] = '\0';
 
 		// tell the user they entered an unknown command
-		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
+		ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 	}
 }
 
@@ -1610,49 +1583,34 @@ engine sets cd to 0 before calling.
 */
 void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd )
 {
-	entvars_t *pev = (entvars_t *)&ent->v;
+	cd->flags			= ent->v.flags;
+	cd->health			= ent->v.health;
 
-	if (pev->iuser1 == OBS_IN_EYE)
-	{
-		CBasePlayer *pl = ( CBasePlayer *) CBasePlayer::Instance( pev );
-		if (pl && pl->m_hObserverTarget)
-		{
-			pev = &(pl->m_hObserverTarget->edict()->v);
-		}
-	}
+	cd->viewmodel		= MODEL_INDEX( STRING( ent->v.viewmodel ) );
 
-	cd->flags			= pev->flags;
-	cd->health			= pev->health;
-
-	cd->viewmodel		= MODEL_INDEX( STRING( pev->viewmodel ) );
-
-	cd->waterlevel		= pev->waterlevel;
-	cd->watertype		= pev->watertype;
-	cd->weapons			= pev->weapons;
+	cd->waterlevel		= ent->v.waterlevel;
+	cd->watertype		= ent->v.watertype;
+	cd->weapons			= ent->v.weapons;
 
 	// Vectors
-	cd->origin			= pev->origin;
-	cd->velocity		= pev->velocity;
-	cd->view_ofs		= pev->view_ofs;
-	cd->punchangle		= pev->punchangle;
+	cd->origin			= ent->v.origin;
+	cd->velocity		= ent->v.velocity;
+	cd->view_ofs		= ent->v.view_ofs;
+	cd->punchangle		= ent->v.punchangle;
 
-	cd->bInDuck			= pev->bInDuck;
-	cd->flTimeStepSound = pev->flTimeStepSound;
-	cd->flDuckTime		= pev->flDuckTime;
-	cd->flSwimTime		= pev->flSwimTime;
-	cd->waterjumptime	= pev->teleport_time;
+	cd->bInDuck			= ent->v.bInDuck;
+	cd->flTimeStepSound = ent->v.flTimeStepSound;
+	cd->flDuckTime		= ent->v.flDuckTime;
+	cd->flSwimTime		= ent->v.flSwimTime;
+	cd->waterjumptime	= ent->v.teleport_time;
 
 	strcpy( cd->physinfo, ENGINE_GETPHYSINFO( ent ) );
 
-	cd->maxspeed		= pev->maxspeed;
-	cd->fov				= pev->fov;
-	cd->weaponanim		= pev->weaponanim;
+	cd->maxspeed		= ent->v.maxspeed;
+	cd->fov				= ent->v.fov;
+	cd->weaponanim		= ent->v.weaponanim;
 
-	cd->pushmsec		= pev->pushmsec;
-
-	// Observer
-	cd->iuser1		= ent->v.iuser1;
-	cd->iuser2		= ent->v.iuser2;
+	cd->pushmsec		= ent->v.pushmsec;
 
 #if defined( CLIENT_WEAPONS )
 	if ( sendweapons )

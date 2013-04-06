@@ -1476,10 +1476,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\observer.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\pathcorner.cpp"
 				>
 				<FileConfiguration
