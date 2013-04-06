@@ -934,8 +934,8 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 	// Tell Ammo Hud that the player is dead
 	MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
 		WRITE_BYTE(0);
-		WRITE_BYTE(0XFF);
-		WRITE_BYTE(0xFF);
+		WRITE_BYTE(0);
+		WRITE_BYTE(0);
 	MESSAGE_END();
 
 	// reset FOV
@@ -1507,6 +1507,14 @@ void CBasePlayer::StartWelcomeCam( void )
 		pev->angles.x = pev->v_angle.x = 30;
 	}
 
+	// Remove crosshair
+	MESSAGE_BEGIN(MSG_ONE, gmsgCurWeapon, NULL, pev);
+		WRITE_BYTE(0);
+		WRITE_BYTE(0);
+		WRITE_BYTE(0);
+	MESSAGE_END();
+
+	m_iHideHUD = HIDEHUD_WEAPONS | HIDEHUD_HEALTH;
 	m_afPhysicsFlags |= PFLAG_OBSERVER;
 	pev->view_ofs = g_vecZero;
 	pev->fixangle = TRUE;
@@ -1514,6 +1522,7 @@ void CBasePlayer::StartWelcomeCam( void )
 	pev->takedamage = DAMAGE_NO;
 	pev->movetype = MOVETYPE_NOCLIP;	// HACK HACK: Player fall down with MOVETYPE_NONE
 	pev->health = 1;					// Let player stay vertically, not lie on a side
+	pev->deadflag = DEAD_RESPAWNABLE;
 	pev->effects = EF_NODRAW;			// Hide model. This is used instead of pev->modelindex = 0
 }
 
