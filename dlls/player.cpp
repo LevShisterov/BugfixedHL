@@ -1423,7 +1423,18 @@ void CBasePlayer::StartDeathCam( void )
 		}
 
 		UTIL_SetOrigin( pev, pSpot->v.origin );
-		pev->angles = pev->v_angle = pSpot->v.v_angle;
+		// Find target for intermission
+		edict_t *pTarget = FIND_ENTITY_BY_TARGETNAME( NULL, STRING(pSpot->v.target) );
+		if (pTarget && !FNullEnt(pTarget))
+		{
+			// Calculate angles to look at camera target
+			pev->angles = UTIL_VecToAngles( pTarget->v.origin - pSpot->v.origin );
+			pev->angles.x = -pev->angles.x;
+		}
+		else
+		{
+			pev->angles = pSpot->v.v_angle;
+		}
 	}
 	else
 	{
