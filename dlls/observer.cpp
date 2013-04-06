@@ -57,8 +57,8 @@ void CBasePlayer::StartObserver( void )
 	// Tell Ammo Hud that the player is dead
 	MESSAGE_BEGIN(MSG_ONE, gmsgCurWeapon, NULL, pev);
 		WRITE_BYTE(0);
-		WRITE_BYTE(0xFF);
-		WRITE_BYTE(0xFF);
+		WRITE_BYTE(0);
+		WRITE_BYTE(0);
 	MESSAGE_END();
 
 	// reset FOV
