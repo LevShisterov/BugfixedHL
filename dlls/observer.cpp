@@ -87,6 +87,9 @@ void CBasePlayer::StartObserver( void )
 	// Clear out the status bar
 	m_fInitHUD = TRUE;
 
+	// Clear welcome cam status
+	m_bInWelcomeCam = FALSE;
+
 	// Move player to same view position he had on entering spectator
 	UTIL_SetOrigin(pev, pev->origin + view_ofs);
 

@@ -1915,16 +1915,6 @@ void CBasePlayer::PreThink(void)
 
 	CheckSuitUpdate();
 
-	// Welcome cam buttons handling
-	if (m_bInWelcomeCam)
-	{
-		if (m_afButtonPressed & IN_ATTACK)
-		{
-			StopWelcomeCam();
-		}
-		return;
-	}
-
 	// Observer Button Handling
 	if ( IsObserver() )
 	{
@@ -1932,6 +1922,16 @@ void CBasePlayer::PreThink(void)
 		Observer_CheckTarget();
 
 		pev->impulse = 0;
+		return;
+	}
+
+	// Welcome cam buttons handling
+	if (m_bInWelcomeCam)
+	{
+		if (m_afButtonPressed & IN_ATTACK)
+		{
+			StopWelcomeCam();
+		}
 		return;
 	}
 
