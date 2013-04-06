@@ -27,11 +27,11 @@
 	fi
 
 	# Get revision and modification status from local SVN copy
-	revision=$(svnversion -n ../ | sed -e 's/\([0-9]\+:\)\?\([0-9]\+\).*/\2/')
+	revision=$(svnversion -c -n ../ | sed -e 's/\([0-9]\+:\)\?\([0-9]\+\).*/\2/')
 	if [ $? -ne 0 -o "$revision" = "" ]; then
 		revision=0
 	fi
-	modifications=$(svnversion -n ../ | sed -e 's/\([0-9]\+:\)\?[0-9]\+.*\(M\).*/\2/')
+	modifications=$(svnversion -c -n ../ | sed -e 's/\([0-9]\+:\)\?[0-9]\+.*\(M\).*/\2/')
 	if [ $? -eq 0 -a "$modifications" = "M" ]; then
 		modifications='"'modified'"'
 	else
