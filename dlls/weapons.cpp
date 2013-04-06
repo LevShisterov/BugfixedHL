@@ -831,6 +831,21 @@ int CBasePlayerWeapon::UpdateClientData( CBasePlayer *pPlayer )
 
 	if ( bSend )
 	{
+		// Send this player's current weapon to all his spectators
+		CBasePlayer *plr;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+			if ( !plr || !plr->IsObserver() || plr->m_hObserverTarget != pPlayer )
+				continue;
+
+			MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, plr->pev );
+				WRITE_BYTE( state );
+				WRITE_BYTE( m_iId );
+				WRITE_BYTE( m_iClip );
+			MESSAGE_END();
+		}
+
 		MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pPlayer->pev );
 			WRITE_BYTE( state );
 			WRITE_BYTE( m_iId );

@@ -44,7 +44,6 @@ extern DLL_GLOBAL BOOL		g_fGameOver;
 extern DLL_GLOBAL int		g_iSkillLevel;
 extern DLL_GLOBAL ULONG		g_ulFrameCount;
 
-extern void CopyToBodyQue(entvars_t* pev);
 extern int giPrecacheGrunt;
 extern int gmsgSayText;
 
@@ -77,7 +76,7 @@ called when a player connects to a server
 ============
 */
 BOOL ClientConnect( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ]  )
-{	
+{
 	return g_pGameRules->ClientConnected( pEntity, pszName, pszAddress, szRejectReason );
 
 // a client connecting during an intermission can cause problems
@@ -126,26 +125,6 @@ void ClientDisconnect( edict_t *pEntity )
 }
 
 
-// called by ClientKill and DeadThink
-void respawn(entvars_t* pev, BOOL fCopyCorpse)
-{
-	if (gpGlobals->coop || gpGlobals->deathmatch)
-	{
-		if ( fCopyCorpse )
-		{
-			// make a copy of the dead body for appearances sake
-			CopyToBodyQue(pev);
-		}
-
-		// respawn player
-		GetClassPtr( (CBasePlayer *)pev)->Spawn( );
-	}
-	else
-	{       // restart the entire server
-		SERVER_COMMAND("reload\n");
-	}
-}
-
 /*
 ============
 ClientKill
@@ -190,10 +169,6 @@ void ClientKill( edict_t *pEntity )
 	// have the player kill themself
 	pev->health = 0;
 	pl->Killed( pev, GIB_NEVER );
-
-//	pev->modelindex = g_ulModelIndexPlayer;
-//	pev->frags -= 2;		// extra penalty
-//	respawn( pev );
 }
 
 /*
@@ -507,12 +482,101 @@ void ClientCommand( edict_t *pEntity )
 	{
 		GetClassPtr((CBasePlayer *)pev)->SelectLastItem();
 	}
-	else if ( FStrEq( pcmd, "spectate" ) && (pev->flags & FL_PROXY) )	// added for proxy support
+	else if (FStrEq(pcmd, "spectate"))
 	{
-		CBasePlayer * pPlayer = GetClassPtr((CBasePlayer *)pev);
+		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
+		// Block too offten spectator command usage
+		if (pPlayer->m_flNextSpectatorCommand < gpGlobals->time)
+		{
+			pPlayer->m_flNextSpectatorCommand = gpGlobals->time + (spectator_cmd_delay.value < 1.0 ? 1.0 : spectator_cmd_delay.value);
+			if (!pPlayer->IsObserver())
+			{
+				if ((pev->flags & FL_PROXY) || allow_spectators.value != 0.0)
+				{
+					pPlayer->StartObserver();
 
-		edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
-		pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles);
+					if (((int)mp_notify_player_status.value & 4) == 4)
+					{
+						// notify other clients of player switched to spectators
+						UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s switched to spectator mode\n", 
+							( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+	}
+
+					// team match?
+					if ( g_teamplay )
+					{
+						UTIL_LogPrintf( "\"%s<%i><%s><%s>\" switched to spectator mode\n",
+							STRING( pPlayer->pev->netname ),
+							GETPLAYERUSERID( pPlayer->edict() ),
+							GETPLAYERAUTHID( pPlayer->edict() ),
+							g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
+					}
+					else
+					{
+						UTIL_LogPrintf( "\"%s<%i><%s><%i>\" switched to spectator mode\n",
+							STRING( pPlayer->pev->netname ),
+							GETPLAYERUSERID( pPlayer->edict() ),
+							GETPLAYERAUTHID( pPlayer->edict() ),
+							GETPLAYERUSERID( pPlayer->edict() ) );
+					}
+				}
+				else
+				{
+					ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Spectator mode is disabled.\n" ) );
+				}
+			}
+			else
+			{
+				pPlayer->StopObserver();
+
+				if (((int)mp_notify_player_status.value & 4) == 4)
+				{
+					// notify other clients of player left spectators
+					UTIL_ClientPrintAll( HUD_PRINTTALK, UTIL_VarArgs( "* %s has left spectator mode\n", 
+						( pPlayer->pev->netname && STRING(pPlayer->pev->netname)[0] != 0 ) ? STRING(pPlayer->pev->netname) : "unconnected" ) );
+				}
+
+				// team match?
+				if ( g_teamplay )
+				{
+					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" has left spectator mode\n",
+						STRING( pPlayer->pev->netname ),
+						GETPLAYERUSERID( pPlayer->edict() ),
+						GETPLAYERAUTHID( pPlayer->edict() ),
+						g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), "model" ) );
+				}
+				else
+				{
+					UTIL_LogPrintf( "\"%s<%i><%s><%i>\" has left spectator mode\n",
+						STRING( pPlayer->pev->netname ),
+						GETPLAYERUSERID( pPlayer->edict() ),
+						GETPLAYERAUTHID( pPlayer->edict() ),
+						GETPLAYERUSERID( pPlayer->edict() ) );
+				}
+			}
+		}
+	}
+	else if (FStrEq(pcmd, "specmode"))
+	{
+		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
+		if (pPlayer->IsObserver())
+		{
+			pPlayer->Observer_SetMode(atoi(CMD_ARGV(1)));
+		}
+	}
+	else if (FStrEq(pcmd, "follownext"))
+	{
+		// No switching of view point in Free Overview
+		if (pev->iuser1 == OBS_MAP_FREE)
+			return;
+		CBasePlayer* pPlayer = GetClassPtr((CBasePlayer *)pev);
+		if (pPlayer->IsObserver())
+		{
+			if (pev->iuser1 == OBS_ROAMING)
+				pPlayer->Observer_FindNextSpot(atoi(CMD_ARGV(1)) != 0);
+			else
+				pPlayer->Observer_FindNextPlayer(atoi(CMD_ARGV(1)) != 0, false);
+		}
 	}
 	else if ( g_pGameRules->ClientCommand( GetClassPtr((CBasePlayer *)pev), pcmd ) )
 	{
@@ -529,7 +593,7 @@ void ClientCommand( edict_t *pEntity )
 		command[127] = '\0';
 
 		// tell the user they entered an unknown command
-		ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 	}
 }
 
@@ -985,6 +1049,14 @@ void SetupVisibility( edict_t *pViewEntity, edict_t *pClient, unsigned char **pv
 		pView = pViewEntity;
 	}
 
+	// Observers use the visibility of their target
+	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
+	if ( pPlayer->pev->iuser1 == OBS_IN_EYE && pPlayer->pev->iuser2 != 0 && pPlayer->m_hObserverTarget != NULL )
+	{
+		ASSERT( pPlayer->pev->iuser2 == ENTINDEX(pPlayer->m_hObserverTarget->edict()));
+		pView = pPlayer->m_hObserverTarget->edict();
+	}
+
 	if ( pClient->v.flags & FL_PROXY )
 	{
 		*pvs = NULL;	// the spectator proxy sees
@@ -1155,6 +1227,12 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 	if ( ent->v.aiment )
 	{
 		state->aiment = ENTINDEX( ent->v.aiment );
+		// Change ent for egon beam for spectators to look like it goes from the client weapon if in first person mode
+		if (state->entityType == ENTITY_BEAM && host->v.iuser1 == OBS_IN_EYE && host->v.iuser2 == state->aiment)
+		{
+			state->aiment = ENTINDEX( host );
+			state->skin = (state->aiment & 0x0FFF) | (state->skin & 0xF000);
+	}
 	}
 
 	state->owner = 0;
@@ -1165,7 +1243,7 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		// Only care if owned by a player
 		if ( owner >= 1 && owner <= gpGlobals->maxClients )
 		{
-			state->owner = owner;	
+			state->owner = owner;
 		}
 	}
 
@@ -1187,8 +1265,10 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		state->friction     = ent->v.friction;
 
 		state->gravity      = ent->v.gravity;
-//		state->team			= ent->v.team;
-//		
+
+		if (ent->v.iuser1)
+			state->team		= -1;	// Set team if player is spectator. This will enable "Cancel" button in team menu.
+
 		state->usehull      = ( ent->v.flags & FL_DUCKING ) ? 1 : 0;
 		state->health		= ent->v.health;
 	}
@@ -1583,34 +1663,49 @@ engine sets cd to 0 before calling.
 */
 void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd )
 {
-	cd->flags			= ent->v.flags;
-	cd->health			= ent->v.health;
+	entvars_t *pev = (entvars_t *)&ent->v;
 
-	cd->viewmodel		= MODEL_INDEX( STRING( ent->v.viewmodel ) );
+	if (pev->iuser1 == OBS_IN_EYE)
+	{
+		CBasePlayer *pl = ( CBasePlayer *) CBasePlayer::Instance( pev );
+		if (pl && pl->m_hObserverTarget)
+		{
+			pev = &(pl->m_hObserverTarget->edict()->v);
+		}
+	}
 
-	cd->waterlevel		= ent->v.waterlevel;
-	cd->watertype		= ent->v.watertype;
-	cd->weapons			= ent->v.weapons;
+	cd->flags			= pev->flags;
+	cd->health			= pev->health;
+
+	cd->viewmodel		= MODEL_INDEX( STRING( pev->viewmodel ) );
+
+	cd->waterlevel		= pev->waterlevel;
+	cd->watertype		= pev->watertype;
+	cd->weapons			= pev->weapons;
 
 	// Vectors
-	cd->origin			= ent->v.origin;
-	cd->velocity		= ent->v.velocity;
-	cd->view_ofs		= ent->v.view_ofs;
-	cd->punchangle		= ent->v.punchangle;
+	cd->origin			= pev->origin;
+	cd->velocity		= pev->velocity;
+	cd->view_ofs		= pev->view_ofs;
+	cd->punchangle		= pev->punchangle;
 
-	cd->bInDuck			= ent->v.bInDuck;
-	cd->flTimeStepSound = ent->v.flTimeStepSound;
-	cd->flDuckTime		= ent->v.flDuckTime;
-	cd->flSwimTime		= ent->v.flSwimTime;
-	cd->waterjumptime	= ent->v.teleport_time;
+	cd->bInDuck			= pev->bInDuck;
+	cd->flTimeStepSound = pev->flTimeStepSound;
+	cd->flDuckTime		= pev->flDuckTime;
+	cd->flSwimTime		= pev->flSwimTime;
+	cd->waterjumptime	= pev->teleport_time;
 
 	strcpy( cd->physinfo, ENGINE_GETPHYSINFO( ent ) );
 
-	cd->maxspeed		= ent->v.maxspeed;
-	cd->fov				= ent->v.fov;
-	cd->weaponanim		= ent->v.weaponanim;
+	cd->maxspeed		= pev->maxspeed;
+	cd->fov				= pev->fov;
+	cd->weaponanim		= pev->weaponanim;
 
-	cd->pushmsec		= ent->v.pushmsec;
+	cd->pushmsec		= pev->pushmsec;
+
+	// Observer
+	cd->iuser1		= ent->v.iuser1;
+	cd->iuser2		= ent->v.iuser2;
 
 #if defined( CLIENT_WEAPONS )
 	if ( sendweapons )

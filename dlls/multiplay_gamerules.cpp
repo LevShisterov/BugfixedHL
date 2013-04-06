@@ -427,16 +427,30 @@ BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszNam
 
 extern int gmsgSayText;
 extern int gmsgGameMode;
+extern int gmsgTeamInfo;
+extern int gmsgTeamNames;
+extern int gmsgSpectator;
+extern int gmsgAllowSpec;
 
 void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
 	MESSAGE_BEGIN( MSG_ONE, gmsgGameMode, NULL, pPlayer->edict() );
+	// There is plugin (su-27) for scoreboard manipulation under AMXX, it should receive 0 for correct behaviour
+	// So in any case (AMXX installed and have or not su-27) we should send 0 down
+	if (g_amxmodx_version)
 		WRITE_BYTE( 0 );  // game mode none
+	else
+		WRITE_BYTE( 1 );  // game mode teamplay
 	MESSAGE_END();
 }
 
 void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 {
+	// Send allow_spectators status
+	MESSAGE_BEGIN( MSG_ONE, gmsgAllowSpec, NULL, pl->edict() );
+		WRITE_BYTE( allow_spectators.value );
+	MESSAGE_END();
+
 	// notify other clients of player joining the game
 	if (((int)mp_notify_player_status.value & 2) == 2)
 	{
@@ -473,12 +487,30 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
-		WRITE_SHORT( 0 );
+		WRITE_SHORT( GetTeamIndex( pl->m_szTeamName ) + 1 );
+	MESSAGE_END();
+
+	if (!g_teamplay)
+	{
+		// Send this player team info to all
+		MESSAGE_BEGIN( MSG_ALL, gmsgTeamInfo );
+			WRITE_BYTE( pl->entindex() );
+		if (g_amxmodx_version)
+			WRITE_STRING( pl->pev->iuser1 ? "" : pl->TeamID() );
+		else
+			WRITE_STRING( pl->pev->iuser1 ? "" : "Players" );
+		MESSAGE_END();
+	}
+
+	// Send player spectator status (it is not used in client dll)
+	MESSAGE_BEGIN( MSG_ALL, gmsgSpectator );  
+		WRITE_BYTE( pl->entindex() );
+		WRITE_BYTE( pl->IsObserver() );
 	MESSAGE_END();
 
 	SendMOTDToClient( pl->edict() );
 
-	// loop through all active players and send their score info to the new client
+	// loop through all active players and send their score and team info to the new client
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		// FIXME:  Probably don't need to cast this just to read m_iDeaths
@@ -493,7 +525,18 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 				WRITE_SHORT( 0 );
 				WRITE_SHORT( GetTeamIndex( plr->m_szTeamName ) + 1 );
 			MESSAGE_END();
+
+			if (!g_teamplay)
+			{
+				MESSAGE_BEGIN( MSG_ONE, gmsgTeamInfo, NULL, pl->edict() );
+					WRITE_BYTE( plr->entindex() );
+				if (g_amxmodx_version)
+					WRITE_STRING( plr->pev->iuser1 ? "" : plr->TeamID() );
+				else
+					WRITE_STRING( plr->pev->iuser1 ? "" : "Players" );
+				MESSAGE_END();
 		}
+	}
 	}
 
 	if ( g_fGameOver )
@@ -549,6 +592,12 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 	}
 
 	pPlayer->RemoveAllItems( TRUE );// destroy all of the players weapons and items
+
+	// Tell all clients this player isn't a spectator anymore
+	MESSAGE_BEGIN( MSG_ALL, gmsgSpectator );  
+		WRITE_BYTE( ENTINDEX(pClient) );
+		WRITE_BYTE( 0 );
+	MESSAGE_END();
 }
 
 //=========================================================
@@ -713,7 +762,7 @@ void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKille
 			WRITE_SHORT( PK->pev->frags );
 			WRITE_SHORT( PK->m_iDeaths );
 			WRITE_SHORT( 0 );
-			WRITE_SHORT( GetTeamIndex( PK->m_szTeamName) + 1 );
+			WRITE_SHORT( GetTeamIndex( PK->m_szTeamName ) + 1 );
 		MESSAGE_END();
 
 		// let the killer paint another decal as soon as he'd like.
@@ -1154,7 +1203,11 @@ edict_t *CHalfLifeMultiplay::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 //=========================================================
 int CHalfLifeMultiplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
-	// half life deathmatch has only enemies
+	if ( !pPlayer || !pTarget || !pPlayer->IsPlayer() || !pTarget->IsPlayer() )
+	return GR_NOTTEAMMATE;
+	if (((CBasePlayer*)pPlayer)->IsObserver() && ((CBasePlayer*)pTarget)->IsObserver())
+		return GR_TEAMMATE;
+	// half life deathmatch has only enemies and spectators
 	return GR_NOTTEAMMATE;
 }
 

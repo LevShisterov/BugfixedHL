@@ -123,8 +123,8 @@ public:
 	void SetStartEntity( int entityIndex );
 	void SetEndEntity( int entityIndex );
 
-	inline void SetStartAttachment( int attachment ) { pev->sequence = (pev->sequence & 0x0FFF) | ((attachment&0xF)<<12); }
-	inline void SetEndAttachment( int attachment ) { pev->skin = (pev->skin & 0x0FFF) | ((attachment&0xF)<<12); }
+	inline void SetStartAttachment( int attachment ) { pev->sequence = (pev->sequence & 0x0FFF) | ((attachment & 0xF) << 12); }
+	inline void SetEndAttachment( int attachment ) { pev->skin = (pev->skin & 0x0FFF) | ((attachment & 0xF) << 12); }
 
 	inline void SetTexture( int spriteIndex ) { pev->modelindex = spriteIndex; }
 	inline void SetWidth( int width ) { pev->scale = width; }

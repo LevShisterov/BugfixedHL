@@ -21,6 +21,10 @@ extern void GameDLLInit( void );
 
 extern cvar_t	displaysoundlist;
 
+// Spectator settings
+extern cvar_t	allow_spectators;
+extern cvar_t	spectator_cmd_delay;
+
 // multiplayer server rules
 extern cvar_t	teamplay;
 extern cvar_t	fraglimit;
@@ -43,5 +47,8 @@ extern cvar_t	mp_welcomecam;
 extern cvar_t	*g_psv_gravity;
 extern cvar_t	*g_psv_aim;
 extern cvar_t	*g_footsteps;
+
+// AMXX
+extern cvar_t	*g_amxmodx_version;
 
 #endif		// GAME_H

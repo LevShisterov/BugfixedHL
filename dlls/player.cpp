@@ -48,7 +48,6 @@ extern DLL_GLOBAL int		g_iSkillLevel, gDisplayTitle;
 BOOL gInitHUD = TRUE;
 
 extern void CopyToBodyQue(entvars_t* pev);
-extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 extern Vector VecBModelOrigin(entvars_t *pevBModel );
 extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 
@@ -187,6 +186,9 @@ int gmsgTeamNames = 0;
 int gmsgStatusText = 0;
 int gmsgStatusValue = 0;
 
+int gmsgSpectator = 0;
+int gmsgAllowSpec = 0;
+
 int gmsgViewMode = 0;
 int gmsgVGUIMenu = 0;
 int gmsgStatusIcon = 0;
@@ -200,6 +202,7 @@ const char* const gCustomMessages[]  = {
 	"IconInfo",
 	NULL
 };
+
 
 void LinkUserMessages( void )
 {
@@ -246,6 +249,8 @@ void LinkUserMessages( void )
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3); 
 
+	gmsgSpectator = REG_USER_MSG( "Spectator", 2 );	// sends observer status on entering and exiting observer mode (it is not used in client dll)
+	gmsgAllowSpec = REG_USER_MSG( "AllowSpec", 1 );	// sends allow_spectators value (this will enable Spectate command button in Team select panel)
 	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
 	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);		// Opens team selection menu with map briefing
 	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);	// Displays specified status icon sprite in hud
@@ -1165,7 +1170,7 @@ void CBasePlayer::WaterMove()
 {
 	int air;
 
-	if (pev->movetype == MOVETYPE_NOCLIP)
+	if (pev->movetype == MOVETYPE_NOCLIP || pev->iuser1 != OBS_NONE)
 		return;
 
 	if (pev->health < 0)
@@ -1351,6 +1356,10 @@ void CBasePlayer::PlayerDeathThink(void)
 		StartDeathCam();
 	}
 
+	// return if player is spectating
+	if (pev->iuser1)
+		return;
+
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	if (!fAnyButtonDown 
 		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.value > 0 && (gpGlobals->time > (m_fDeadTime + 5))) )
@@ -1360,8 +1369,20 @@ void CBasePlayer::PlayerDeathThink(void)
 	m_flDeathAnimationStartTime = 0;
 
 	//ALERT(at_console, "Respawn\n");
-
-	respawn(pev, !(m_afPhysicsFlags & PFLAG_OBSERVER) );// don't copy a corpse if we're in deathcam.
+	if (gpGlobals->coop || gpGlobals->deathmatch)
+	{
+		if (!(m_afPhysicsFlags & PFLAG_OBSERVER))	// don't copy a corpse if we're in deathcam.
+		{
+			// make a copy of the dead body for appearances sake
+			CopyToBodyQue(pev);
+		}
+		// respawn player
+		GetClassPtr( (CBasePlayer *)pev)->Spawn();
+	}
+	else
+	{	// restart the entire server
+		SERVER_COMMAND("reload\n");
+	}
 	pev->nextthink = -1;
 }
 
@@ -1374,14 +1395,15 @@ void CBasePlayer::StartDeathCam( void )
 	edict_t *pSpot, *pNewSpot;
 	int iRand;
 
-	if ( pev->view_ofs == g_vecZero )
+	if ( m_afPhysicsFlags & PFLAG_OBSERVER )
 	{
 		// don't accept subsequent attempts to StartDeathCam()
 		return;
 	}
 
-	pSpot = FIND_ENTITY_BY_CLASSNAME( NULL, "info_intermission");	
+	CopyToBodyQue( pev );
 
+	pSpot = FIND_ENTITY_BY_CLASSNAME( NULL, "info_intermission");
 	if ( !FNullEnt( pSpot ) )
 	{
 		// at least one intermission spot in the world.
@@ -1399,32 +1421,38 @@ void CBasePlayer::StartDeathCam( void )
 			iRand--;
 		}
 
-		CopyToBodyQue( pev );
-		StartObserver( pSpot->v.origin, pSpot->v.v_angle );
+		UTIL_SetOrigin( pev, pSpot->v.origin );
+		// Find target for intermission
+		edict_t *pTarget = FIND_ENTITY_BY_TARGETNAME( NULL, STRING(pSpot->v.target) );
+		if (pTarget && !FNullEnt(pTarget))
+		{
+			// Calculate angles to look at camera target
+			pev->angles = UTIL_VecToAngles( pTarget->v.origin - pSpot->v.origin );
+			pev->angles.x = -pev->angles.x;
+	}
+	else
+	{
+			pev->angles = pSpot->v.v_angle;
+		}
 	}
 	else
 	{
 		// no intermission spot. Push them up in the air, looking down at their corpse
 		TraceResult tr;
-		CopyToBodyQue( pev );
 		UTIL_TraceLine( pev->origin, pev->origin + Vector( 0, 0, 128 ), ignore_monsters, edict(), &tr );
-		StartObserver( tr.vecEndPos, UTIL_VecToAngles( tr.vecEndPos - pev->origin  ) );
-		return;
+		UTIL_SetOrigin( pev, tr.vecEndPos - Vector( 0, 0, 10 ) );
+		pev->angles.x = pev->v_angle.x = 90;
 	}
-}
 
-void CBasePlayer::StartObserver( Vector vecPosition, Vector vecViewAngle )
-{
 	m_afPhysicsFlags |= PFLAG_OBSERVER;
-
 	pev->view_ofs = g_vecZero;
-	pev->angles = pev->v_angle = vecViewAngle;
 	pev->fixangle = TRUE;
 	pev->solid = SOLID_NOT;
 	pev->takedamage = DAMAGE_NO;
-	pev->movetype = MOVETYPE_NONE;
-	pev->modelindex = 0;
-	UTIL_SetOrigin( pev, vecPosition );
+	pev->movetype = MOVETYPE_NOCLIP;	// HACK HACK: Player fall down with MOVETYPE_NONE
+	pev->health = 1;					// Let player stay vertically, not lie on a side
+	pev->effects = EF_NODRAW;			// Hide model. This is used instead of pev->modelindex = 0
+	//pev->modelindex = 0;				// Commented to let view point be moved
 }
 
 void CBasePlayer::StartWelcomeCam( void )
@@ -1885,6 +1913,16 @@ void CBasePlayer::PreThink(void)
 	CheckTimeBasedDamage();
 
 	CheckSuitUpdate();
+
+	// Observer Button Handling
+	if ( IsObserver() )
+	{
+		Observer_HandleButtons();
+		Observer_CheckTarget();
+
+		pev->impulse = 0;
+		return;
+	}
 
 	// Welcome cam buttons handling
 	if (m_bInWelcomeCam)
@@ -2912,6 +2950,22 @@ void CBasePlayer::Spawn( void )
 
 	g_pGameRules->SetDefaultPlayerTeam( this );
 	g_pGameRules->GetPlayerSpawnSpot( this );
+
+	// Move all player spectators to new traget origin (bugfix for pmove/PAS issue)
+	CBasePlayer *plr;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+		if (!plr ||
+			plr->pev->iuser1 == 0 ||
+			plr->pev->iuser1 == OBS_ROAMING ||
+			plr->pev->iuser1 == OBS_MAP_FREE ||
+			plr->pev->iuser2 == 0 ||
+			plr->m_hObserverTarget != this)
+			continue;
+
+		UTIL_SetOrigin(plr->pev, pev->origin);
+	}
 
 	SET_MODEL(ENT(pev), "models/player.mdl");
 	g_ulModelIndexPlayer = pev->modelindex;
@@ -3953,21 +4007,22 @@ int CBasePlayer::GetAmmoIndex(const char *psz)
 
 // Called from UpdateClientData
 // makes sure the client has all the necessary ammo info,  if values have changed
-void CBasePlayer::SendAmmoUpdate(void)
+// If this player is spectating someone target will be in pPlayer
+void CBasePlayer::SendAmmoUpdate(CBasePlayer *pPlayer)
 {
 	for (int i=0; i < MAX_AMMO_SLOTS;i++)
 	{
-		if (m_rgAmmo[i] != m_rgAmmoLast[i])
+		if (this->m_rgAmmoLast[i] != pPlayer->m_rgAmmo[i])
 		{
-			m_rgAmmoLast[i] = m_rgAmmo[i];
+			this->m_rgAmmoLast[i] = pPlayer->m_rgAmmo[i];
 
-			ASSERT( m_rgAmmo[i] >= 0 );
-			ASSERT( m_rgAmmo[i] < 255 );
+			ASSERT( pPlayer->m_rgAmmo[i] >= 0 );
+			ASSERT( pPlayer->m_rgAmmo[i] < 255 );
 
 			// send "Ammo" update message
 			MESSAGE_BEGIN( MSG_ONE, gmsgAmmoX, NULL, pev );
 				WRITE_BYTE( i );
-				WRITE_BYTE( max( min( m_rgAmmo[i], 254 ), 0 ) );  // clamp the value to one byte
+				WRITE_BYTE( max( min( pPlayer->m_rgAmmo[i], 254 ), 0 ) );  // clamp the value to one byte
 			MESSAGE_END();
 		}
 	}
@@ -4006,6 +4061,7 @@ void CBasePlayer :: UpdateClientData( void )
 
 			g_pGameRules->InitHUD( this );
 			m_fGameHUDInitialized = TRUE;
+			m_iObserverMode = OBS_ROAMING;
 			if ( g_pGameRules->IsMultiplayer() )
 			{
 				FireTargets( "game_playerjoin", this, this, USE_TOGGLE, 0 );
@@ -4017,19 +4073,31 @@ void CBasePlayer :: UpdateClientData( void )
 		InitStatusBar();
 	}
 
-	if ( m_iHideHUD != m_iClientHideHUD )
+	CBasePlayer *pPlayer = this;
+	// We will take spectating target player status if we have it
+	if (pev->iuser1 == OBS_IN_EYE && m_hObserverTarget)
 	{
-		MESSAGE_BEGIN( MSG_ONE, gmsgHideWeapon, NULL, pev );
-			WRITE_BYTE( m_iHideHUD );
-		MESSAGE_END();
-
-		m_iClientHideHUD = m_iHideHUD;
+		// This will fix angles, so pain display will show correct direction
+		pev->angles = pev->v_angle = m_hObserverTarget->pev->angles;
+		pev->fixangle = TRUE;
+		pPlayer = (CBasePlayer*)UTIL_PlayerByIndex(ENTINDEX(m_hObserverTarget->edict()));
+		if (!pPlayer)
+			pPlayer = this;
 	}
 
-	if ( m_iFOV != m_iClientFOV )
+	if ( pPlayer->m_iHideHUD != m_iClientHideHUD )
+	{
+		MESSAGE_BEGIN( MSG_ONE, gmsgHideWeapon, NULL, pev );
+			WRITE_BYTE( pPlayer->m_iHideHUD );
+		MESSAGE_END();
+
+		m_iClientHideHUD = pPlayer->m_iHideHUD;
+	}
+
+	if ( pPlayer->m_iFOV != m_iClientFOV )
 	{
 		MESSAGE_BEGIN( MSG_ONE, gmsgSetFOV, NULL, pev );
-			WRITE_BYTE( m_iFOV );
+			WRITE_BYTE( pPlayer->m_iFOV );
 		MESSAGE_END();
 
 		// cache FOV change at end of function, so weapon updates can see that FOV has changed
@@ -4044,28 +4112,28 @@ void CBasePlayer :: UpdateClientData( void )
 		gDisplayTitle = 0;
 	}
 
-	if (pev->health != m_iClientHealth)
+	if (pPlayer->pev->health != m_iClientHealth)
 	{
-		int iHealth = max( pev->health, 0 );  // make sure that no negative health values are sent
+		int iHealth = max( pPlayer->pev->health, 0 );  // make sure that no negative health values are sent
 
 		// send "health" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgHealth, NULL, pev );
 			WRITE_BYTE( iHealth );
 		MESSAGE_END();
 
-		m_iClientHealth = pev->health;
+		m_iClientHealth = pPlayer->pev->health;
 	}
 
 
-	if (pev->armorvalue != m_iClientBattery)
+	if (pPlayer->pev->armorvalue != m_iClientBattery)
 	{
-		m_iClientBattery = pev->armorvalue;
-
 		ASSERT( gmsgBattery > 0 );
-		// send "health" update message
+		// send "armor" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
-			WRITE_SHORT( (int)pev->armorvalue);
+			WRITE_SHORT( (int)pPlayer->pev->armorvalue);
 		MESSAGE_END();
+
+		m_iClientBattery = pPlayer->pev->armorvalue;
 	}
 
 	if (pev->dmg_take || pev->dmg_save || m_bitsHUDDamage != m_bitsDamageType)
@@ -4084,6 +4152,24 @@ void CBasePlayer :: UpdateClientData( void )
 
 		// only send down damage type that have hud art
 		int visibleDamageBits = m_bitsDamageType & DMG_SHOWNHUD;
+
+		// Send this player's damage to all his specators
+		CBasePlayer *plr;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+			if ( !plr || !plr->IsObserver() || plr->m_hObserverTarget != this )
+				continue;
+
+			MESSAGE_BEGIN( MSG_ONE, gmsgDamage, NULL, plr->pev );
+				WRITE_BYTE( pev->dmg_save );
+				WRITE_BYTE( pev->dmg_take );
+				WRITE_LONG( visibleDamageBits );
+				WRITE_COORD( damageOrigin.x );
+				WRITE_COORD( damageOrigin.y );
+				WRITE_COORD( damageOrigin.z );
+			MESSAGE_END();
+		}
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgDamage, NULL, pev );
 			WRITE_BYTE( pev->dmg_save );
@@ -4136,7 +4222,7 @@ void CBasePlayer :: UpdateClientData( void )
 	if (m_iTrain & TRAIN_NEW)
 	{
 		ASSERT( gmsgTrain > 0 );
-		// send "health" update message
+		// send "train" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgTrain, NULL, pev );
 			WRITE_BYTE(m_iTrain & 0xF);
 		MESSAGE_END();
@@ -4156,7 +4242,7 @@ void CBasePlayer :: UpdateClientData( void )
 		//
 		// for each weapon:
 		// byte		name str length (not including null)
-		// bytes... name
+		// bytes	name
 		// byte		Ammo Type
 		// byte		Ammo2 Type
 		// byte		bucket
@@ -4165,9 +4251,7 @@ void CBasePlayer :: UpdateClientData( void )
 		// ????		Icons
 
 		// Send ALL the weapon info now
-		int i;
-
-		for (i = 0; i < MAX_WEAPONS; i++)
+		for (int i = 0; i < MAX_WEAPONS; i++)
 		{
 			ItemInfo& II = CBasePlayerItem::ItemInfoArray[i];
 
@@ -4194,8 +4278,7 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 	}
 
-
-	SendAmmoUpdate();
+	SendAmmoUpdate(pPlayer);
 
 	// Update all the items
 	for ( int i = 0; i < MAX_ITEM_TYPES; i++ )
@@ -4204,9 +4287,55 @@ void CBasePlayer :: UpdateClientData( void )
 			m_rgpPlayerItems[i]->UpdateClientData( this );
 	}
 
-	// Cache and client weapon change
-	m_pClientActiveItem = m_pActiveItem;
-	m_iClientFOV = m_iFOV;
+	if (m_pClientActiveItem != pPlayer->m_pActiveItem)
+	{
+		if (pPlayer->m_pActiveItem == NULL)
+		{
+			// If no weapon, we have to send update here
+			CBasePlayer *plr;
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+				if ( !plr || !plr->IsObserver() || plr->m_hObserverTarget != pPlayer )
+					continue;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, plr->pev );
+					WRITE_BYTE(0);
+					WRITE_BYTE(0);
+					WRITE_BYTE(0);
+				MESSAGE_END();
+			}
+
+			MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pPlayer->pev );
+				WRITE_BYTE(0);
+				WRITE_BYTE(0);
+				WRITE_BYTE(0);
+			MESSAGE_END();
+		}
+		else if (this != pPlayer)
+		{
+			// Special case for spectator
+			CBasePlayerWeapon *gun = (CBasePlayerWeapon *)pPlayer->m_pActiveItem->GetWeaponPtr();
+			if (gun)
+			{
+				int state;
+				if ( pPlayer->m_fOnTarget )
+					state = WEAPON_IS_ONTARGET;
+				else
+					state = 1;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
+					WRITE_BYTE( state );
+					WRITE_BYTE( gun->m_iId );
+					WRITE_BYTE( gun->m_iClip );
+				MESSAGE_END();
+			}
+		}
+	}
+
+	// Cache fov and client weapon change
+	m_pClientActiveItem = pPlayer->m_pActiveItem;
+	m_iClientFOV = pPlayer->m_iFOV;
 
 	// Update Status Bar
 	if ( m_flNextSBarUpdateTime < gpGlobals->time )

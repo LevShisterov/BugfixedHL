@@ -580,6 +580,70 @@ CBaseEntity *UTIL_FindEntityGeneric( const char *szWhatever, Vector &vecSrc, flo
 }
 
 
+// Finds next entity of a given class starting from given entity and looping and 
+// the end starting next from zero towards to given entity. Also can search in reverse direction.
+CBaseEntity *UTIL_FindEntityByClassname( CBaseEntity *pStartEntity, const char *szName, bool bLoop, bool bReverse )
+{
+	if (szName == NULL || *szName == 0)
+		return NULL;
+
+	CBaseEntity *pEntity;
+
+	if (!bReverse)
+	{
+		pEntity = UTIL_FindEntityByClassname(pStartEntity, szName);
+		if (pEntity == NULL && pStartEntity != NULL && bLoop)
+		{
+			pEntity = UTIL_FindEntityByClassname(NULL, szName);
+			if (pEntity == pStartEntity)
+				pEntity = NULL;
+		}
+		return pEntity;
+	}
+
+	// Do reverse search logic
+	edict_t *pEdictFound = NULL;
+	edict_t *pEdictStart = g_engfuncs.pfnPEntityOfEntIndex(0);
+	edict_t *pEdictEnd = pEdictStart + gpGlobals->maxEntities - 1;
+	edict_t *pEdictMiddle = pStartEntity == NULL ? pEdictStart : pStartEntity->edict();
+
+	edict_t *pEdict;
+	// Search from the middle to the start
+	for (pEdict = pEdictMiddle - 1; pEdict >= pEdictStart; pEdict--)
+	{
+		if ( pEdict->free )	// Not in use
+			continue;
+		if (pEdict->v.classname == NULL)
+			continue;
+		const char *name = STRING(pEdict->v.classname);
+		if (strcmp(szName, name))
+			continue;
+		pEdictFound = pEdict;
+		break;
+	}
+	if (!pEdictFound && bLoop)
+	{
+		// Loop: Search from the end to the middle
+		for (pEdict = pEdictEnd; pEdict > pEdictMiddle; pEdict--)
+		{
+			if ( pEdict->free )	// Not in use
+				continue;
+			if (pEdict->v.classname == NULL)
+				continue;
+			const char *name = STRING(pEdict->v.classname);
+			if (strcmp(szName, name))
+				continue;
+			pEdictFound = pEdict;
+			break;
+		}
+	}
+
+	if (!FNullEnt(pEdictFound))
+		return CBaseEntity::Instance(pEdictFound);
+	return NULL;
+}
+
+
 // Returns a CBaseEntity pointer to a player by index.
 // Only returns if the player is connected and was spawned, otherwise returns NULL.
 // Index is 1 based.

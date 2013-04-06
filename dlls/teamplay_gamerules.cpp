@@ -191,7 +191,7 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 	CHalfLifeMultiplay::InitHUD( pPlayer );
 
 	// Send down the team names
-	MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pPlayer->edict() );  
+	MESSAGE_BEGIN( MSG_ONE, gmsgTeamNames, NULL, pPlayer->edict() );
 		WRITE_BYTE( num_teams );
 		for ( i = 0; i < num_teams; i++ )
 		{
@@ -215,7 +215,6 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 
 	ChangePlayerTeam( pPlayer, pPlayer->m_szTeamName, FALSE, FALSE );
 	UTIL_SayText( text, pPlayer );
-	int clientIndex = pPlayer->entindex();
 	RecountTeams();
 	// update this player with all the other players team info
 	// loop through all active players and send their team info to the new client
@@ -226,7 +225,7 @@ void CHalfLifeTeamplay::InitHUD( CBasePlayer *pPlayer )
 		{
 			MESSAGE_BEGIN( MSG_ONE, gmsgTeamInfo, NULL, pPlayer->edict() );
 				WRITE_BYTE( plr->entindex() );
-				WRITE_STRING( plr->TeamID() );
+				WRITE_STRING( plr->pev->iuser1 ? "" : plr->TeamID() );
 			MESSAGE_END();
 		}
 	}
@@ -269,7 +268,7 @@ void CHalfLifeTeamplay::ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTea
 	// notify everyone's HUD of the team change
 	MESSAGE_BEGIN( MSG_ALL, gmsgTeamInfo );
 		WRITE_BYTE( clientIndex );
-		WRITE_STRING( pPlayer->m_szTeamName );
+		WRITE_STRING( pPlayer->pev->iuser1 ? "" : pPlayer->TeamID() );
 	MESSAGE_END();
 
 	MESSAGE_BEGIN( MSG_ALL, gmsgScoreInfo );
@@ -405,8 +404,11 @@ int CHalfLifeTeamplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pT
 {
 	// half life multiplay has a simple concept of Player Relationships.
 	// you are either on another player's team, or you are not.
-	if ( !pPlayer || !pTarget || !pTarget->IsPlayer() )
+	if ( !pPlayer || !pTarget || !pPlayer->IsPlayer() || !pTarget->IsPlayer() )
 		return GR_NOTTEAMMATE;
+	// Spectators are teammates
+	if (((CBasePlayer*)pPlayer)->IsObserver() && ((CBasePlayer*)pTarget)->IsObserver())
+		return GR_TEAMMATE;
 
 	if ( (*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !_stricmp( GetTeamID(pPlayer), GetTeamID(pTarget) ) )
 	{
@@ -596,7 +598,7 @@ void CHalfLifeTeamplay::RecountTeams( bool bResendInfo )
 				{
 					MESSAGE_BEGIN( MSG_ALL, gmsgTeamInfo, NULL );
 						WRITE_BYTE( plr->entindex() );
-						WRITE_STRING( plr->TeamID() );
+						WRITE_STRING( plr->pev->iuser1 ? "" : plr->TeamID() );
 					MESSAGE_END();
 				}
 			}

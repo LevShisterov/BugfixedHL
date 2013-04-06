@@ -1773,9 +1773,9 @@ void PM_SpectatorMove (void)
 			iJumpSpectator	= 0;
 			return;
 		}
-		#endif
-		// Move around in normal spectator method
+#endif // CLIENT_DLL
 
+		// Move around in normal spectator method
 		speed = Length (pmove->velocity);
 		if (speed < 1)
 		{

@@ -19,6 +19,10 @@
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};
 
+// Spectator settings
+cvar_t	allow_spectators = {"allow_spectators","1", FCVAR_SERVER };
+cvar_t	spectator_cmd_delay = {"spectator_cmd_delay","5"};
+
 // multiplayer server rules
 cvar_t	fragsleft	= {"mp_fragsleft","0", FCVAR_SERVER | FCVAR_UNLOGGED };	  // Don't spam console/log files/users with this changing
 cvar_t	timeleft	= {"mp_timeleft","0" , FCVAR_SERVER | FCVAR_UNLOGGED };	  // "      "
@@ -34,8 +38,8 @@ cvar_t	forcerespawn= {"mp_forcerespawn","1", FCVAR_SERVER };
 cvar_t	flashlight	= {"mp_flashlight","0", FCVAR_SERVER };
 cvar_t	aimcrosshair= {"mp_autocrosshair","1", FCVAR_SERVER };
 cvar_t	decalfrequency = {"decalfrequency","30", FCVAR_SERVER };
-cvar_t	teamlist = {"mp_teamlist","hgrunt;scientist", FCVAR_SERVER };
-cvar_t	teamoverride = {"mp_teamoverride","1" };
+cvar_t	teamlist	= {"mp_teamlist","hgrunt;scientist", FCVAR_SERVER };
+cvar_t	teamoverride= {"mp_teamoverride","1" };
 cvar_t	defaultteam = {"mp_defaultteam","0" };
 cvar_t	allowmonsters={"mp_allowmonsters","0", FCVAR_SERVER };
 
@@ -48,6 +52,9 @@ cvar_t	mp_welcomecam = { "mp_welcomecam", "1", FCVAR_SERVER };
 cvar_t 	*g_psv_gravity = NULL;
 cvar_t	*g_psv_aim = NULL;
 cvar_t	*g_footsteps = NULL;
+
+// AMXX cvar
+cvar_t	*g_amxmodx_version = NULL;
 
 //CVARS FOR SKILL LEVEL SETTINGS
 // Agrunt
@@ -455,13 +462,20 @@ cvar_t	sk_player_leg3	= { "sk_player_leg3","1" };
 // This gets called one time when the game is initialied
 void GameDLLInit( void )
 {
-	// Register cvars here:
+	// Get cvars here:
 
 	g_psv_gravity = CVAR_GET_POINTER( "sv_gravity" );
 	g_psv_aim = CVAR_GET_POINTER( "sv_aim" );
 	g_footsteps = CVAR_GET_POINTER( "mp_footsteps" );
 
+	g_amxmodx_version = CVAR_GET_POINTER( "amxmodx_version" );
+
+	// Register cvars here:
+
 	CVAR_REGISTER (&displaysoundlist);
+
+	CVAR_REGISTER (&allow_spectators);
+	CVAR_REGISTER (&spectator_cmd_delay);
 
 	CVAR_REGISTER (&teamplay);
 	CVAR_REGISTER (&fraglimit);

@@ -92,6 +92,12 @@ enum sbar_data
 class CBasePlayer : public CBaseMonster
 {
 public:
+	// Observer camera
+	EHANDLE m_hObserverTarget;
+	float m_flNextObserverInput;
+	int m_iObservedWeaponId;
+	int m_iObserverMode;
+
 	int					random_seed;    // See that is shared between client & server for shared weapons code
 
 	int					m_iPlayerSound;// the index of the sound list slot reserved for this player
@@ -247,7 +253,14 @@ public:
 	void CheatImpulseCommands( int iImpulse );
 
 	void StartDeathCam( void );
-	void StartObserver( Vector vecPosition, Vector vecViewAngle );
+	void StartObserver( void );
+	void StopObserver( void );
+	void Observer_FindNextPlayer( bool bReverse, bool bOverview );
+	void Observer_FindNextSpot( bool bReverse );
+	void Observer_HandleButtons();
+	void Observer_SetMode( int iMode );
+	void Observer_CheckTarget();
+	int IsObserver() { return pev->iuser1; };
 
 	void AddPoints( int score, BOOL bAllowNegativeScore );
 	void AddPointsToTeam( int score, BOOL bAllowNegativeScore );
@@ -267,7 +280,7 @@ public:
 	void EnableControl(BOOL fControl);
 
 	int  GiveAmmo( int iAmount, char *szName, int iMax );
-	void SendAmmoUpdate(void);
+	void SendAmmoUpdate(CBasePlayer *pPlayer);
 
 	void WaterMove( void );
 	void EXPORT PlayerDeathThink( void );
@@ -314,9 +327,8 @@ public:
 
 	int m_iChatFlood;
 	float m_flNextChatTime;
-
+	float m_flNextSpectatorCommand;
 	float m_flNextFullupdate[2];
-
 
 	BOOL m_bConnected;		// we set it in Spawn() so it will be TRUE only after player was spawned
 	BOOL m_bPutInServer;	// we set it after PutInServer finished
