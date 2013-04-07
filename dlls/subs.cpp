@@ -402,7 +402,6 @@ void CBaseToggle ::  LinearMove( Vector	vecDest, float flSpeed )
 	if (vecDest == pev->origin)
 	{
 		pev->fuser1 = pev->ltime;
-		pev->iuser1 = pev->flags & FL_ALWAYSTHINK;
 		LinearMoveDone();
 		return;
 	}
@@ -417,7 +416,6 @@ void CBaseToggle ::  LinearMove( Vector	vecDest, float flSpeed )
 	pev->fuser1 = pev->ltime + flTravelTime;
 
 	// think each frame to do speed corrections
-	pev->iuser1 = pev->flags & FL_ALWAYSTHINK;
 	pev->flags |= FL_ALWAYSTHINK;
 	pev->nextthink = pev->fuser1;
 	SetThink( &CBaseToggle::LinearMoveDone );
@@ -443,11 +441,10 @@ void CBaseToggle :: LinearMoveDone( void )
 
 	// trigger a call to MoveDone when dest is reached
 	//UTIL_SetOrigin(pev, m_vecFinalDest);	// setting origin could lead to stuck of other entities
-	pev->flags &= pev->iuser1 | ~FL_ALWAYSTHINK;
+	pev->flags &= ~FL_ALWAYSTHINK;
 	pev->velocity = g_vecZero;
 	pev->nextthink = -1;
 	pev->fuser1 = 0;
-	pev->iuser1 = 0;
 	if ( m_pfnCallWhenMoveDone )
 		(this->*m_pfnCallWhenMoveDone)();
 }
@@ -480,7 +477,6 @@ void CBaseToggle :: AngularMove( Vector vecDestAngle, float flSpeed )
 	if (vecDestAngle == pev->angles)
 	{
 		pev->fuser1 = pev->ltime;
-		pev->iuser1 = pev->flags & FL_ALWAYSTHINK;
 		AngularMoveDone();
 		return;
 	}
@@ -495,7 +491,6 @@ void CBaseToggle :: AngularMove( Vector vecDestAngle, float flSpeed )
 	pev->fuser1 = pev->ltime + flTravelTime;
 
 	// think each frame to do speed corrections
-	pev->iuser1 = pev->flags & FL_ALWAYSTHINK;
 	pev->flags |= FL_ALWAYSTHINK;
 	pev->nextthink = pev->fuser1;
 	SetThink( &CBaseToggle::AngularMoveDone );
@@ -520,12 +515,11 @@ void CBaseToggle :: AngularMoveDone( void )
 	}
 
 	// trigger a call to MoveDone when dest is reached
-	pev->flags &= pev->iuser1 | ~FL_ALWAYSTHINK;
+	pev->flags &= ~FL_ALWAYSTHINK;
 	pev->angles = m_vecFinalAngle;
 	pev->avelocity = g_vecZero;
 	pev->nextthink = -1;
 	pev->fuser1 = 0;
-	pev->iuser1 = 0;
 	if ( m_pfnCallWhenMoveDone )
 		(this->*m_pfnCallWhenMoveDone)();
 }
