@@ -1529,6 +1529,8 @@ void CBasePlayer::StopWelcomeCam( void )
 {
 	m_bInWelcomeCam = FALSE;
 
+	m_iHideHUD = 0;
+
 	Spawn();
 	pev->nextthink = -1;
 }
