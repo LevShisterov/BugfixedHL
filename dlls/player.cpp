@@ -3298,7 +3298,6 @@ BOOL CBasePlayer :: FlashlightIsOn( void )
 	return FBitSet(pev->effects, EF_DIMLIGHT);
 }
 
-
 void CBasePlayer :: FlashlightTurnOn( void )
 {
 	if ( !g_pGameRules->FAllowFlashlight() )
@@ -3311,23 +3310,21 @@ void CBasePlayer :: FlashlightTurnOn( void )
 		EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM );
 		SetBits(pev->effects, EF_DIMLIGHT);
 		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
-		WRITE_BYTE(1);
-		WRITE_BYTE(m_iFlashBattery);
+			WRITE_BYTE(1);
+			WRITE_BYTE(m_iFlashBattery);
 		MESSAGE_END();
 
 		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
-
 	}
 }
-
 
 void CBasePlayer :: FlashlightTurnOff( void )
 {
 	EMIT_SOUND_DYN( ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM );
-    ClearBits(pev->effects, EF_DIMLIGHT);
+	ClearBits(pev->effects, EF_DIMLIGHT);
 	MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
-	WRITE_BYTE(0);
-	WRITE_BYTE(m_iFlashBattery);
+		WRITE_BYTE(0);
+		WRITE_BYTE(m_iFlashBattery);
 	MESSAGE_END();
 
 	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
@@ -3930,6 +3927,12 @@ void CBasePlayer :: UpdateClientData( void )
 
 		FireTargets( "game_playerspawn", this, this, USE_TOGGLE, 0 );
 
+		// Send flashlight status
+		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
+			WRITE_BYTE(FlashlightIsOn() ? 1 : 0);
+			WRITE_BYTE(m_iFlashBattery);
+		MESSAGE_END();
+
 		InitStatusBar();
 	}
 
@@ -4027,7 +4030,7 @@ void CBasePlayer :: UpdateClientData( void )
 			{
 				m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
 				m_iFlashBattery--;
-				
+
 				if (!m_iFlashBattery)
 					FlashlightTurnOff();
 			}
@@ -4044,7 +4047,7 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgFlashBattery, NULL, pev );
-		WRITE_BYTE(m_iFlashBattery);
+			WRITE_BYTE(m_iFlashBattery);
 		MESSAGE_END();
 	}
 

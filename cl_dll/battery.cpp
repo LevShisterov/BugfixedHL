@@ -40,7 +40,6 @@ int CHudBattery::Init(void)
 	return 1;
 };
 
-
 int CHudBattery::VidInit(void)
 {
 	int HUD_suit_empty = gHUD.GetSpriteIndex( "suit_empty" );
@@ -58,7 +57,6 @@ int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 {
 	m_iFlags |= HUD_ACTIVE;
 
-	
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_SHORT();
 
@@ -70,7 +68,6 @@ int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 
 	return 1;
 }
-
 
 int CHudBattery::Draw(float flTime)
 {

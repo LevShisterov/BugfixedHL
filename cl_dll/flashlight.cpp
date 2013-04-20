@@ -51,6 +51,8 @@ void CHudFlashlight::Reset(void)
 {
 	m_fFade = 0;
 	m_fOn = 0;
+	m_iBat = 100;
+	m_flBat = 1.0;
 }
 
 int CHudFlashlight::VidInit(void)
@@ -72,8 +74,6 @@ int CHudFlashlight::VidInit(void)
 
 int CHudFlashlight:: MsgFunc_FlashBat(const char *pszName,  int iSize, void *pbuf )
 {
-
-	
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_BYTE();
 	m_iBat = x;
@@ -84,7 +84,6 @@ int CHudFlashlight:: MsgFunc_FlashBat(const char *pszName,  int iSize, void *pbu
 
 int CHudFlashlight:: MsgFunc_Flashlight(const char *pszName,  int iSize, void *pbuf )
 {
-
 	BEGIN_READ( pbuf, iSize );
 	m_fOn = READ_BYTE();
 	int x = READ_BYTE();
@@ -143,7 +142,6 @@ int CHudFlashlight::Draw(float flTime)
 		SPR_Set(m_hSprite2, r, g, b );
 		SPR_DrawAdditive( 0, x + iOffset, y, &rc);
 	}
-
 
 	return 1;
 }
