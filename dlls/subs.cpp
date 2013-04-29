@@ -391,7 +391,7 @@ calculate pev->velocity and pev->nextthink to reach vecDest from
 pev->origin traveling at flSpeed
 ===============
 */
-void CBaseToggle ::  LinearMove( Vector	vecDest, float flSpeed )
+void CBaseToggle :: LinearMove( Vector vecDest, float flSpeed )
 {
 	ASSERTSZ(flSpeed != 0, "LinearMove: no speed is defined!");
 	//ASSERTSZ(m_pfnCallWhenMoveDone != NULL, "LinearMove: no post-move function defined");
