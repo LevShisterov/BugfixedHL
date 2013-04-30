@@ -103,7 +103,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Automatic deployment script"
-				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (&#x0D;&#x0A;  CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(TargetExt)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
+				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(TargetExt)&quot; &quot;$(ProjectDir)&quot;)"
 			/>
 		</Configuration>
 		<Configuration
@@ -192,7 +192,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Automatic deployment script"
-				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (&#x0D;&#x0A;  CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(TargetExt)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;)&#x0D;&#x0A;"
+				CommandLine="IF EXIST &quot;$(ProjectDir)PostBuild.bat&quot; (CALL &quot;$(ProjectDir)PostBuild.bat&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(TargetExt)&quot; &quot;$(ProjectDir)&quot;)"
 			/>
 		</Configuration>
 	</Configurations>

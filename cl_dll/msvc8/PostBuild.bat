@@ -3,6 +3,8 @@
 :: Post-build auto-deploy script
 :: Create and fill PublishPath.txt file with path to deployment folder
 :: I.e. PublishPath.txt should contain one line with a folder path
+:: Call it so:
+:: IF EXIST "$(ProjectDir)PostBuild.bat" (CALL "$(ProjectDir)PostBuild.bat" "$(TargetDir)" "$(TargetName)" "$(TargetExt)" "$(ProjectDir)")
 ::
 
 SET targetDir=%~1
