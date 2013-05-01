@@ -62,7 +62,7 @@ public:
 	void EXPORT DoorGoDown( void );
 	void EXPORT DoorHitTop( void );
 	void EXPORT DoorHitBottom( void );
-	
+
 	BYTE	m_bHealthValue;// some doors are medi-kit doors, they give players health
 	
 	BYTE	m_bMoveSnd;			// sound a door makes while moving
@@ -574,7 +574,7 @@ void CBaseDoor::DoorGoUp( void )
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
 
 	m_toggle_state = TS_GOING_UP;
-	
+
 	SetMoveDone( &CBaseDoor::DoorHitTop );
 	if ( FClassnameIs(pev, "func_door_rotating"))		// !!! BUGBUG Triggered doors don't work with this yet
 	{
@@ -888,6 +888,8 @@ public:
 	virtual int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
 
+	void EXPORT DoorMoveDone( void );
+
 	BYTE	m_bMoveSnd;			// sound a door makes while moving	
 };
 
@@ -927,10 +929,10 @@ void CMomentaryDoor::Spawn( void )
 		m_vecPosition1 = pev->origin;
 	}
 	SetTouch( NULL );
-	
+
 	Precache();
 }
-	
+
 void CMomentaryDoor::Precache( void )
 {
 
@@ -1007,19 +1009,32 @@ void CMomentaryDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 
 	if ( value > 1.0 )
 		value = 1.0;
+	if ( value < 0.0 )
+		value = 0.0;
 	Vector move = m_vecPosition1 + (value * (m_vecPosition2 - m_vecPosition1));
-	
+
 	Vector delta = move - pev->origin;
-	float speed = delta.Length() * 10;
+	float speed = delta.Length() / 0.1; // move there in 0.1 sec
 
-	if ( speed != 0 )
-	{
-		// This entity only thinks when it moves, so if it's thinking, it's in the process of moving
-		// play the sound when it starts moving
-		if ( pev->nextthink < pev->ltime || pev->nextthink == 0 )
-			EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
+	if ( speed == 0 )
+		return;
 
-		LinearMove( move, speed );
-	}
+	// This entity only thinks when it moves, so if it's thinking, it's in the process of moving
+	// play the sound when it starts moving (not yet thinking)
+	if ( pev->nextthink < pev->ltime || pev->nextthink == 0 )
+		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
+	// If we already moving to designated point, return
+	else if (move == m_vecFinalDest)
+		return;
 
+	SetMoveDone( &CMomentaryDoor::DoorMoveDone );
+	LinearMove( move, speed );
+}
+
+//
+// The door has reached needed position.
+//
+void CMomentaryDoor::DoorMoveDone( void )
+{
+	STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
 }
