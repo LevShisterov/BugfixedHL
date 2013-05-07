@@ -1539,7 +1539,16 @@ engine sets cd to 0 before calling.
 void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd )
 {
 	cd->flags			= ent->v.flags;
-	cd->health			= ent->v.health;
+
+	// Clamp value for delta compression
+	if (ent->v.health <= 0.0)
+		cd->health	= 0.0;
+	else if (ent->v.health <= 1.0)
+		cd->health	= 1.0;
+	else if (ent->v.health <= 511.0)
+		cd->health	= ent->v.health;
+	else
+		cd->health	= 511;
 
 	cd->viewmodel		= MODEL_INDEX( STRING( ent->v.viewmodel ) );
 
