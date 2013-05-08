@@ -117,7 +117,7 @@ public:
 private:
 	HLHSPRITE m_hSprite;
 	HLHSPRITE m_hDamage;
-	
+	wrect_t *m_prcCross;
 	DAMAGE_IMAGE m_dmg[NUM_DMG_TYPES];
 	int	m_bitsDamage;
 	int DrawPain(float fTime);

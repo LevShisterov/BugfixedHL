@@ -246,15 +246,18 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 {
 	int iWidth = GetSpriteRect(m_HUD_number_0).right - GetSpriteRect(m_HUD_number_0).left;
 	int k;
-	
+
 	if (iNumber > 0)
 	{
+		if (iNumber > 999)
+			iNumber = 999;
+
 		// SPR_Draw 100's
 		if (iNumber >= 100)
 		{
-			 k = iNumber/100;
+			k = iNumber /100;
 			SPR_Set(GetSprite(m_HUD_number_0 + k), r, g, b );
-			SPR_DrawAdditive( 0, x, y, &GetSpriteRect(m_HUD_number_0 + k));
+			SPR_DrawAdditive(0, x, y, &GetSpriteRect(m_HUD_number_0 + k));
 			x += iWidth;
 		}
 		else if (iFlags & (DHN_3DIGITS))
@@ -268,7 +271,7 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 		{
 			k = (iNumber % 100)/10;
 			SPR_Set(GetSprite(m_HUD_number_0 + k), r, g, b );
-			SPR_DrawAdditive( 0, x, y, &GetSpriteRect(m_HUD_number_0 + k));
+			SPR_DrawAdditive(0, x, y, &GetSpriteRect(m_HUD_number_0 + k));
 			x += iWidth;
 		}
 		else if (iFlags & (DHN_3DIGITS | DHN_2DIGITS))
@@ -283,7 +286,7 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 		SPR_DrawAdditive(0,  x, y, &GetSpriteRect(m_HUD_number_0 + k));
 		x += iWidth;
 	}
-	else if (iFlags & DHN_DRAWZERO) 
+	else if (iFlags & DHN_DRAWZERO)
 	{
 		SPR_Set(GetSprite(m_HUD_number_0), r, g, b );
 
@@ -301,8 +304,7 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 		}
 
 		// SPR_Draw ones
-		
-		SPR_DrawAdditive( 0,  x, y, &GetSpriteRect(m_HUD_number_0));
+		SPR_DrawAdditive(0, x, y, &GetSpriteRect(m_HUD_number_0));
 		x += iWidth;
 	}
 
