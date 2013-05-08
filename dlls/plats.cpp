@@ -448,6 +448,7 @@ void CFuncPlat :: HitBottom( void )
 {
 	ASSERT(m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN);
 
+	// Delay sound emiting for a case plat will go up again immediately
 	if (m_toggle_state == TS_GOING_DOWN)
 	{
 		m_toggle_state = TS_AT_BOTTOM;
@@ -463,8 +464,6 @@ void CFuncPlat :: HitBottom( void )
 
 	if (pev->noiseStopMoving)
 		EMIT_SOUND(ENT(pev), CHAN_WEAPON, (char*)STRING(pev->noiseStopMoving), m_volume, ATTN_NORM);
-
-	m_toggle_state = TS_AT_BOTTOM;
 }
 
 
