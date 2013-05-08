@@ -1542,13 +1542,13 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 
 	// Clamp value for delta compression
 	if (ent->v.health <= 0.0)
-		cd->health	= 0.0;
+		cd->health		= 0.0;
 	else if (ent->v.health <= 1.0)
-		cd->health	= 1.0;
-	else if (ent->v.health <= 511.0)
-		cd->health	= ent->v.health;
+		cd->health		= 1.0;
+	else if (ent->v.health > 0x7FFFFFFF)
+		cd->health		= 0x7FFFFFFF;
 	else
-		cd->health	= 511;
+		cd->health		= ent->v.health;
 
 	cd->viewmodel		= MODEL_INDEX( STRING( ent->v.viewmodel ) );
 
