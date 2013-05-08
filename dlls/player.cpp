@@ -1698,10 +1698,11 @@ void CBasePlayer::UpdateStatusBar()
 
 	// Find an ID Target
 	TraceResult tr;
-	UTIL_MakeVectors( pev->v_angle + pev->punchangle );
-	Vector vecSrc = EyePosition();
+	CBaseEntity *sourcePlayer = IsObserver() && m_hObserverTarget ? (CBaseEntity *)m_hObserverTarget : this;
+	UTIL_MakeVectors( sourcePlayer->pev->v_angle + sourcePlayer->pev->punchangle );
+	Vector vecSrc = sourcePlayer->EyePosition();
 	Vector vecEnd = vecSrc + (gpGlobals->v_forward * MAX_ID_RANGE);
-	UTIL_TraceLine( vecSrc, vecEnd, dont_ignore_monsters, edict(), &tr);
+	UTIL_TraceLine( vecSrc, vecEnd, dont_ignore_monsters, sourcePlayer->edict(), &tr);
 
 	if (tr.flFraction != 1.0)
 	{
