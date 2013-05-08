@@ -4128,7 +4128,7 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 	float fHealth = pPlayer->pev->health;
-	int iHealth = fHealth <= 0.0 ? 0 : (fHealth <= 1.0 ? 1 : fHealth <= 255.0 ? (int)fHealth : 255);
+	int iHealth = fHealth <= 0.0 ? 0 : (fHealth <= 1.0 ? 1 : fHealth <= 255.0 ? 255 : (int)fHealth);
 	if (iHealth != m_iClientHealth)
 	{
 		// send "health" update message
@@ -4140,7 +4140,7 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 	float fArmor = pPlayer->pev->armorvalue;
-	int iArmor = fArmor <= 0.0 ? 0 : (fArmor <= 1.0 ? 1 : fArmor <= 65535.0 ? (int)fArmor : 65535);
+	int iArmor = fArmor <= 0.0 ? 0 : (fArmor <= 1.0 ? 1 : fArmor > 32767.0 ? 32767 : (int)fArmor);
 	if (iArmor != m_iClientBattery)
 	{
 		ASSERT( gmsgBattery > 0 );
