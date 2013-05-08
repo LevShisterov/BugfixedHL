@@ -92,6 +92,8 @@ int CHudHealth::VidInit(void)
 	m_HUD_dmg_bio = gHUD.GetSpriteIndex( "dmg_bio" ) + 1;
 	m_HUD_cross = gHUD.GetSpriteIndex( "cross" );
 
+	m_prcCross = &gHUD.GetSpriteRect(m_HUD_cross);
+
 	giDmgHeight = gHUD.GetSpriteRect(m_HUD_dmg_bio).right - gHUD.GetSpriteRect(m_HUD_dmg_bio).left;
 	giDmgWidth = gHUD.GetSpriteRect(m_HUD_dmg_bio).bottom - gHUD.GetSpriteRect(m_HUD_dmg_bio).top;
 	return 1;
@@ -197,6 +199,16 @@ int CHudHealth::Draw(float flTime)
 	else
 		a = MIN_ALPHA;
 
+	// Apply wider range health from client_state_t structure
+	cl_entity_t *player = gEngfuncs.GetLocalPlayer();
+	int health = player->curstate.health;
+	health = clamp(health, 0, 999);
+	if (m_iHealth != health)
+	{
+		m_fFade = FADE_TIME;
+		m_iHealth = health;
+	}
+
 	// If health is getting low, make it bright red
 	if (m_iHealth <= 15)
 		a = 255;
@@ -208,13 +220,14 @@ int CHudHealth::Draw(float flTime)
 	if (gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)))
 	{
 		HealthWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;
-		int CrossWidth = gHUD.GetSpriteRect(m_HUD_cross).right - gHUD.GetSpriteRect(m_HUD_cross).left;
+		int CrossWidth = m_prcCross->right - m_prcCross->left;
+		int iOffset = (m_prcCross->bottom - m_prcCross->top - gHUD.m_iFontHeight) / 2;
 
 		y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight / 2;
-		x = CrossWidth /2;
+		x = gHUD.m_iFontHeight / 2 - iOffset;
 
 		SPR_Set(gHUD.GetSprite(m_HUD_cross), r, g, b);
-		SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_HUD_cross));
+		SPR_DrawAdditive(0, x, y - iOffset, m_prcCross);
 
 		x = CrossWidth + HealthWidth / 2;
 
@@ -424,7 +437,6 @@ int CHudHealth::DrawDamage(float flTime)
 
 	return 1;
 }
- 
 
 void CHudHealth::UpdateTiles(float flTime, long bitsDamage)
 {	
