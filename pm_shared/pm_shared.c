@@ -147,6 +147,7 @@ static char grgszTextureName[CTEXTURESMAX][CBTEXTURENAMEMAX];
 static char grgchTextureType[CTEXTURESMAX];
 
 int g_onladder = 0;
+int g_bBunnyHop = 1;
 
 void PM_SwapTextures( int i, int j )
 {
@@ -2513,7 +2514,7 @@ void PM_Jump (void)
 	}
 
 	// No more effect
- 	if ( pmove->onground == -1 )
+	if ( pmove->onground == -1 )
 	{
 		// Flag that we jumped.
 		// HACK HACK HACK
@@ -2526,9 +2527,10 @@ void PM_Jump (void)
 		return;		// don't pogo stick
 
 	// In the air now.
-    pmove->onground = -1;
+	pmove->onground = -1;
 
-	//PM_PreventMegaBunnyJumping();
+	if (!g_bBunnyHop)
+		PM_PreventMegaBunnyJumping();
 
 	if ( tfc )
 	{

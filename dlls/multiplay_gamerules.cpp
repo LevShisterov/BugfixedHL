@@ -38,6 +38,7 @@ extern int gmsgMOTD;
 extern int gmsgServerName;
 
 extern int g_teamplay;
+extern "C" int g_bBunnyHop;
 
 #define ITEM_RESPAWN_TIME	30
 #define WEAPON_RESPAWN_TIME	20
@@ -206,6 +207,8 @@ extern cvar_t mp_chattime;
 void CHalfLifeMultiplay :: Think ( void )
 {
 	g_VoiceGameMgr.Update(gpGlobals->frametime);
+
+	g_bBunnyHop = bunnyhop.value;
 
 	///// Check game rules /////
 	static int last_frags;

@@ -30,6 +30,8 @@ static int num_teams = 0;
 
 extern DLL_GLOBAL BOOL		g_fGameOver;
 
+extern "C" int g_bBunnyHop;
+
 CHalfLifeTeamplay :: CHalfLifeTeamplay()
 {
 	m_DisableDeathMessages = FALSE;
@@ -100,6 +102,8 @@ void CHalfLifeTeamplay :: Think ( void )
 	int time_remaining = 0;
 
 	g_VoiceGameMgr.Update(gpGlobals->frametime);
+
+	g_bBunnyHop = bunnyhop.value;
 
 	if ( g_fGameOver )   // someone else quit the game already
 	{
