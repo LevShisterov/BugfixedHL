@@ -33,6 +33,7 @@ int grgLogoFrame[MAX_LOGO_FRAMES] =
 
 
 extern int g_iVisibleMouse;
+extern "C" int g_bBunnyHop;
 
 float HUD_GetFOV( void );
 
@@ -80,6 +81,9 @@ void CHud::Think(void)
 	{  // only let players adjust up in fov,  and only if they are not overriden by something else
 		m_iFOV = max( default_fov->value, 90 );  
 	}
+
+	// Refresh bunnyhop
+	g_bBunnyHop = m_pCvarBunnyHop->value != 0.0;
 }
 
 // Redraw
