@@ -32,6 +32,7 @@ cvar_t	teamplay	= {"mp_teamplay","0", FCVAR_SERVER };
 cvar_t	fraglimit	= {"mp_fraglimit","0", FCVAR_SERVER };
 cvar_t	timelimit	= {"mp_timelimit","0", FCVAR_SERVER };
 cvar_t	friendlyfire= {"mp_friendlyfire","0", FCVAR_SERVER };
+cvar_t	bunnyhop	= {"mp_bunnyhop","1", FCVAR_SERVER };
 cvar_t	falldamage	= {"mp_falldamage","0", FCVAR_SERVER };
 cvar_t	weaponstay	= {"mp_weaponstay","0", FCVAR_SERVER };
 cvar_t	forcerespawn= {"mp_forcerespawn","1", FCVAR_SERVER };
@@ -485,6 +486,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&timeleft);
 
 	CVAR_REGISTER (&friendlyfire);
+	CVAR_REGISTER (&bunnyhop);
 	CVAR_REGISTER (&falldamage);
 	CVAR_REGISTER (&weaponstay);
 	CVAR_REGISTER (&forcerespawn);
@@ -905,12 +907,18 @@ void GameDLLInit( void )
 
 	SERVER_COMMAND( "exec skill.cfg\n" );
 
-	// Execute server startup config file for deathmatch only.
-	// Dunno how to get deathmatch at this step yet (gpGlobals isn't initialised), so will execute only for dedicated server.
-	//if (gpGlobals->deathmatch)
 	int dedicated = IS_DEDICATED_SERVER();
-	if (dedicated)
+	cvar_t *deathmatch = CVAR_GET_POINTER("deathmatch");
+	cvar_t *coop = CVAR_GET_POINTER("coop");
+	if (!dedicated && deathmatch->value == 0.0 && coop->value == 0.0)
 	{
+		// Set bunnhop and clock_window initially off for singleplayer
+		CVAR_SET_FLOAT(bunnyhop.name, 0.0);
+		CVAR_SET_FLOAT("clockwindow", 0.0);
+	}
+	else
+	{
+		// Execute server startup config file for multiplayer only.
 		char szCommand[256], buffer[256], *startupCfgFile, *serverType;
 		if (dedicated)
 		{

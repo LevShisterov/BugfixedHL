@@ -23,12 +23,15 @@
 #include	"gamerules.h"
 #include	"skill.h"
 #include	"items.h"
+#include	"game.h"
 
 extern DLL_GLOBAL CGameRules	*g_pGameRules;
 extern DLL_GLOBAL BOOL	g_fGameOver;
 extern int gmsgDeathMsg;	// client dll messages
 extern int gmsgScoreInfo;
 extern int gmsgMOTD;
+
+extern "C" int g_bBunnyHop;
 
 //=========================================================
 //=========================================================
@@ -41,6 +44,7 @@ CHalfLifeRules::CHalfLifeRules( void )
 //=========================================================
 void CHalfLifeRules::Think ( void )
 {
+	g_bBunnyHop = bunnyhop.value;
 }
 
 //=========================================================
