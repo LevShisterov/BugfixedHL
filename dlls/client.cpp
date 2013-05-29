@@ -214,12 +214,18 @@ void ClientKill( edict_t *pEntity )
 {
 	entvars_t *pev = &pEntity->v;
 
-	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
+	// Is the client spawned yet?
+	if (!pEntity->pvPrivateData)
+		return;
+	// PrivateData is never deleted after it was created on first PutInServer so we will check for IsConnected flag too
+	CBasePlayer *pPlayer = (CBasePlayer *)CBasePlayer::Instance(pev);
+	if (!pPlayer || !pPlayer->IsConnected())
+		return;
 
 	// prevent suiciding too often
-	if ( pl->m_fNextSuicideTime > gpGlobals->time )
+	if ( pPlayer->m_fNextSuicideTime > gpGlobals->time )
 		return;
-	pl->m_fNextSuicideTime = gpGlobals->time + 1;
+	pPlayer->m_fNextSuicideTime = gpGlobals->time + 1;
 
 	// prevent death in spectator mode
 	if ( pev->iuser1 != OBS_NONE)
@@ -237,7 +243,7 @@ void ClientKill( edict_t *pEntity )
 
 	// have the player kill themself
 	pev->health = 0;
-	pl->Killed( pev, GIB_NEVER );
+	pPlayer->Killed( pev, GIB_NEVER );
 
 //	pev->modelindex = g_ulModelIndexPlayer;
 //	pev->frags -= 2;		// extra penalty
@@ -461,15 +467,15 @@ void ClientCommand( edict_t *pEntity )
 	const char *pcmd = CMD_ARGV(0);
 	const char *pstr;
 
+	entvars_t *pev = &pEntity->v;
+
 	// Is the client spawned yet?
 	if (!pEntity->pvPrivateData)
 		return;
 	// PrivateData is never deleted after it was created on first PutInServer so we will check for IsConnected flag too
-	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
-	if (!pPlayer->IsConnected())
+	CBasePlayer *pPlayer = (CBasePlayer *)CBasePlayer::Instance(pev);
+	if (!pPlayer || !pPlayer->IsConnected())
 		return;
-
-	entvars_t *pev = &pEntity->v;
 
 	if ( FStrEq(pcmd, "say" ) )
 	{
@@ -481,53 +487,50 @@ void ClientCommand( edict_t *pEntity )
 	}
 	else if ( FStrEq(pcmd, "fullupdate" ) )
 	{
-		GetClassPtr((CBasePlayer *)pev)->ForceClientDllUpdate(); 
+		pPlayer->ForceClientDllUpdate(); 
 	}
 	else if ( FStrEq(pcmd, "give" ) )
 	{
 		if ( g_flWeaponCheat != 0.0)
 		{
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );	// Make a copy of the classname
-			GetClassPtr((CBasePlayer *)pev)->GiveNamedItem( STRING(iszItem) );
+			pPlayer->GiveNamedItem( STRING(iszItem) );
 		}
 	}
-
 	else if ( FStrEq(pcmd, "drop" ) )
 	{
-		// player is dropping an item. 
-		GetClassPtr((CBasePlayer *)pev)->DropPlayerItem((char *)CMD_ARGV(1));
+		// player is dropping an item.
+		pPlayer->DropPlayerItem((char *)CMD_ARGV(1));
 	}
 	else if ( FStrEq(pcmd, "fov" ) )
 	{
 		if ( g_flWeaponCheat && CMD_ARGC() > 1)
 		{
-			GetClassPtr((CBasePlayer *)pev)->m_iFOV = atoi( CMD_ARGV(1) );
+			pPlayer->m_iFOV = atoi( CMD_ARGV(1) );
 		}
 		else
 		{
-			CLIENT_PRINTF( pEntity, print_console, UTIL_VarArgs( "\"fov\" is \"%d\"\n", (int)GetClassPtr((CBasePlayer *)pev)->m_iFOV ) );
+			CLIENT_PRINTF( pEntity, print_console, UTIL_VarArgs( "\"fov\" is \"%d\"\n", (int)pPlayer->m_iFOV ) );
 		}
 	}
 	else if ( FStrEq(pcmd, "use" ) )
 	{
-		GetClassPtr((CBasePlayer *)pev)->SelectItem((char *)CMD_ARGV(1));
+		pPlayer->SelectItem((char *)CMD_ARGV(1));
 	}
 	else if (((pstr = strstr(pcmd, "weapon_")) != NULL)  && (pstr == pcmd))
 	{
-		GetClassPtr((CBasePlayer *)pev)->SelectItem(pcmd);
+		pPlayer->SelectItem(pcmd);
 	}
 	else if (FStrEq(pcmd, "lastinv" ))
 	{
-		GetClassPtr((CBasePlayer *)pev)->SelectLastItem();
+		pPlayer->SelectLastItem();
 	}
 	else if ( FStrEq( pcmd, "spectate" ) && (pev->flags & FL_PROXY) )	// added for proxy support
 	{
-		CBasePlayer * pPlayer = GetClassPtr((CBasePlayer *)pev);
-
 		edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
 		pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles);
 	}
-	else if ( g_pGameRules->ClientCommand( GetClassPtr((CBasePlayer *)pev), pcmd ) )
+	else if ( g_pGameRules->ClientCommand( pPlayer, pcmd ) )
 	{
 		// MenuSelect returns true only if the command is properly handled,  so don't print a warning
 	}
