@@ -120,7 +120,6 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 		ApplyMultiDamage( pev, pevOwner );
 
-		pev->velocity = Vector( 0, 0, 0 );
 		// play body "thwack" sound
 		switch( RANDOM_LONG(0,1) )
 		{
@@ -148,9 +147,6 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			Vector vecDir = pev->velocity.Normalize( );
 			UTIL_SetOrigin( pev, pev->origin - vecDir * 12 );
 			pev->angles = UTIL_VecToAngles( vecDir );
-			pev->solid = SOLID_NOT;
-			pev->movetype = MOVETYPE_FLY;
-			pev->velocity = Vector( 0, 0, 0 );
 			pev->avelocity.z = 0;
 			pev->angles.z = RANDOM_LONG(0,360);
 			pev->nextthink = gpGlobals->time + 10.0;
@@ -161,6 +157,9 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			UTIL_Sparks( pev->origin );
 		}
 	}
+
+	pev->solid = SOLID_NOT;
+	pev->velocity = Vector( 0, 0, 0 );
 
 	if ( g_pGameRules->IsMultiplayer() )
 	{

@@ -40,7 +40,6 @@ int CHudBattery::Init(void)
 	return 1;
 };
 
-
 int CHudBattery::VidInit(void)
 {
 	int HUD_suit_empty = gHUD.GetSpriteIndex( "suit_empty" );
@@ -58,19 +57,18 @@ int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 {
 	m_iFlags |= HUD_ACTIVE;
 
-	
 	BEGIN_READ( pbuf, iSize );
-	int x = READ_SHORT();
+	int battery = READ_SHORT();
+	battery = clamp(battery, 0, 999);
 
-	if (x != m_iBat)
+	if (battery != m_iBat)
 	{
 		m_fFade = FADE_TIME;
-		m_iBat = x;
+		m_iBat = battery;
 	}
 
 	return 1;
 }
-
 
 int CHudBattery::Draw(float flTime)
 {
@@ -82,7 +80,7 @@ int CHudBattery::Draw(float flTime)
 	wrect_t rc;
 
 	rc = *m_prc2;
-	rc.top  += m_iHeight * ((float)(100-(min(100,m_iBat))) * 0.01);	// battery can go from 0 to 100 so * 0.01 goes from 0 to 1
+	rc.top  += m_iHeight * ((float)(100 - (min(100, m_iBat))) * 0.01);	// battery can go from 0 to 100 so * 0.01 goes from 0 to 1
 
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
 		return 1;
@@ -116,12 +114,12 @@ int CHudBattery::Draw(float flTime)
 		m_hSprite2 = gHUD.GetSprite( gHUD.GetSpriteIndex( "suit_full" ) );
 
 	SPR_Set(m_hSprite1, r, g, b );
-	SPR_DrawAdditive( 0,  x, y - iOffset, m_prc1);
+	SPR_DrawAdditive(0,  x, y - iOffset, m_prc1);
 
 	if (rc.bottom > rc.top)
 	{
 		SPR_Set(m_hSprite2, r, g, b );
-		SPR_DrawAdditive( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
+		SPR_DrawAdditive(0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
 	}
 
 	x += (m_prc1->right - m_prc1->left);

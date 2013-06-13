@@ -142,11 +142,22 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 	int clientIndex = pPlayer->entindex();
 	char *prevModel = g_checkedPlayerModels[clientIndex - 1];
 
-	// Check for incorrect player model
+	// Detect model change
 	char *mdls = g_engfuncs.pfnInfoKeyValue(infobuffer, "model");
 	if (prevModel[0] == 0 || _stricmp(mdls, prevModel))
 	{
-		if (strlen(mdls) > MAX_TEAM_NAME - 1 || !IsValidFilename(mdls))
+		// First parse the model and remove any %'s
+		bool changed = false;
+		for (char *c = mdls; *c != 0; c++)
+		{
+			if (*c != '%') continue;
+			// Replace it with a space
+			*c = ' ';
+			changed = true;
+		}
+
+		// Check for incorrect player model
+		if (mdls[0] == 0 || strlen(mdls) > MAX_TEAM_NAME - 1 || !IsValidFilename(mdls))
 		{
 			if (prevModel[0] == 0)
 				strcpy(prevModel, "gordon");	// default model if empty
@@ -157,12 +168,16 @@ void CheckPlayerModel(CBasePlayer *pPlayer, char *infobuffer)
 			// Inform player
 			sprintf(text, "* Model should be non-empty, less then %d characters and can't contain special characters like: <>:\"/\\|?*\n* Your current model remains: \"%s\"\n", MAX_TEAM_NAME - 1, prevModel);
 			UTIL_SayText(text, pPlayer);
+
+			return;
 		}
-		else
-		{
-			// Remember model player has set
-			strcpy(prevModel, mdls);
-		}
+
+		// Set changed model back into info buffer
+		if (changed)
+			g_engfuncs.pfnSetClientKeyValue(clientIndex, infobuffer, "model", mdls);
+
+		// Remember model player has set
+		strcpy(prevModel, mdls);
 	}
 }
 
@@ -199,16 +214,36 @@ void ClientKill( edict_t *pEntity )
 {
 	entvars_t *pev = &pEntity->v;
 
-	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
+	// Is the client spawned yet?
+	if (!pEntity->pvPrivateData)
+		return;
+	// PrivateData is never deleted after it was created on first PutInServer so we will check for IsConnected flag too
+	CBasePlayer *pPlayer = (CBasePlayer *)CBasePlayer::Instance(pev);
+	if (!pPlayer || !pPlayer->IsConnected())
+		return;
 
-	if ( pl->m_fNextSuicideTime > gpGlobals->time )
-		return;  // prevent suiciding too ofter
+	// prevent suiciding too often
+	if ( pPlayer->m_fNextSuicideTime > gpGlobals->time )
+		return;
+	pPlayer->m_fNextSuicideTime = gpGlobals->time + 1;
 
-	pl->m_fNextSuicideTime = gpGlobals->time + 1;  // don't let them suicide for 5 seconds after suiciding
+	// prevent death in spectator mode
+	if ( pev->iuser1 != OBS_NONE)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide while in spectator mode!\n" ) );
+		return;
+	}
+
+	// prevent death if already dead
+	if ( pev->deadflag != DEAD_NO)
+	{
+		ClientPrint( pev, HUD_PRINTCONSOLE, UTIL_VarArgs( "Can't suicide -- already dead!\n" ) );
+		return;
+	}
 
 	// have the player kill themself
 	pev->health = 0;
-	pl->Killed( pev, GIB_NEVER );
+	pPlayer->Killed( pev, GIB_NEVER );
 
 //	pev->modelindex = g_ulModelIndexPlayer;
 //	pev->frags -= 2;		// extra penalty
@@ -235,10 +270,24 @@ void ClientPutInServer( edict_t *pEntity )
 	// Check player model before spawn
 	CheckPlayerModel(pPlayer, g_engfuncs.pfnGetInfoKeyBuffer(pPlayer->edict()));
 
+	// Check if bot
+	const char *auth;
+	if ((pPlayer->pev->flags & FL_FAKECLIENT) == FL_FAKECLIENT ||
+		(auth = GETPLAYERAUTHID(pPlayer->edict())) && strcmp(auth, "BOT") == 0)
+	{
+		pPlayer->m_bIsBot = true;
+	}
+
 	pPlayer->Spawn();
+
+	// Setup some fields initially
+	pPlayer->m_fNextSuicideTime = 0;
 
 	// Reset interpolation during first frame
 	pPlayer->pev->effects |= EF_NOINTERP;
+
+	// Mark as PutInServer
+	pPlayer->m_bPutInServer = TRUE;
 }
 
 #include "voice_gamemgr.h"
@@ -418,15 +467,15 @@ void ClientCommand( edict_t *pEntity )
 	const char *pcmd = CMD_ARGV(0);
 	const char *pstr;
 
+	entvars_t *pev = &pEntity->v;
+
 	// Is the client spawned yet?
 	if (!pEntity->pvPrivateData)
 		return;
 	// PrivateData is never deleted after it was created on first PutInServer so we will check for IsConnected flag too
-	CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)&pEntity->v);
-	if (!pPlayer->IsConnected())
+	CBasePlayer *pPlayer = (CBasePlayer *)CBasePlayer::Instance(pev);
+	if (!pPlayer || !pPlayer->IsConnected())
 		return;
-
-	entvars_t *pev = &pEntity->v;
 
 	if ( FStrEq(pcmd, "say" ) )
 	{
@@ -438,53 +487,50 @@ void ClientCommand( edict_t *pEntity )
 	}
 	else if ( FStrEq(pcmd, "fullupdate" ) )
 	{
-		GetClassPtr((CBasePlayer *)pev)->ForceClientDllUpdate(); 
+		pPlayer->ForceClientDllUpdate(); 
 	}
 	else if ( FStrEq(pcmd, "give" ) )
 	{
 		if ( g_flWeaponCheat != 0.0)
 		{
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );	// Make a copy of the classname
-			GetClassPtr((CBasePlayer *)pev)->GiveNamedItem( STRING(iszItem) );
+			pPlayer->GiveNamedItem( STRING(iszItem) );
 		}
 	}
-
 	else if ( FStrEq(pcmd, "drop" ) )
 	{
-		// player is dropping an item. 
-		GetClassPtr((CBasePlayer *)pev)->DropPlayerItem((char *)CMD_ARGV(1));
+		// player is dropping an item.
+		pPlayer->DropPlayerItem((char *)CMD_ARGV(1));
 	}
 	else if ( FStrEq(pcmd, "fov" ) )
 	{
 		if ( g_flWeaponCheat && CMD_ARGC() > 1)
 		{
-			GetClassPtr((CBasePlayer *)pev)->m_iFOV = atoi( CMD_ARGV(1) );
+			pPlayer->m_iFOV = atoi( CMD_ARGV(1) );
 		}
 		else
 		{
-			CLIENT_PRINTF( pEntity, print_console, UTIL_VarArgs( "\"fov\" is \"%d\"\n", (int)GetClassPtr((CBasePlayer *)pev)->m_iFOV ) );
+			CLIENT_PRINTF( pEntity, print_console, UTIL_VarArgs( "\"fov\" is \"%d\"\n", (int)pPlayer->m_iFOV ) );
 		}
 	}
 	else if ( FStrEq(pcmd, "use" ) )
 	{
-		GetClassPtr((CBasePlayer *)pev)->SelectItem((char *)CMD_ARGV(1));
+		pPlayer->SelectItem((char *)CMD_ARGV(1));
 	}
 	else if (((pstr = strstr(pcmd, "weapon_")) != NULL)  && (pstr == pcmd))
 	{
-		GetClassPtr((CBasePlayer *)pev)->SelectItem(pcmd);
+		pPlayer->SelectItem(pcmd);
 	}
 	else if (FStrEq(pcmd, "lastinv" ))
 	{
-		GetClassPtr((CBasePlayer *)pev)->SelectLastItem();
+		pPlayer->SelectLastItem();
 	}
 	else if ( FStrEq( pcmd, "spectate" ) && (pev->flags & FL_PROXY) )	// added for proxy support
 	{
-		CBasePlayer * pPlayer = GetClassPtr((CBasePlayer *)pev);
-
 		edict_t *pentSpawnSpot = g_pGameRules->GetPlayerSpawnSpot( pPlayer );
 		pPlayer->StartObserver( pev->origin, VARS(pentSpawnSpot)->angles);
 	}
-	else if ( g_pGameRules->ClientCommand( GetClassPtr((CBasePlayer *)pev), pcmd ) )
+	else if ( g_pGameRules->ClientCommand( pPlayer, pcmd ) )
 	{
 		// MenuSelect returns true only if the command is properly handled,  so don't print a warning
 	}

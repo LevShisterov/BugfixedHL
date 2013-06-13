@@ -89,6 +89,9 @@ void DLLEXPORT HUD_TxferLocalOverrides( struct entity_state_s *state, const stru
 {
 	VectorCopy( client->origin, state->origin );
 
+	// Wider range health
+	state->health = client->health;
+
 	// Spectator
 	state->iuser1 = client->iuser1;
 	state->iuser2 = client->iuser2;
