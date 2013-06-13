@@ -785,7 +785,7 @@ void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, 
 
 	const char *killer_weapon_name = "world";		// by default, the player is killed by the world
 	int killer_index = 0;
-	
+
 	// Hack to fix name change
 	char *tau = "tau_cannon";
 	char *gluon = "gluon gun";
@@ -814,7 +814,10 @@ void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, 
 	}
 	else
 	{
-		killer_weapon_name = STRING( pevInflictor->classname );
+		if ( pevInflictor )
+		{
+			killer_weapon_name = STRING( pevInflictor->classname );
+		}
 	}
 
 	// strip the monster_* or weapon_* from the inflictor's classname
