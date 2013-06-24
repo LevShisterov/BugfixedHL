@@ -287,7 +287,7 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 		// SPR_Draw ones
 		k = iNumber % 10;
 		SPR_Set(GetSprite(m_HUD_number_0 + k), r, g, b );
-		SPR_DrawAdditive(0,  x, y, &GetSpriteRect(m_HUD_number_0 + k));
+		SPR_DrawAdditive(0, x, y, &GetSpriteRect(m_HUD_number_0 + k));
 		x += iWidth;
 	}
 	else if (iFlags & DHN_DRAWZERO)
