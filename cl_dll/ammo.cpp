@@ -194,7 +194,8 @@ void WeaponsResource :: LoadWeaponSprites( WEAPON *pWeapon )
 	while (p != NULL)
 	{
 		gHUD.AddSprite(p);
-		p = GetSpriteFromList(p, "d_", iRes, i - (p - pList) - 1);
+		p++;
+		p = GetSpriteFromList(p, "d_", iRes, i - (p - pList));
 	}
 }
 
@@ -1223,10 +1224,9 @@ client_sprite_t *GetSpriteFromList(client_sprite_t *pList, const char *pszNameSt
 	if (!pList || iCount <= 0)
 		return NULL;
 
-	int i = iCount;
 	int len = strlen(pszNameStart);
 	client_sprite_t *p = pList;
-	while(i--)
+	while(iCount--)
 	{
 		if (p->iRes == iRes && !strncmp(pszNameStart, p->szName, len))
 			return p;
