@@ -60,8 +60,9 @@ int CHudSayText :: Init( void )
 
 	InitHUDData();
 
-	m_HUD_saytext =			gEngfuncs.pfnRegisterVariable( "hud_saytext", "1", 0 );
-	m_HUD_saytext_time =	gEngfuncs.pfnRegisterVariable( "hud_saytext_time", "5", 0 );
+	m_HUD_saytext = CVAR_CREATE( "hud_saytext", "1", 0 );
+	m_HUD_saytext_time = CVAR_CREATE( "hud_saytext_time", "5", 0 );
+	m_pCvarConSayColor = CVAR_CREATE( "con_say_color", "auto", FCVAR_ARCHIVE );
 
 	m_iFlags |= HUD_INTERMISSION; // is always drawn during an intermission
 
@@ -161,7 +162,7 @@ int CHudSayText :: MsgFunc_SayText( const char *pszName, int iSize, void *pbuf )
 
 	int client_index = READ_BYTE();		// the client who spoke the message
 	SayTextPrint( READ_STRING(), iSize - 1,  client_index );
-	
+
 	return 1;
 }
 
@@ -174,8 +175,17 @@ void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIn
 	if (now && (*pszBuf == 2 && clientIndex > 0 || *pszBuf == 1 && clientIndex == 0))
 	{
 		sprintf(time_buf, "[%02i:%02i:%02i] ", current->tm_hour, current->tm_min, current->tm_sec);
-		ConsolePrint(time_buf);
-		ConsolePrint(pszBuf + 1);
+		RGBA color;
+		if (ParseColor(m_pCvarConSayColor->string, color))
+		{
+			ConsolePrintColor(time_buf, color);
+			ConsolePrintColor(pszBuf + 1, color);
+		}
+		else
+		{
+			ConsolePrint(time_buf);
+			ConsolePrint(pszBuf + 1);
+		}
 	}
 	else
 	{

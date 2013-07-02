@@ -758,24 +758,25 @@ float CHud::GetSensitivity( void )
 	return m_flMouseSensitivity;
 }
 
-void ParseColor( char *string, RGBA &rgba )
+bool ParseColor( char *string, RGBA &rgba )
 {
 	unsigned char r,g,b;
 	char *value = string;
 	while (*value == ' ') value++;
-	if (*value < '0' || *value > '9') return;
+	if (*value < '0' || *value > '9') return false;
 	r = atoi(value);
 	value = strchr(value, ' ');
-	if (value == NULL) return;
+	if (value == NULL) return false;
 	while (*value == ' ') value++;
-	if (*value < '0' || *value > '9') return;
+	if (*value < '0' || *value > '9') return false;
 	g = atoi(value);
 	value = strchr(value, ' ');
-	if (value == NULL) return;
+	if (value == NULL) return false;
 	while (*value == ' ') value++;
-	if (*value < '0' || *value > '9') return;
+	if (*value < '0' || *value > '9') return false;
 	b = atoi(value);
 	rgba.Set(r, g, b);
+	return true;
 }
 
 // hudPart: 0 - common hud, 1 - health points, 2 - armor points

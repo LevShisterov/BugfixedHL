@@ -12,9 +12,8 @@
 #include <windows.h>
 #include <psapi.h>
 
+#include "hud.h"
 #include "memory.h"
-#include "wrect.h"
-#include "cl_dll.h"
 #include "cvardef.h"
 #include "jpge.h"
 #include "cl_util.h"
@@ -75,6 +74,10 @@ ThisCallInt g_pFunctionReplacedByCounter;
 ThisCallIntInt g_pFunctionReplacedBySubst;
 size_t (*g_pGet_VGUI_System009)(void);
 size_t *g_pSystem = 0;
+
+/* Colored console variables*/
+CGameConsole003 **g_pGameConsole003 = 0;
+size_t g_PanelColorOffset = 0;
 
 bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleSize)
 {
@@ -587,6 +590,41 @@ void FindSnapshotAddresses(void)
 		}
 	}
 }
+void FindGameConsole003(void)
+{
+	if (!g_pGameConsole003)
+	{
+		// Find address of "GameConsole003" string
+		const char data1[] = "47616D65436F6E736F6C6530303300";
+		const char mask1[] = "FFFFFF00FFFFFFFFFFFFFFFFFFFFFF";
+		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
+		if (!addr1 || MemoryFindForward(addr1 + 1, g_EngineModuleEnd, data1, mask1))
+		{
+			strncat(g_szPatchErrors, "Colored console patch: offset of \"GameConsole003\" string not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		// Find address of GameConsole003
+		unsigned char data2[8];
+		data2[0] = 0x6A;
+		data2[1] = 0x00;
+		data2[2] = 0x68;
+		*(size_t*)(data2 + 3) = addr1;
+		data2[7] = 0xA3;
+		const char mask2[] = "FFFFFFFFFFFFFFFF";
+		unsigned char m[MAX_PATTERN];
+		ConvertHexString(mask2, m, sizeof(m));
+		size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data2, m, 8);
+		if (!addr2 || MemoryFindForward(addr2 + 1, g_EngineModuleEnd, data2, m, 8))
+		{
+			strncat(g_szPatchErrors, "Colored console patch: offset of GameConsole003 interface not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		g_pGameConsole003 = (CGameConsole003 **)(*(size_t *)(addr2 + 8) + 4);
+	}
+}
+
 void PatchFpsBugPlace(void)
 {
 	if (!g_FpsBugPlace)
@@ -733,6 +771,52 @@ void PatchGameUiConsoleCopy(void)
 	}
 }
 
+void FindColorOffset(void)
+{
+	if (!g_PanelColorOffset)
+	{
+		// Find "console dumped to " string
+		const char data1[] = "636F6E736F6C652064756D70656420746F2000";
+		const char mask1[] = "FFFFFF00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+		size_t addr1 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data1, mask1);
+		if (!addr1 || MemoryFindForward(addr1 + 1, g_GameUiModuleEnd, data1, mask1))
+		{
+			strncat(g_szPatchErrors, "Colored console patch: offset of \"console dumped to\" string not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		// Find CGameConsole_AddText function
+		unsigned char data2[8];
+		data2[0] = 0x68;
+		*(size_t*)(data2 + 1) = addr1;
+		data2[5] = 0x8B;
+		data2[6] = 0xCF;
+		data2[7] = 0xE8;
+		const char mask2[] = "FFFFFFFFFFFFFFFF";
+		unsigned char m[MAX_PATTERN];
+		ConvertHexString(mask2, m, sizeof(m));
+		size_t addr2 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data2, m, 8);
+		if (!addr2 || MemoryFindForward(addr2 + 1, g_GameUiModuleEnd, data2, m, 8))
+		{
+			strncat(g_szPatchErrors, "Colored console patch: offset of CGameConsole_AddText function not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		// Find CGameConsole_AddText function
+		char *pCGameConsole_AddText = (char *)(*(size_t *)(addr2 + 8) + addr2 + 12);
+		if (pCGameConsole_AddText[0] != (char)0x56 ||
+			pCGameConsole_AddText[1] != (char)0x8B || pCGameConsole_AddText[2] != (char)0xF1 ||
+			pCGameConsole_AddText[3] != (char)0x8B || pCGameConsole_AddText[4] != (char)0x86)
+		{
+			strncat(g_szPatchErrors, "Colored console patch: wrong offset of CGameConsole_AddText function found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		// Get correct color offset
+		g_PanelColorOffset = *(int *)(((size_t)pCGameConsole_AddText) + 5);
+	}
+}
+
 // Applies engine patches
 void PatchEngine(void)
 {
@@ -747,6 +831,7 @@ void PatchEngine(void)
 	FindEngineMessagesBufferVariables();
 	FindUserMessagesEntry();
 	FindSnapshotAddresses();
+	FindGameConsole003();
 
 	PatchFpsBugPlace();
 	PatchCommandsList();
@@ -809,6 +894,7 @@ void PatchGameUi(void)
 	}
 
 	PatchGameUiConsoleCopy();
+	FindColorOffset();
 }
 
 // Registers cvars and hooks commands
@@ -839,4 +925,12 @@ void MemoryPatcherHudFrame(void)
 	}
 
 	g_bPatchStatusPrinted = true;
+}
+
+// Set console output color
+RGBA SetConsoleColor(RGBA color)
+{
+	RGBA oldColor = *((RGBA *)((size_t)(*g_pGameConsole003)->panel + g_PanelColorOffset));
+	*((RGBA *)((size_t)(*g_pGameConsole003)->panel + g_PanelColorOffset)) = color;
+	return oldColor;
 }
