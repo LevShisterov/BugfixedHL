@@ -114,6 +114,13 @@ struct CommandLink
 	int _zero;
 };
 
+struct CGameConsole003
+{
+	int v_table;
+	int activated;
+	void *panel;
+};
+
 
 void HookSvcMessages(cl_enginemessages_t *pEngineMessages);
 void UnHookSvcMessages(cl_enginemessages_t *pEngineMessages);

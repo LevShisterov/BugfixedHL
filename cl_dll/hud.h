@@ -44,10 +44,16 @@ typedef struct {
 	int x, y;
 } POSITION;
 
-struct RGBA {
-	unsigned char r,g,b,a;
-	void Set(unsigned char r1, unsigned char g1, unsigned char b1) { r = r1; g = g1; b = b1; a = 0; }
+union RGBA {
+	struct { unsigned char r, g, b, a; };
+	unsigned int c;
+
+	RGBA() { c = 0; }
+	RGBA(unsigned int value) { c = value; }
+	void Set(unsigned char r1, unsigned char g1, unsigned char b1) { r = r1; g = g1; b = b1; a = 255; }
 };
+
+bool ParseColor( char *string, RGBA &rgba );
 
 typedef struct cvar_s cvar_t;
 
@@ -381,9 +387,9 @@ public:
 friend class CHudSpectator;
 
 private:
-
 	struct cvar_s *	m_HUD_saytext;
 	struct cvar_s *	m_HUD_saytext_time;
+	cvar_t	*m_pCvarConSayColor;
 };
 
 //

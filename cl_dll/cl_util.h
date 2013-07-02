@@ -126,6 +126,14 @@ inline void ConsolePrint( const char *string )
 	gEngfuncs.pfnConsolePrint( string );
 }
 
+RGBA SetConsoleColor(RGBA color);
+inline void ConsolePrintColor( const char *string, RGBA color )
+{
+	RGBA oldColor = SetConsoleColor(color);
+	gEngfuncs.pfnConsolePrint( string );
+	SetConsoleColor(oldColor);
+}
+
 inline void CenterPrint( const char *string )
 {
 	gEngfuncs.pfnCenterPrint( string );
