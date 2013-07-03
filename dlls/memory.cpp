@@ -52,15 +52,17 @@ double g_flFrameTimeReminder = 0;
 
 /* Snapshot variables */
 cvar_t *m_pCvarEngineSnapshotHook = 0, *m_pCvarSnapshotJpeg = 0, *m_pCvarSnapshotJpegQuality = 0;
-int (*g_pEngineSnapshotCommandHandler)(void) = 0;
+void (*g_pEngineSnapshotCommandHandler)(void) = 0;
 int (*g_pEngineCreateSnapshot)(char *filename) = 0;
-int *g_piScreenWidth = 0, *g_piScreenHeight = 0;
 int (__stdcall **g_pGlReadPixels)(int x, int y, int width, int height, DWORD format, DWORD type, void *data) = 0;
+void (__stdcall **g_pglPixelStorei)(int pname, int param) = 0;
+int *g_pIsFbo, *g_pFboLeft, *g_pFboRight, *g_pFboTop, *g_pFboBottom;
+bool (*g_pVideoMode)(void);	// Some engine function about video mode or window state
+#define GL_PACK_ALIGNMENT	0x0D05
 #define GL_RGB				0x1907
 #define GL_UNSIGNED_BYTE	0x1401
 
 /* Commands variables */
-CommandLink **g_pCommandsList = 0;
 void (*g_pOldMotdWriteHandler)(void) = 0;
 
 /* Connectionless packets */
@@ -317,26 +319,45 @@ void SnapshotCmdHandler(void)
 		// Do snapshot
 		if (m_pCvarSnapshotJpeg->value)
 		{	// jpeg
-			if (g_piScreenWidth && g_piScreenHeight && g_pGlReadPixels)
+			if (g_pGlReadPixels)
 			{
 				// Get filename
 				if (!GetResultsFilename("jpg", filename, fullpath))
 				{
 					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.\n");
+					return;
+				}
+				// Get screen size
+				int width, height;
+				if (g_pIsFbo && *g_pIsFbo || g_pVideoMode && g_pVideoMode())
+				{
+					width = *g_pFboLeft - *g_pFboRight;
+					height = *g_pFboTop - *g_pFboBottom;
+				}
+				else
+				{
+					SCREENINFO pscrinfo;
+					pscrinfo.iSize = sizeof(SCREENINFO);
+					gEngfuncs.pfnGetScreenInfo(&pscrinfo);
+					width = pscrinfo.iWidth;
+					height = pscrinfo.iHeight;
 				}
 				// Allocate buffer for image data
-				int size = *g_piScreenWidth * *g_piScreenHeight * 3;
+				int size = width * height * 3;
 				uint8_t *pImageData = (uint8_t *)malloc(size);
 				if (pImageData)
 				{
+					// Set packing type
+					if (g_pglPixelStorei)
+						(*g_pglPixelStorei)(GL_PACK_ALIGNMENT, 1);
 					// Get image data
-					(*g_pGlReadPixels)(0, 0, *g_piScreenWidth, *g_piScreenHeight, GL_RGB, GL_UNSIGNED_BYTE, (void *)pImageData);
+					(*g_pGlReadPixels)(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, (void *)pImageData);
 					// Compress and save
 					jpge::params params;
 					params.m_quality = clamp((int)m_pCvarSnapshotJpegQuality->value, 1, 100);
 					params.m_subsampling = jpge::H1V1;
 					params.m_two_pass_flag = true;
-					bool res = jpge::compress_image_to_jpeg_file(fullpath, *g_piScreenWidth, *g_piScreenHeight, 3, pImageData, true, params);
+					bool res = jpge::compress_image_to_jpeg_file(fullpath, width, height, 3, pImageData, true, params);
 					if (!res)
 					{
 						gEngfuncs.Con_Printf("Couldn't create snapshot: something bad happen.\n");
@@ -352,6 +373,7 @@ void SnapshotCmdHandler(void)
 			{
 				gEngfuncs.Con_Printf("Can't create snapshot: engine wasn't hooked properly.\n");
 			}
+			return;
 		}
 		else
 		{	// bmp
@@ -361,24 +383,20 @@ void SnapshotCmdHandler(void)
 				if (!GetResultsFilename("bmp", filename, fullpath))
 				{
 					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.\n");
+					return;
 				}
 				// Call original snapshot create function, but pass our filename to it
 				g_pEngineCreateSnapshot(filename);
-			}
-			else
-			{
-				gEngfuncs.Con_Printf("Can't create snapshot: engine wasn't hooked properly.\n");
+				return;
 			}
 		}
 	}
+
+	// Call original snapshot command handler
+	if (g_pEngineSnapshotCommandHandler)
+		g_pEngineSnapshotCommandHandler();
 	else
-	{
-		// Call original snapshot command handler
-		if (g_pEngineSnapshotCommandHandler)
-			g_pEngineSnapshotCommandHandler();
-		else
-			gEngfuncs.Con_Printf("Can't create snapshot: engine wasn't hooked properly.\n");
-	}
+		gEngfuncs.Con_Printf("Can't create snapshot: engine wasn't hooked properly.\n");
 }
 
 // Our motd_write command block handler
@@ -549,44 +567,91 @@ void FindUserMessagesEntry(void)
 }
 void FindSnapshotAddresses(void)
 {
-	if (!g_pEngineSnapshotCommandHandler && !g_pEngineCreateSnapshot && !g_pGlReadPixels)
+	if (!g_pGlReadPixels)
 	{
-		// Find snapshot addresses
-		const char data2[] = "A1B8F26E0481EC8000000085C0741CA1FCFB6C038B80940B000085C0740D8D4C24005150E8";
-		const char mask2[] = "FF00000000FFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-		size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data2, mask2);
-		const char data3[] = "83EC388B44243C5355568B35C036FA03570FAF35BC36FA0368247F690350E8CDDCFEFF8BD833FF83C4083BDF895C244C";
-		const char mask3[] = "FFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFF00000000FF00000000FFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFF";
-		size_t addr3 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data3, mask3);
-		const char data4[] = "83C41485C07520A1C036FA038B0DBC36FA03556801140000680719000050515757FF15A4D5F7038B0D";
-		const char mask4[] = "FFFFFFFFFFFFFFFF00000000FFFF00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFF";
-		size_t addr4 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data4, mask4);
-		// We do splitted checks for addresses to use all we have found
-		if (addr2)
+		// Find address of glReadPixes
+		const char data1[] = "6801140000 6807190000 52575051FF15";
+		const char mask1[] = "FFFFFFFFFF FFFFFFFFFF 00000000FFFF";
+		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
+		if (!addr1)
 		{
-			g_pEngineSnapshotCommandHandler = (int (*)(void))addr2;
+			strncat(g_szPatchErrors, "Engine patch: offset of glReadPixes not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
 		}
-		else
+		g_pGlReadPixels = (int (__stdcall **)(int, int, int, int, DWORD, DWORD, void*))*(size_t *)(addr1 + 16);
+	}
+
+	if (g_pEngineSnapshotCommandHandler)
+	{
+		if (!g_pEngineCreateSnapshot)
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of EngineSnapshotCommandHandler (A1B8F26E04) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			// Find address of EngineCreateSnapshot function
+			const char data1[] = "C38D4580 50 E8334A0300 83C404";	// New steam sample
+			const char mask1[] = "FFFF0000 FF FF00000000 FFFFFF";
+			size_t addr1 = MemoryFindForward((size_t)g_pEngineSnapshotCommandHandler, (size_t)g_pEngineSnapshotCommandHandler + 256, data1, mask1);
+			const char data2[] = "C38D442444 50 E8023A0300 83C404";	// Old nonsteam
+			const char mask2[] = "FFFF000000 FF FF00000000 FFFFFF";
+			size_t addr2 = MemoryFindForward((size_t)g_pEngineSnapshotCommandHandler, (size_t)g_pEngineSnapshotCommandHandler + 256, data2, mask2);
+			if (addr1)
+			{
+				g_pEngineCreateSnapshot = (int (*)(char *))(*(size_t *)(addr1 + 6) + addr1 + 10);
+			}
+			else if (addr2)
+			{
+				g_pEngineCreateSnapshot = (int (*)(char *))(*(size_t *)(addr2 + 7) + addr2 + 11);
+			}
+			else
+			{
+				strncat(g_szPatchErrors, "Engine patch: offset of EngineCreateSnapshot not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+				return;
+			}
 		}
-		if (addr3)
+
+		// If g_pEngineCreateSnapshot was found, try to find new steam related things
+
+		if (!g_pglPixelStorei)
 		{
-			g_pEngineCreateSnapshot = (int (*)(char *))addr3;
+			// Try to find address of FBO sizes
+			const char data1[] = "6A0168050D0000 FF15";
+			const char mask1[] = "FFFFFFFFFFFFFF FFFF";
+			size_t addr1 = MemoryFindForward((size_t)g_pEngineCreateSnapshot, (size_t)g_pEngineCreateSnapshot + 512, data1, mask1);
+			if (!addr1)
+			{
+				// No errors
+				return;
+			}
+			g_pglPixelStorei = (void (__stdcall **)(int, int))*(size_t *)(addr1 + 9);
 		}
-		else
+
+		if (!g_pIsFbo)
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of EngineCreateSnapshot (83EC388B44) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-		}
-		if (addr4)
-		{
-			g_piScreenHeight = (int *)*(size_t *)(addr4 + 8);
-			g_piScreenWidth = (int *)*(size_t *)(addr4 + 14);
-			g_pGlReadPixels = (int (__stdcall **)(int, int, int, int, DWORD, DWORD, void*))*(size_t *)(addr4 + 35);
-		}
-		else
-		{
-			strncat(g_szPatchErrors, "Engine patch: offset of screen parameters (83C41485C0) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			// Try to find address of FBO sizes
+			const char data1[] = "8B3D283F7B02 8B0D203F7B02 8B1D2C3F7B02 A1243F7B02 2BF9 2BD8";
+			const char mask1[] = "FF0000000000 FF0000000000 FF0000000000 FF00000000 FF00 FF00";
+			size_t addr1 = MemoryFindForward((size_t)g_pEngineCreateSnapshot, (size_t)g_pEngineCreateSnapshot + 256, data1, mask1);
+			if (!addr1)
+			{
+				// No errors
+				return;
+			}
+			const char data2[] = "A17C4BE401";
+			const char mask2[] = "FF00000000";
+			size_t addr2 = MemoryFindForward((size_t)g_pEngineCreateSnapshot, addr1, data2, mask2);
+			const char data3[] = "E809FC0500 85C0";
+			const char mask3[] = "FF00000000 FFFF";
+			size_t addr3 = MemoryFindForward((size_t)g_pEngineCreateSnapshot, addr1, data3, mask3);
+			if (!addr2 || !addr3)
+			{
+				// No errors
+				return;
+			}
+
+			g_pIsFbo = (int*)*(size_t *)(addr2 + 1);
+			g_pFboLeft = (int*)*(size_t *)(addr1 + 2);
+			g_pFboRight = (int*)*(size_t *)(addr1 + 8);
+			g_pFboTop = (int*)*(size_t *)(addr1 + 14);
+			g_pFboBottom = (int*)*(size_t *)(addr1 + 19);
+			g_pVideoMode = (bool (*)(void))(*(size_t *)(addr3 + 1) + addr3 + 5);
 		}
 	}
 }
@@ -659,52 +724,46 @@ void PatchFpsBugPlace(void)
 }
 void PatchCommandsList(void)
 {
-	if (!g_pCommandsList)
+	if (gEngfuncs.pfnGetCommandsList)
 	{
-		// Find commands list entry address
-		const char data5[] = "83C4085F5E5B83C410C3 8B35486A0202 85F67417 8B46045053";
-		const char mask5[] = "FFFFFFFFFFFFFFFFFFFF FFFF00000000 FFFFFFFF FFFFFFFFFF";
-		size_t addr5 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data5, mask5);
-		if (addr5)
-		{
-			g_pCommandsList = (CommandLink **)*(size_t *)(addr5 + 12);
+		CommandLink *cl;
 
-			// Hook commands
-			CommandLink *cl = *g_pCommandsList;
-			while (cl != NULL)
-			{
-				if (!_stricmp(cl->commandName, "motd_write"))
-				{
-					g_pOldMotdWriteHandler = (void (*)())HookDWord((size_t)&cl->handler, (uint32_t)MotdWriteHandler);
-					break;
-				}
-				cl = cl->nextCommand;
-			}
-		}
-		else
+		// Unhook commands
+		cl = gEngfuncs.pfnGetCommandsList();
+		while (cl != NULL)
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of CommandsList (83C4085F5E) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			// Search by address cos some commands has invalidated name references due to unloading process
+			if (g_pOldMotdWriteHandler && cl->handler == MotdWriteHandler && !_stricmp(cl->commandName, "motd_write"))
+			{
+				HookDWord((size_t)&cl->handler, (uint32_t)g_pOldMotdWriteHandler);
+				g_pOldMotdWriteHandler = 0;
+			}
+			else if (g_pEngineSnapshotCommandHandler && cl->handler == SnapshotCmdHandler && !_stricmp(cl->commandName, "snapshot"))
+			{
+				HookDWord((size_t)&cl->handler, (uint32_t)g_pEngineSnapshotCommandHandler);
+				g_pEngineSnapshotCommandHandler = 0;
+			}
+			cl = cl->nextCommand;
+		}
+
+		// Hook commands
+		cl = gEngfuncs.pfnGetCommandsList();
+		while (cl != NULL)
+		{
+			if (!_stricmp(cl->commandName, "motd_write"))
+			{
+				g_pOldMotdWriteHandler = (void (*)())HookDWord((size_t)&cl->handler, (uint32_t)MotdWriteHandler);
+			}
+			else if (!_stricmp(cl->commandName, "snapshot"))
+			{
+				g_pEngineSnapshotCommandHandler = (void (*)())HookDWord((size_t)&cl->handler, (uint32_t)SnapshotCmdHandler);
+			}
+			cl = cl->nextCommand;
 		}
 	}
 	else
 	{
-		// Unhook commands
-		CommandLink *cl = *g_pCommandsList;
-		while (cl != NULL)
-		{
-			// Search by address cos some commands has invalidated name references due to unloading process
-			if (cl->handler == MotdWriteHandler)
-			{
-				if (!_stricmp(cl->commandName, "motd_write"))
-				{
-					HookDWord((size_t)&cl->handler, (uint32_t)g_pOldMotdWriteHandler);
-					g_pOldMotdWriteHandler = 0;
-					break;
-				}
-			}
-			cl = cl->nextCommand;
-		}
-		g_pCommandsList = 0;
+		strncat(g_szPatchErrors, "Engine patch: pfnGetCommandsList is not set.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 	}
 }
 void PatchConnectionlessPacketHandler(void)
@@ -830,11 +889,9 @@ void PatchEngine(void)
 	FindSvcMessagesTable();
 	FindEngineMessagesBufferVariables();
 	FindUserMessagesEntry();
-	FindSnapshotAddresses();
 	FindGameConsole003();
 
 	PatchFpsBugPlace();
-	PatchCommandsList();
 	PatchConnectionlessPacketHandler();
 }
 // Removes engine patches
@@ -843,20 +900,28 @@ void UnPatchEngine(void)
 	if (!g_EngineModuleBase) return;
 
 	PatchConnectionlessPacketHandler();
-	PatchCommandsList();
 	PatchFpsBugPlace();
 
-	g_pGlReadPixels = 0;
-	g_piScreenWidth = 0;
-	g_piScreenHeight = 0;
-	g_pEngineCreateSnapshot = 0;
 	g_pEngineSnapshotCommandHandler = 0;
+	g_pEngineCreateSnapshot = 0;
+	g_pGlReadPixels = 0;
+	g_pIsFbo = 0;
+	g_pFboLeft = 0;
+	g_pFboRight = 0;
+	g_pFboTop = 0;
+	g_pFboBottom = 0;
+	g_pVideoMode = 0;
 
 	g_pUserMessages = 0;
 	g_EngineReadPos = 0;
 	g_EngineBufSize = 0;
 	g_EngineBuf = 0;
 	g_SvcMessagesTable = 0;
+}
+// Apply OnInit engine patches
+void PatchEngineInit(void)
+{
+	PatchCommandsList();
 }
 
 // Hooks requested SvcMessages functions
@@ -905,10 +970,6 @@ void MemoryPatcherInit(void)
 	m_pCvarSnapshotJpeg = gEngfuncs.pfnRegisterVariable("snapshot_jpeg", "1", FCVAR_ARCHIVE);
 	m_pCvarSnapshotJpegQuality = gEngfuncs.pfnRegisterVariable("snapshot_jpeg_quality", "95", FCVAR_ARCHIVE);
 
-	// Hook snapshot command if we were able to find engine handler
-	if (g_pEngineSnapshotCommandHandler)
-		gEngfuncs.pfnAddCommand("snapshot", SnapshotCmdHandler);
-
 	// Patch GameUI
 	PatchGameUi();
 }
@@ -917,6 +978,10 @@ void MemoryPatcherInit(void)
 void MemoryPatcherHudFrame(void)
 {
 	if (g_bPatchStatusPrinted) return;
+
+	// Late patching when engine is initialized fully
+	PatchEngineInit();
+	FindSnapshotAddresses();
 
 	if (g_szPatchErrors[0] != 0)
 	{

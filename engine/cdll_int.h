@@ -238,12 +238,16 @@ typedef struct cl_enginefuncs_s
 	void						( *pfnSetMousePos )( int x, int y );
 	void						( *pfnSetMouseEnable )( qboolean fEnable );
 
-	int		pfnUnks001[13];
+	int		pfnUnks001[1];
+
+	struct	CommandLink *		( *pfnGetCommandsList )		( void );
+
+	int		pfnUnks002[11];
 
 	int							( *pfnDrawString )			( int x, int y, const char* string, int r, int g, int b );
 	int							( *pfnDrawStringReverse )	( int x, int y, const char* string, int r, int g, int b );
 
-	int		pfnUnks002[17];
+	int		pfnUnks003[17];
 } cl_enginefunc_t;
 
 #ifndef IN_BUTTONS_H
