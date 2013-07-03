@@ -111,7 +111,7 @@ struct CommandLink
 	CommandLink *nextCommand;
 	char *commandName;
 	void (*handler)(void);
-	int _zero;
+	int addedByMod;
 };
 
 struct CGameConsole003
@@ -126,6 +126,7 @@ void HookSvcMessages(cl_enginemessages_t *pEngineMessages);
 void UnHookSvcMessages(cl_enginemessages_t *pEngineMessages);
 void PatchEngine(void);
 void UnPatchEngine(void);
+void PatchEngineInit(void);
 void MemoryPatcherInit(void);
 void MemoryPatcherHudFrame(void);
 
