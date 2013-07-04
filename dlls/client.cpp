@@ -1740,8 +1740,8 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 		cd->health		= 0.0;
 	else if (pev->health <= 1.0)
 		cd->health		= 1.0;
-	else if ((unsigned int)pev->health > 0x7FFF0000)
-		cd->health		= 0x7FFF0000;
+	else if ((int)pev->health < 0)
+		cd->health		= 0x7FFFFF00;	// (int)(float)0x7FFFFF00 == 0x7FFFFF00, (int)(float)0x7FFFFFF0 != 0x7FFFFFF0
 	else
 		cd->health		= pev->health;
 
