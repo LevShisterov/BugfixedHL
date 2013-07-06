@@ -807,7 +807,10 @@ void CHudSpectator::SetModes(int iNewMainMode, int iNewInsetMode)
 		{
 			char cmdstring[32];
 			// forward command to server
-			sprintf(cmdstring,"specmode %i", iNewMainMode);
+			if (gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_NONE)
+				sprintf(cmdstring,"specmode %i", iNewMainMode);
+			else
+				sprintf(cmdstring,"spec_mode %i", iNewMainMode);
 			gEngfuncs.pfnServerCmd(cmdstring);
 			return;
 		}
