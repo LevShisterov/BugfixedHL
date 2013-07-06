@@ -76,8 +76,7 @@ typedef struct hud_player_info_s
 	short ping;
 	byte thisplayer;  // TRUE if this is the calling player
 
-  // stuff that's unused at the moment,  but should be done
-	byte spectator;
+	byte spectator;	// set via Spectator user messages, so work only on server with them
 	byte packetloss;
 
 	char *model;

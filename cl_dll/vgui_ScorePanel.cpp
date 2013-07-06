@@ -309,6 +309,7 @@ void ScorePanel::Initialize( void )
 	m_iNumTeams = 0;
 	memset(g_PlayerExtraInfo, 0, sizeof(g_PlayerExtraInfo));
 	memset(g_TeamInfo, 0, sizeof(g_TeamInfo));
+	memset(g_IsSpectator, 0, sizeof(g_IsSpectator));
 	memset(g_PlayerSteamId, 0, sizeof(g_PlayerSteamId));
 	m_PlayerList.SetScrollPos(0);
 	m_iStatusRequestState = STATUS_REQUEST_IDLE;
@@ -356,6 +357,12 @@ void ScorePanel::Update()
 
 	m_iRows = 0;
 	gViewPort->GetAllPlayersInfo();
+
+	// Transfer spectator state
+	for (int i = 1; i <= MAX_PLAYERS; i++)
+	{
+		g_PlayerInfoList[i].spectator = g_IsSpectator[i];
+	}
 
 	// Check SteamIds
 	for (int i = 1; i <= MAX_PLAYERS; i++)
@@ -856,6 +863,13 @@ void ScorePanel::FillGrid()
 					break;
 				case COLUMN_NAME:
 					sprintf(sz, "%s", pl_info->name);
+
+					// Append spectator label
+					if (pl_info->spectator)
+					{
+						pLabel->setText2("(spectator)");
+						pLabel->setFont2(smallfont);
+					}
 					break;
 				case COLUMN_STEAMID:
 					if (gHUD.m_pCvarShowSteamId->value)
