@@ -3930,6 +3930,20 @@ void CBasePlayer :: UpdateClientData( void )
 			MESSAGE_BEGIN( MSG_ONE, gmsgInitHUD, NULL, pev );
 			MESSAGE_END();
 
+			// Send spectator statuses
+			CBasePlayer *plr;
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+				if ( !plr || !plr->IsObserver() )
+					continue;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgSpectator, NULL, pev );
+					WRITE_BYTE(ENTINDEX(plr->edict()));	// index number of primary entity
+					WRITE_BYTE(1);
+				MESSAGE_END();
+			}
+
 			g_pGameRules->InitHUD( this );
 			m_fGameHUDInitialized = TRUE;
 			m_iObserverMode = OBS_ROAMING;
