@@ -296,6 +296,7 @@ int CHudAmmo::Init(void)
 
 	CVAR_CREATE( "hud_drawhistory_time", HISTORY_DRAW_TIME, 0 );
 	CVAR_CREATE( "hud_fastswitch", "0", FCVAR_ARCHIVE );		// controls whether or not weapons can be selected in one keypress
+	m_pCvarHudWeapon = CVAR_CREATE( "hud_weapon", "0", FCVAR_ARCHIVE );			// controls displaying sprite of currently selected weapon
 
 	m_iFlags |= HUD_ACTIVE; //!!!
 
@@ -875,13 +876,6 @@ int CHudAmmo::Draw(float flTime)
 
 	WEAPON *pw = m_pWeapon; // shorthand
 
-	// SPR_Draw Ammo
-	if ((pw->iAmmoType < 0) && (pw->iAmmo2Type < 0))
-		return 0;
-
-
-	int iFlags = DHN_DRAWZERO; // draw 0 values
-
 	AmmoWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;
 
 	if (gHUD.m_pCvarDim->value == 0)
@@ -900,6 +894,21 @@ int CHudAmmo::Draw(float flTime)
 	a *= gHUD.GetHudTransparency();
 	gHUD.GetHudColor(0, 0, r, g, b);
 	ScaleColors(r, g, b, a );
+
+	// Draw weapon sprite
+	if (m_pCvarHudWeapon->value > 0)
+	{
+		y = ScreenHeight - (m_pWeapon->rcInactive.bottom - m_pWeapon->rcInactive.top);
+		x = ScreenWidth - (8.5 * AmmoWidth) - (m_pWeapon->rcInactive.right - m_pWeapon->rcInactive.left);
+		SPR_Set(m_pWeapon->hInactive, r, g, b);
+		SPR_DrawAdditive(0, x, y, &m_pWeapon->rcInactive);
+	}
+
+	// SPR_Draw Ammo
+	if ((pw->iAmmoType < 0) && (pw->iAmmo2Type < 0))
+		return 0;
+
+	int iFlags = DHN_DRAWZERO; // draw 0 values
 
 	// Does this weapon have a clip?
 	y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight/2;
@@ -970,6 +979,7 @@ int CHudAmmo::Draw(float flTime)
 			SPR_DrawAdditive(0, x, y - iOffset, &m_pWeapon->rcAmmo2);
 		}
 	}
+
 	return 1;
 }
 
