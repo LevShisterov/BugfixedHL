@@ -62,15 +62,13 @@ void SpectatorPanel::ActionSignal(int cmd)
 
 		case SPECTATOR_PANEL_CMD_CAMERA :		gViewPort->ShowCommandMenu( gViewPort->m_SpectatorCameraMenu );
 												break;
-		
+
 		case SPECTATOR_PANEL_CMD_TOGGLE_INSET : gHUD.m_Spectator.SetModes( -1, 
 													gHUD.m_Spectator.ToggleInset(false) );
 												break;
-		
 
 		default : 	gEngfuncs.Con_DPrintf("Unknown SpectatorPanel ActionSingal %i.\n",cmd); break;
 	}
-
 }
 
 

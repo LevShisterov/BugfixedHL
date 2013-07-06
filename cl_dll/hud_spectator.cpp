@@ -48,8 +48,6 @@ extern vec3_t v_sim_org;	// last sim origin
 
 void SpectatorMode(void)
 {
-
-
 	if ( gEngfuncs.Cmd_Argc() <= 1 )
 	{
 		gEngfuncs.Con_Printf( "usage:  spec_mode <Main Mode> [<Inset Mode>]\n" );
