@@ -62,7 +62,7 @@ int CHudSayText :: Init( void )
 
 	m_HUD_saytext = CVAR_CREATE( "hud_saytext", "1", 0 );
 	m_HUD_saytext_time = CVAR_CREATE( "hud_saytext_time", "5", 0 );
-	m_pCvarConSayColor = CVAR_CREATE( "con_say_color", "auto", FCVAR_ARCHIVE );
+	m_pCvarConSayColor = CVAR_CREATE( "con_say_color", "30 230 50", FCVAR_ARCHIVE );
 
 	m_iFlags |= HUD_INTERMISSION; // is always drawn during an intermission
 
