@@ -93,6 +93,7 @@ public:
 	BOOL StartControl( CBasePlayer* pController );
 	void StopControl( void );
 	void ControllerPostFrame( void );
+	virtual void StopFire(void) { }
 
 
 protected:
@@ -373,6 +374,8 @@ BOOL CFuncTank :: StartControl( CBasePlayer *pController )
 
 void CFuncTank :: StopControl()
 {
+	StopFire();
+
 	// TODO: bring back the controllers current weapon
 	if ( !m_pController )
 		return;
@@ -409,7 +412,7 @@ void CFuncTank :: ControllerPostFrame( void )
 		m_fireLast = gpGlobals->time - (1/m_fireRate) - 0.01;  // to make sure the gun doesn't fire too many bullets
 
 		Fire( BarrelPosition(), vecForward, m_pController->pev );
-		
+
 		// HACKHACK -- make some noise (that the AI can hear)
 		if ( m_pController && m_pController->IsPlayer() )
 			((CBasePlayer *)m_pController)->m_iWeaponVolume = LOUD_GUN_VOLUME;
@@ -775,6 +778,8 @@ public:
 	virtual int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
 
+	virtual void StopFire(void);
+
 private:
 	CLaser	*m_pLaser;
 	float	m_laserTime;
@@ -880,6 +885,13 @@ void CFuncTankLaser::Fire( const Vector &barrelEnd, const Vector &forward, entva
 		CFuncTank::Fire( barrelEnd, forward, pevAttacker );
 	}
 }
+
+void CFuncTankLaser::StopFire(void)
+{
+	if (m_pLaser)
+		m_pLaser->TurnOff();
+}
+
 
 class CFuncTankRocket : public CFuncTank
 {
