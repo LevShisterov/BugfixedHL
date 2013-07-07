@@ -124,7 +124,7 @@ void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDama
 {
 	if ( !pEntity )
 		return;
-	
+
 	gMultiDamage.type |= bitsDamageType;
 
 	if ( pEntity != gMultiDamage.pEntity )

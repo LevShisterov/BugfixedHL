@@ -214,7 +214,7 @@ void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	// do damage
 	if ( !( pev->spawnflags & SF_ENVEXPLOSION_NODAMAGE ) )
 	{
-		RadiusDamage ( pev, pev, m_iMagnitude, CLASS_NONE, DMG_BLAST );
+		RadiusDamage(pev->owner ? VARS(pev->owner) : pev, pActivator ? pActivator->pev : pev, m_iMagnitude, CLASS_NONE, DMG_BLAST);
 	}
 
 	SetThink( &CEnvExplosion::Smoke );
@@ -255,12 +255,12 @@ void CEnvExplosion::Smoke( void )
 
 
 // HACKHACK -- create one of these and fake a keyvalue to get the right explosion setup
-void ExplosionCreate( const Vector &center, const Vector &angles, edict_t *pOwner, int magnitude, BOOL doDamage )
+void ExplosionCreate( const Vector &center, const Vector &angles, edict_t *pInflictor, edict_t *pAttacker, int magnitude, BOOL doDamage )
 {
 	KeyValueData	kvd;
 	char			buf[128];
 
-	CBaseEntity *pExplosion = CBaseEntity::Create( "env_explosion", center, angles, pOwner );
+	CBaseEntity *pExplosion = CBaseEntity::Create( "env_explosion", center, angles, pInflictor );
 	sprintf( buf, "%3d", magnitude );
 	kvd.szKeyName = "iMagnitude";
 	kvd.szValue = buf;
@@ -269,5 +269,5 @@ void ExplosionCreate( const Vector &center, const Vector &angles, edict_t *pOwne
 		pExplosion->pev->spawnflags |= SF_ENVEXPLOSION_NODAMAGE;
 
 	pExplosion->Spawn();
-	pExplosion->Use( NULL, NULL, USE_TOGGLE, 0 );
+	pExplosion->Use( CBaseEntity::Instance(pAttacker), pExplosion, USE_TOGGLE, 0 );
 }

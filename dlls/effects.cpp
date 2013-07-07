@@ -742,7 +742,12 @@ void CLightning::StrikeThink( void )
 }
 
 
-void CBeam::BeamDamage( TraceResult *ptr )
+void CBeam::BeamDamage(TraceResult *ptr)
+{
+	CBeam::BeamDamage(ptr, pev);
+}
+
+void CBeam::BeamDamage(TraceResult *ptr, entvars_t *pevAttacker)
 {
 	RelinkBeam();
 	if ( ptr->flFraction != 1.0 && ptr->pHit != NULL )
@@ -751,8 +756,8 @@ void CBeam::BeamDamage( TraceResult *ptr )
 		if ( pHit )
 		{
 			ClearMultiDamage();
-			pHit->TraceAttack( pev, pev->dmg * (gpGlobals->time - pev->dmgtime), (ptr->vecEndPos - pev->origin).Normalize(), ptr, DMG_ENERGYBEAM );
-			ApplyMultiDamage( pev, pev );
+			pHit->TraceAttack( pevAttacker, pev->dmg * (gpGlobals->time - pev->dmgtime), (ptr->vecEndPos - pev->origin).Normalize(), ptr, DMG_ENERGYBEAM );
+			ApplyMultiDamage( pev, pevAttacker );
 			if ( pev->spawnflags & SF_BEAM_DECALS )
 			{
 				if ( pHit->IsBSPModel() )
@@ -1084,14 +1089,17 @@ void CLaser::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useTyp
 	}
 }
 
-
-void CLaser::FireAtPoint( TraceResult &tr )
+void CLaser::FireAtPoint(TraceResult &tr)
+{
+	CLaser::FireAtPoint(tr, NULL);
+}
+void CLaser::FireAtPoint(TraceResult &tr, entvars_t *pevAttacker)
 {
 	SetEndPos( tr.vecEndPos );
 	if ( m_pSprite )
 		UTIL_SetOrigin( m_pSprite->pev, tr.vecEndPos );
 
-	BeamDamage( &tr );
+	BeamDamage( &tr, pevAttacker );
 	DoSparks( GetStartPos(), tr.vecEndPos );
 }
 
