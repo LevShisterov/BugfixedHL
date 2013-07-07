@@ -18,6 +18,7 @@
 #include "effects.h"
 
 class CBasePlayer;
+extern int gmsgAmmoPickup;
 extern int gmsgWeapPickup;
 
 void DeactivateSatchels( CBasePlayer *pOwner );
@@ -353,6 +354,8 @@ public:
 
 	int		m_iDefaultAmmo;// how much ammo you get when you pick up this weapon as placed by a level designer.
 
+protected:
+	void SendWeaponPickup(CBasePlayer *pPlayer);
 };
 
 

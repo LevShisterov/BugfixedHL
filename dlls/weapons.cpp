@@ -1058,6 +1058,29 @@ void CBasePlayerWeapon::Holster( int skiplocal /* = 0 */ )
 	m_pPlayer->pev->weaponmodel = 0;
 }
 
+void CBasePlayerWeapon::SendWeaponPickup(CBasePlayer *pPlayer)
+{
+	MESSAGE_BEGIN( MSG_ONE, gmsgWeapPickup, NULL, pPlayer->pev );
+		WRITE_BYTE( m_iId );
+	MESSAGE_END();
+
+	if (!pPlayer->m_fInitHUD)
+	{
+		// Send to all spectating players
+		CBasePlayer *plr;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			plr = (CBasePlayer *)UTIL_PlayerByIndex(i);
+			if (!plr || plr->pev->iuser1 != OBS_IN_EYE || plr->m_hObserverTarget != pPlayer)
+				continue;
+
+			MESSAGE_BEGIN( MSG_ONE, gmsgWeapPickup, NULL, plr->pev );
+				WRITE_BYTE( m_iId );
+			MESSAGE_END();
+		}
+	}
+}
+
 void CBasePlayerAmmo::Spawn( void )
 {
 	pev->movetype = MOVETYPE_TOSS;
