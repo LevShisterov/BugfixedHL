@@ -85,9 +85,7 @@ int CHgun::AddToPlayer( CBasePlayer *pPlayer )
 		}
 #endif
 
-		MESSAGE_BEGIN( MSG_ONE, gmsgWeapPickup, NULL, pPlayer->pev );
-			WRITE_BYTE( m_iId );
-		MESSAGE_END();
+		CBasePlayerWeapon::SendWeaponPickup(pPlayer);
 		return TRUE;
 	}
 	return FALSE;

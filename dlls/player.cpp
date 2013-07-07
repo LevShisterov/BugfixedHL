@@ -3786,6 +3786,23 @@ int CBasePlayer :: GiveAmmo( int iCount, char *szName, int iMax )
 			WRITE_BYTE( GetAmmoIndex(szName) );		// ammo ID
 			WRITE_BYTE( iAdd );		// amount
 		MESSAGE_END();
+
+		if (!this->m_fInitHUD)
+		{
+			// Send to all spectating players
+			CBasePlayer *plr;
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				plr = (CBasePlayer *)UTIL_PlayerByIndex(i);
+				if (!plr || plr->pev->iuser1 != OBS_IN_EYE || plr->m_hObserverTarget != this)
+					continue;
+
+				MESSAGE_BEGIN( MSG_ONE, gmsgAmmoPickup, NULL, plr->pev );
+					WRITE_BYTE( GetAmmoIndex(szName) );		// ammo ID
+					WRITE_BYTE( iAdd );		// amount
+				MESSAGE_END();
+			}
+		}
 	}
 
 	TabulateAmmo();
