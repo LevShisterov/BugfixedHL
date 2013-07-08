@@ -119,6 +119,9 @@ int CHud :: Redraw( float flTime, int intermission )
 			gViewPort->ShowScoreBoard();
 			gViewPort->UpdateSpectatorPanel();
 
+			// Clear center text
+			CenterPrint("");
+
 			// Take a screenshot if the client's got the cvar set and not in demo playback
 			if (!gEngfuncs.pDemoAPI->IsPlayingback() && CVAR_GET_FLOAT( "hud_takesshots" ) != 0)
 				m_flShotTime = flTime + 1.0;	// Take a screenshot in a second
@@ -135,7 +138,7 @@ int CHud :: Redraw( float flTime, int intermission )
 
 	// if no redrawing is necessary
 	// return 0;
-	
+
 	if ( m_pCvarDraw->value )
 	{
 		HUDLIST *pList = m_pHudList;
