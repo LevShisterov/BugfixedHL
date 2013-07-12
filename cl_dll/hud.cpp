@@ -34,6 +34,40 @@
 #include "appversion.h"
 
 
+float g_ColorBlue[3]	= { 0.6, 0.8, 1.0 };
+float g_ColorRed[3]		= { 1.0, 0.25, 0.25 };
+float g_ColorGreen[3]	= { 0.6, 1.0, 0.6 };
+float g_ColorYellow[3]	= { 1.0, 0.7, 0.0 };
+float g_ColorGrey[3]	= { 0.8, 0.8, 0.8 };
+
+float *GetClientTeamColor(int clientIndex)
+{
+	switch (g_PlayerExtraInfo[clientIndex].teamnumber)
+	{
+		case 0: return NULL;
+		case 1: return g_ColorBlue;
+		case 2: return g_ColorRed;
+		case 3: return g_ColorYellow;
+		case 4: return g_ColorGreen;
+
+		default: return g_ColorGrey;
+	}
+}
+
+int g_iColorsCodes[10][3] = 
+{
+	{ 0xFF, 0xAA, 0x00 },	// ^0 orange
+	{ 0xFF, 0x00, 0x00 },	// ^1 red
+	{ 0x00, 0xFF, 0x00 },	// ^2 green
+	{ 0xFF, 0xFF, 0x00 },	// ^3 yellow
+	{ 0x00, 0x00, 0xFF },	// ^4 blue
+	{ 0x00, 0xFF, 0xFF },	// ^5 cyan
+	{ 0xFF, 0x00, 0xFF },	// ^6 magenta
+	{ 0x88, 0x88, 0x88 },	// ^7 grey
+	{ 0xFF, 0xFF, 0xFF },	// ^8 white
+							// ^9 con_color
+};
+
 class CHLVoiceStatusHelper : public IVoiceStatusHelper
 {
 public:
@@ -352,6 +386,7 @@ void CHud :: Init( void )
 	m_pCvarColor3 = CVAR_CREATE( "hud_color3", "255 96 0", FCVAR_ARCHIVE );
 	m_pCvarShowLoss = CVAR_CREATE( "hud_showlossinscore", "1", FCVAR_ARCHIVE );	// controls whether or not to show loss in scoreboard table
 	m_pCvarShowSteamId = CVAR_CREATE( "hud_showsteamidinscore", "1", FCVAR_ARCHIVE );	// controls whether or not to show SteamId in scoreboard table
+	m_pCvarColorText = CVAR_CREATE( "hud_colortext", "1", FCVAR_ARCHIVE );
 
 	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
 
@@ -801,4 +836,122 @@ float CHud::GetHudTransparency()
 	if (hud_draw < 0) hud_draw = 0;
 
 	return hud_draw;
+}
+
+void GetConsoleStringSize(const char *string, int *width, int *height)
+{
+	if (gHUD.m_pCvarColorText->value == 0)
+		gEngfuncs.pfnDrawConsoleStringLen(string, width, height);
+	else
+		gEngfuncs.pfnDrawConsoleStringLen(RemoveColorCodes((char*)string), width, height);
+}
+
+int DrawConsoleString(int x, int y, const char *string, float *color)
+{
+	if (!string || !*string)
+		return x;
+
+	if (color != NULL)
+		gEngfuncs.pfnDrawSetTextColor(color[0], color[1], color[2]);
+	else
+		gEngfuncs.pfnDrawConsoleString(x, y, " ");	// Reset color to con_color
+
+	if (gHUD.m_pCvarColorText->value == 0)
+		return gEngfuncs.pfnDrawConsoleString(x, y, (char*)string);
+
+	char *c1 = (char*)string;
+	char *c2 = (char*)string;
+	float r, g, b;
+	int colorIndex;
+	while (true)
+	{
+		// Search for next color code
+		colorIndex = -1;
+		while(*c2 && *(c2 + 1) && !(*c2 == '^' && *(c2 + 1) >= '0' && *(c2 + 1) <= '9'))
+			c2++;
+		if (*c2 == '^' && *(c2 + 1) >= '0' && *(c2 + 1) <= '9')
+		{
+			colorIndex = *(c2 + 1) - '0';
+			*c2 = 0;
+		}
+		// Draw current string
+		x = gEngfuncs.pfnDrawConsoleString(x, y, c1);
+
+		if (colorIndex >= 0)
+		{
+			// Revert change and advance
+			*c2 = '^';
+			c2 += 2;
+			c1 = c2;
+
+			// Return if next string is empty
+			if (!*c1)
+				return x;
+
+			// Setup color
+			if (color == NULL && colorIndex <= 8 && gHUD.m_pCvarColorText->value == 1)
+			{
+				r = g_iColorsCodes[colorIndex][0] / 256.0;
+				g = g_iColorsCodes[colorIndex][1] / 256.0;
+				b = g_iColorsCodes[colorIndex][2] / 256.0;
+				gEngfuncs.pfnDrawSetTextColor(r, g, b);
+			}
+			else if (color != NULL)
+				gEngfuncs.pfnDrawSetTextColor(color[0], color[1], color[2]);
+			continue;
+		}
+
+		// Done
+		break;
+	}
+	return x;
+}
+
+char *RemoveColorCodes(const char *string, bool inPlace)
+{
+	static char buffer[1024];
+
+	char *c1 = inPlace ? (char *)string : buffer;
+	char *c2 = (char *)string;
+	char *end = inPlace ? 0 : buffer + sizeof(buffer) - 1;
+	while(*c2 && (inPlace || c1 < end))
+	{
+		if (*c2 == '^' && *(c2 + 1) >= '0' && *(c2 + 1) <= '9')
+		{
+			c2 += 2;
+			continue;
+		}
+		*c1 = *c2;
+		c1++;
+		c2++;
+	}
+	*c1 = 0;
+
+	return buffer;
+}
+
+void ConsolePrint(const char *string)
+{
+	if (gHUD.m_pCvarColorText->value == 0)
+		gEngfuncs.pfnConsolePrint(string);
+	else
+		gEngfuncs.pfnConsolePrint(RemoveColorCodes(string));
+}
+
+void ConsolePrintColor(const char *string, RGBA color)
+{
+	RGBA oldColor = SetConsoleColor(color);
+	if (gHUD.m_pCvarColorText->value == 0)
+		gEngfuncs.pfnConsolePrint(string);
+	else
+		gEngfuncs.pfnConsolePrint(RemoveColorCodes(string));
+	SetConsoleColor(oldColor);
+}
+
+void CenterPrint( const char *string )
+{
+	if (gHUD.m_pCvarColorText->value == 0)
+		gEngfuncs.pfnCenterPrint(string);
+	else
+		gEngfuncs.pfnCenterPrint(RemoveColorCodes(string));
 }

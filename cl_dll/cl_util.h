@@ -90,30 +90,22 @@ inline int SPR_Width( HLHSPRITE x, int f )	{ return gEngfuncs.pfnSPR_Width(x, f)
 inline client_textmessage_t *TextMessageGet( const char *pName ) { return gEngfuncs.pfnTextMessageGet( pName ); }
 
 inline int TextMessageDrawChar( int x, int y, int number, int r, int g, int b ) 
-{ 
+{
 	return gEngfuncs.pfnDrawCharacter( x, y, number, r, g, b ); 
 }
 
 inline int TextMessageDrawString( int x, int y, const char* string, int r, int g, int b ) 
-{ 
+{
 	return gEngfuncs.pfnDrawString( x, y, string, r, g, b ); 
 }
 
 inline int TextMessageDrawStringReverse( int x, int y, const char* string, int r, int g, int b ) 
-{ 
+{
 	return gEngfuncs.pfnDrawStringReverse( x, y, string, r, g, b ); 
 }
 
-inline int DrawConsoleString( int x, int y, const char *string )
-{
-	return gEngfuncs.pfnDrawConsoleString( x, y, (char*) string );
-}
-
-inline void GetConsoleStringSize( const char *string, int *width, int *height )
-{
-	gEngfuncs.pfnDrawConsoleStringLen( string, width, height );
-}
-
+int DrawConsoleString( int x, int y, const char *string, float *color );
+void GetConsoleStringSize( const char *string, int *width, int *height );
 inline int ConsoleStringLen( const char *string )
 {
 	int _width, _height;
@@ -121,23 +113,13 @@ inline int ConsoleStringLen( const char *string )
 	return _width;
 }
 
-inline void ConsolePrint( const char *string )
-{
-	gEngfuncs.pfnConsolePrint( string );
-}
-
+char *RemoveColorCodes(const char *string, bool inPlace = false);
 RGBA SetConsoleColor(RGBA color);
-inline void ConsolePrintColor( const char *string, RGBA color )
-{
-	RGBA oldColor = SetConsoleColor(color);
-	gEngfuncs.pfnConsolePrint( string );
-	SetConsoleColor(oldColor);
-}
+void ConsolePrint(const char *string);
+void ConsolePrintColor(const char *string, RGBA color);
+void CenterPrint(const char *string);
 
-inline void CenterPrint( const char *string )
-{
-	gEngfuncs.pfnCenterPrint( string );
-}
+float *GetClientTeamColor(int clientIndex);
 
 // returns the players name of entity no.
 #define GetPlayerInfo (*gEngfuncs.pfnGetPlayerInfo)

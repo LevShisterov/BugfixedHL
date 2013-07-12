@@ -463,8 +463,8 @@ void CHudMessage::MessageAdd( const char *pName, float time )
 			g_pCustomMessage.fxtime = 0.25;
 			g_pCustomMessage.holdtime = 5;
 			g_pCustomMessage.pName = g_pCustomName;
-			strcpy( g_pCustomText, pName );
 			g_pCustomMessage.pMessage = g_pCustomText;
+			strcpy(g_pCustomText, pName);
 
 			tempMessage = &g_pCustomMessage;
 		}
@@ -478,6 +478,9 @@ void CHudMessage::MessageAdd( const char *pName, float time )
 			// TODO: Additional checks on text in the message...
 			return;
 		}
+
+		if (gHUD.m_pCvarColorText->value != 0)
+			RemoveColorCodes(tempMessage->pMessage, true);
 
 		for ( j = 0; j < maxHUDMessages; j++ )
 		{

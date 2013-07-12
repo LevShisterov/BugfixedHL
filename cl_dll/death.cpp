@@ -45,28 +45,6 @@ static int DEATHNOTICE_DISPLAY_TIME = 6;
 
 DeathNoticeItem rgDeathNoticeList[ MAX_DEATHNOTICES + 1 ];
 
-float g_ColorBlue[3]	= { 0.6, 0.8, 1.0 };
-float g_ColorRed[3]		= { 1.0, 0.25, 0.25 };
-float g_ColorGreen[3]	= { 0.6, 1.0, 0.6 };
-float g_ColorYellow[3]	= { 1.0, 0.7, 0.0 };
-float g_ColorGrey[3]	= { 0.8, 0.8, 0.8 };
-
-float *GetClientColor( int clientIndex )
-{
-	switch ( g_PlayerExtraInfo[clientIndex].teamnumber )
-	{
-	case 1:	return g_ColorBlue;
-	case 2: return g_ColorRed;
-	case 3: return g_ColorYellow;
-	case 4: return g_ColorGreen;
-	case 0: return g_ColorYellow;
-
-		default	: return g_ColorGrey;
-	}
-
-	return NULL;
-}
-
 int CHudDeathNotice :: Init( void )
 {
 	gHUD.AddHudElem( this );
@@ -83,7 +61,6 @@ void CHudDeathNotice :: InitHUDData( void )
 {
 	memset( rgDeathNoticeList, 0, sizeof(rgDeathNoticeList) );
 }
-
 
 int CHudDeathNotice :: VidInit( void )
 {
@@ -127,9 +104,7 @@ int CHudDeathNotice :: Draw( float flTime )
 				x -= (5 + ConsoleStringLen( rgDeathNoticeList[i].szKiller ) );
 
 				// Draw killers name
-				if ( rgDeathNoticeList[i].KillerColor )
-					gEngfuncs.pfnDrawSetTextColor( rgDeathNoticeList[i].KillerColor[0], rgDeathNoticeList[i].KillerColor[1], rgDeathNoticeList[i].KillerColor[2] );
-				x = 5 + DrawConsoleString( x, y, rgDeathNoticeList[i].szKiller );
+				x = 5 + DrawConsoleString( x, y, rgDeathNoticeList[i].szKiller, rgDeathNoticeList[i].KillerColor );
 			}
 
 			r = 255;  g = 80;	b = 0;
@@ -147,9 +122,7 @@ int CHudDeathNotice :: Draw( float flTime )
 			// Draw victims name (if it was a player that was killed)
 			if (rgDeathNoticeList[i].iNonPlayerKill == FALSE)
 			{
-				if ( rgDeathNoticeList[i].VictimColor )
-					gEngfuncs.pfnDrawSetTextColor( rgDeathNoticeList[i].VictimColor[0], rgDeathNoticeList[i].VictimColor[1], rgDeathNoticeList[i].VictimColor[2] );
-				x = DrawConsoleString( x, y, rgDeathNoticeList[i].szVictim );
+				x = DrawConsoleString( x, y, rgDeathNoticeList[i].szVictim, rgDeathNoticeList[i].VictimColor );
 			}
 		}
 	}
@@ -198,12 +171,13 @@ int CHudDeathNotice :: MsgFunc_DeathMsg( const char *pszName, int iSize, void *p
 	{
 		killer_name = "";
 		rgDeathNoticeList[i].szKiller[0] = 0;
+		rgDeathNoticeList[i].KillerColor = NULL;
 	}
 	else
 	{
-		rgDeathNoticeList[i].KillerColor = GetClientColor( killer );
 		strncpy( rgDeathNoticeList[i].szKiller, killer_name, MAX_PLAYER_NAME );
 		rgDeathNoticeList[i].szKiller[MAX_PLAYER_NAME - 1] = 0;
+		rgDeathNoticeList[i].KillerColor = GetClientTeamColor(killer);
 	}
 
 	// Get the Victim's name
@@ -215,12 +189,13 @@ int CHudDeathNotice :: MsgFunc_DeathMsg( const char *pszName, int iSize, void *p
 	{
 		victim_name = "";
 		rgDeathNoticeList[i].szVictim[0] = 0;
+		rgDeathNoticeList[i].VictimColor = NULL;
 	}
 	else
 	{
-		rgDeathNoticeList[i].VictimColor = GetClientColor( victim );
 		strncpy( rgDeathNoticeList[i].szVictim, victim_name, MAX_PLAYER_NAME );
 		rgDeathNoticeList[i].szVictim[MAX_PLAYER_NAME - 1] = 0;
+		rgDeathNoticeList[i].VictimColor = GetClientTeamColor(victim);
 	}
 
 	// Is it a non-player object kill?

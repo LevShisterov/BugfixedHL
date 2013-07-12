@@ -39,7 +39,6 @@ extern void V_ResetChaseCam();
 extern void V_GetChasePos(int target, float * cl_angles, float * origin, float * angles);
 extern void VectorAngles( const float *forward, float *angles );
 extern "C" void NormalizeAngles( float *angles );
-extern float * GetClientColor( int clientIndex );
 
 extern vec3_t v_origin;		// last view origin
 extern vec3_t v_angles;		// last view angle
@@ -411,27 +410,24 @@ int CHudSpectator::Draw(float flTime)
 		VectorScale(right, m_moveDelta, right );
 
 		VectorAdd( m_mapOrigin, right, m_mapOrigin )
-
 	}
-	
+
 	// Only draw the icon names only if map mode is in Main Mode
 	if ( g_iUser1 < OBS_MAP_FREE  ) 
 		return 1;
-	
+
 	if ( !m_drawnames->value )
 		return 1;
-	
+
 	// make sure we have player info
 	gViewPort->GetAllPlayersInfo();
-
 
 	// loop through all the players and draw additional infos to their sprites on the map
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
-
 		if ( m_vPlayerPos[i][2]<0 )	// marked as invisible ?
 			continue;
-		
+
 		// check if name would be in inset window
 		if ( m_pip->value != INSET_OFF )
 		{
@@ -442,16 +438,11 @@ int CHudSpectator::Draw(float flTime)
 				) continue;
 		}
 
-		color = GetClientColor( i+1 );
-
 		// draw the players name and health underneath
-		sprintf(string, "%s", g_PlayerInfoList[i+1].name );
-		
-		lx = strlen(string)*3; // 3 is avg. character length :)
-
-		gEngfuncs.pfnDrawSetTextColor( color[0], color[1], color[2] );
-		DrawConsoleString( m_vPlayerPos[i][0]-lx,m_vPlayerPos[i][1], string);
-		
+		sprintf( string, "%s", g_PlayerInfoList[i + 1].name );
+		lx = strlen(string) * 3; // 3 is avg. character length :)
+		color = GetClientTeamColor(i + 1);
+		DrawConsoleString( m_vPlayerPos[i][0] - lx, m_vPlayerPos[i][1], string, color );
 	}
 
 	return 1;
