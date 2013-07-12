@@ -459,9 +459,9 @@ void CBreakable::BreakTouch( CBaseEntity *pOther )
 		// play creaking sound here.
 		DamageSound();
 
-		SetThink ( &CBreakable::Die );
+		SetThink ( (void (CBreakable::*)(void)) &CBreakable::Die );
 		SetTouch( NULL );
-		
+
 		if ( m_flDelay == 0 )
 		{// !!!BUGBUG - why doesn't zero delay work?
 			m_flDelay = 0.1;
