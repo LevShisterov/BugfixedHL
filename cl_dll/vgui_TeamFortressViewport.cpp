@@ -76,7 +76,7 @@ int g_iUser3;
 
 void IN_ResetMouse( void );
 extern CMenuPanel *CMessageWindowPanel_Create( const char *szMOTD, const char *szTitle, int iShadeFullscreen, int iRemoveMe, int x, int y, int wide, int tall );
-extern float * GetClientColor( int clientIndex );
+extern float g_ColorYellow[3];
 
 using namespace vgui;
 
@@ -1386,7 +1386,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 	m_iUser1 = g_iUser1;
 	m_iUser2 = g_iUser2;
 	m_iUser3 = g_iUser3;
-		
+
 	if (!m_pSpectatorPanel)
 		return;
 
@@ -1395,7 +1395,6 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		char bottomText[128];
 		char helpString2[128];
 		char tempString[128];
-		char * name;
 		int player = 0;
 
 		// check if spectator combinations are still valid
@@ -1411,9 +1410,9 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 
 			gHUD.m_TextMessage.MsgFunc_TextMsg( NULL, strlen( tempString ) + 1, tempString );
 		}
-		
-		sprintf(bottomText,"#Spec_Mode%d", g_iUser1 );
-		sprintf(helpString2,"#Spec_Mode%d", g_iUser1 );
+
+		sprintf(bottomText, "#Spec_Mode%d", g_iUser1 );
+		sprintf(helpString2, "#Spec_Mode%d", g_iUser1 );
 
 		if ( gEngfuncs.IsSpectateOnly() )
 			strcat(helpString2, " - HLTV");
@@ -1425,32 +1424,31 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		}
 
 		// special case in free map and inset off, don't show names
-		if ( (g_iUser1 == OBS_MAP_FREE) && !gHUD.m_Spectator.m_pip->value )
-			name = NULL;
-		else
-			name = g_PlayerInfoList[player].name;
-
-		// create player & health string
-		if ( player && name )
+		if ((g_iUser1 != OBS_MAP_FREE && g_iUser1 != OBS_ROAMING || gHUD.m_Spectator.m_pip->value) && player && g_PlayerInfoList[player].name)
 		{
-			strcpy( bottomText, name );
+			if (gHUD.m_pCvarColorText->value == 0)
+				strncpy(bottomText, g_PlayerInfoList[player].name, sizeof(bottomText) - 1);
+			else
+				strncpy(bottomText, RemoveColorCodes(g_PlayerInfoList[player].name), sizeof(bottomText) - 1);
+			bottomText[sizeof(bottomText) - 1] = 0;
 		}
 
+		// Default GUI color
+		int r = 143;
+		int g = 143;
+		int b = 54;
 		// in first person mode colorize player names
-		if ( (g_iUser1 == OBS_IN_EYE) && player )
+		if ((g_iUser1 == OBS_IN_EYE) && player)
 		{
-			float * color = GetClientColor( player );
-			int r = color[0]*255;
-			int g = color[1]*255;
-			int b = color[2]*255;
-			
 			// set team color, a bit transparent
-			m_pSpectatorPanel->m_BottomMainLabel->setFgColor(r,g,b,0);
+			float *color = GetClientTeamColor(player);
+			if (!color)
+				color = g_ColorYellow;
+			r = color[0] * 255;
+			g = color[1] * 255;
+			b = color[2] * 255;
 		}
-		else
-		{	// restore GUI color
-			m_pSpectatorPanel->m_BottomMainLabel->setFgColor( 143, 143, 54, 0 );
-		}
+		m_pSpectatorPanel->m_BottomMainLabel->setFgColor(r, g, b, 0);
 
 		// add sting auto if we are in auto directed mode
 		if ( gHUD.m_Spectator.m_autoDirector->value )

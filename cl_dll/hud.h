@@ -676,6 +676,7 @@ public:
 	cvar_t	*m_pCvarDim;
 	cvar_t	*m_pCvarShowLoss;
 	cvar_t	*m_pCvarShowSteamId;
+	cvar_t	*m_pCvarColorText;
 
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );

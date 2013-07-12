@@ -28,8 +28,6 @@
 
 #include "vgui_TeamFortressViewport.h"
 
-extern float *GetClientColor( int clientIndex );
-
 #define MAX_LINES	5
 #define MAX_CHARS_PER_LINE	256  /* it can be less than this, depending on char size */
 
@@ -136,16 +134,14 @@ int CHudSayText :: Draw( float flTime )
 				// draw the first x characters in the player color
 				strncpy( buf, g_szLineBuffer[i], min(g_iNameLengths[i], MAX_PLAYER_NAME+32) );
 				buf[ min(g_iNameLengths[i], MAX_PLAYER_NAME+31) ] = 0;
-				gEngfuncs.pfnDrawSetTextColor( g_pflNameColors[i][0], g_pflNameColors[i][1], g_pflNameColors[i][2] );
-				int x = DrawConsoleString( LINE_START, y, buf );
+				int x = DrawConsoleString( LINE_START, y, buf, g_pflNameColors[i] );
 
-				// color is reset after each string draw
-				DrawConsoleString( x, y, g_szLineBuffer[i] + g_iNameLengths[i] );
+				DrawConsoleString( x, y, g_szLineBuffer[i] + g_iNameLengths[i], NULL );
 			}
 			else
 			{
 				// normal draw
-				DrawConsoleString( LINE_START, y, g_szLineBuffer[i] );
+				DrawConsoleString( LINE_START, y, g_szLineBuffer[i], NULL );
 			}
 		}
 
@@ -169,23 +165,27 @@ int CHudSayText :: MsgFunc_SayText( const char *pszName, int iSize, void *pbuf )
 void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIndex )
 {
 	// Print to the console
-	time(&now);
-	current = localtime(&now);
-	// Prepend time for say messages from players and the server
-	if (now && (*pszBuf == 2 && clientIndex > 0 || *pszBuf == 1 && clientIndex == 0))
+	if (*pszBuf == 2 && clientIndex > 0 || *pszBuf == 1 && clientIndex == 0)
 	{
-		sprintf(time_buf, "[%02i:%02i:%02i] ", current->tm_hour, current->tm_min, current->tm_sec);
 		RGBA color;
-		if (ParseColor(m_pCvarConSayColor->string, color))
+		bool colored = ParseColor(m_pCvarConSayColor->string, color);
+
+		// Prepend time for say messages from players and the server
+		time(&now);
+		if (now)
 		{
-			ConsolePrintColor(time_buf, color);
+			current = localtime(&now);
+			sprintf(time_buf, "[%02i:%02i:%02i] ", current->tm_hour, current->tm_min, current->tm_sec);
+			if (colored)
+				ConsolePrintColor(time_buf, color);
+			else
+				ConsolePrint(time_buf);
+		}
+
+		if (colored)
 			ConsolePrintColor(pszBuf + 1, color);
-		}
 		else
-		{
-			ConsolePrint(time_buf);
 			ConsolePrint(pszBuf + 1);
-		}
 	}
 	else
 	{
@@ -215,22 +215,21 @@ void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIn
 	g_pflNameColors[i] = NULL;
 
 	// if it's a say message, search for the players name in the string
-	if ( *pszBuf == 2 && clientIndex > 0 )
+	if (*pszBuf == 2 && clientIndex > 0)
 	{
-		GetPlayerInfo( clientIndex, &g_PlayerInfoList[clientIndex] );
+		GetPlayerInfo(clientIndex, &g_PlayerInfoList[clientIndex]);
 		const char *pName = g_PlayerInfoList[clientIndex].name;
-
-		if ( pName )
+		if (pName)
 		{
-			const char *nameInString = strstr( pszBuf, pName );
-
-			if ( nameInString )
+			const char *nameInString = strstr(pszBuf, pName);
+			if (nameInString)
 			{
 				g_iNameLengths[i] = strlen( pName ) + (nameInString - pszBuf);
-				g_pflNameColors[i] = GetClientColor( clientIndex );
+				g_pflNameColors[i] = GetClientTeamColor(clientIndex);
 			}
 		}
 	}
+
 
 	strncpy( g_szLineBuffer[i], pszBuf, max(iBufSize -1, MAX_CHARS_PER_LINE-1) );
 

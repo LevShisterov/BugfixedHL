@@ -862,7 +862,10 @@ void ScorePanel::FillGrid()
 				case COLUMN_TRACKER:
 					break;
 				case COLUMN_NAME:
-					sprintf(sz, "%s", pl_info->name);
+					if (gHUD.m_pCvarColorText->value == 0)
+						sprintf(sz, "%s", pl_info->name);
+					else
+						sprintf(sz, "%s", RemoveColorCodes(pl_info->name));
 
 					// Append spectator label
 					if (pl_info->spectator)
