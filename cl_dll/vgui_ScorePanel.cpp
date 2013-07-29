@@ -66,9 +66,9 @@ SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 	{NULL,			2,			Label::a_east},		// blank column to take up the slack
 };
 
-#define DRAW_LOSS		1 << 0
-#define DRAW_STEAMID	1 << 1
-
+#define DRAW_NEXTMAP	1 << 0
+#define DRAW_LOSS		1 << 1
+#define DRAW_STEAMID	1 << 2
 
 #define TEAM_NO				0
 #define TEAM_YES			1
@@ -251,12 +251,19 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 void ScorePanel::Configure(void)
 {
 	int newConfiguration = 0;
+	bool drawNextmap = gHUD.m_pCvarShowNextmap->value ? true : false;
 	bool drawLoss = gHUD.m_pCvarShowLoss->value ? true : false;
 	bool drawSteamId = gHUD.m_pCvarShowSteamId->value ? true : false;
+	if (drawNextmap) newConfiguration |= DRAW_NEXTMAP;
 	if (drawLoss) newConfiguration |= DRAW_LOSS;
 	if (drawSteamId) newConfiguration |= DRAW_STEAMID;
 
 	if (newConfiguration == m_iCurrentConfiguration) return;
+
+	if ((m_iCurrentConfiguration & DRAW_NEXTMAP) != (newConfiguration & DRAW_NEXTMAP))
+	{
+		m_NextmapLabel.setVisible(drawNextmap);
+	}
 
 	if ((m_iCurrentConfiguration & DRAW_LOSS) != (newConfiguration & DRAW_LOSS))
 	{
