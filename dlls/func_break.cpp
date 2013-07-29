@@ -535,7 +535,7 @@ int CBreakable :: TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, f
 	if ( pevAttacker == pevInflictor )
 	{
 		vecTemp = pevInflictor->origin - ( pev->absmin + ( pev->size * 0.5 ) );
-		
+
 		// if a client hit the breakable with a crowbar, and breakable is crowbar-sensitive, break it now.
 		if ( FBitSet ( pevAttacker->flags, FL_CLIENT ) &&
 				 FBitSet ( pev->spawnflags, SF_BREAK_CROWBAR ) && (bitsDamageType & DMG_CLUB))
@@ -563,7 +563,7 @@ int CBreakable :: TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, f
 	if (pev->health <= 0)
 	{
 		Killed(pevAttacker, GIB_NORMAL);
-		Die(CBaseEntity::Instance(pevAttacker));
+		Die(pevAttacker ? CBaseEntity::Instance(pevAttacker) : NULL);
 		return 0;
 	}
 
@@ -752,7 +752,7 @@ void CBreakable::Die( CBaseEntity *pActivator )
 
 	if ( Explodable() )
 	{
-		ExplosionCreate( Center(), pev->angles, edict(), pActivator->edict(), ExplosionMagnitude(), TRUE );
+		ExplosionCreate( Center(), pev->angles, edict(), pActivator ? pActivator->edict() : NULL, ExplosionMagnitude(), TRUE );
 	}
 }
 
