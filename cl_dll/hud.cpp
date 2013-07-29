@@ -384,6 +384,7 @@ void CHud :: Init( void )
 	m_pCvarColor1 = CVAR_CREATE( "hud_color1", "0 255 0", FCVAR_ARCHIVE );
 	m_pCvarColor2 = CVAR_CREATE( "hud_color2", "255 160 0", FCVAR_ARCHIVE );
 	m_pCvarColor3 = CVAR_CREATE( "hud_color3", "255 96 0", FCVAR_ARCHIVE );
+	m_pCvarShowNextmap = CVAR_CREATE( "hud_shownextmapinscore", "1", FCVAR_ARCHIVE );	// controls whether or not to show nextmap in scoreboard table
 	m_pCvarShowLoss = CVAR_CREATE( "hud_showlossinscore", "1", FCVAR_ARCHIVE );	// controls whether or not to show loss in scoreboard table
 	m_pCvarShowSteamId = CVAR_CREATE( "hud_showsteamidinscore", "1", FCVAR_ARCHIVE );	// controls whether or not to show SteamId in scoreboard table
 	m_pCvarColorText = CVAR_CREATE( "hud_colortext", "1", FCVAR_ARCHIVE );

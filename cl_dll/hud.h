@@ -674,6 +674,7 @@ public:
 	cvar_t	*m_pCvarStealMouse;
 	cvar_t	*m_pCvarDraw;
 	cvar_t	*m_pCvarDim;
+	cvar_t	*m_pCvarShowNextmap;
 	cvar_t	*m_pCvarShowLoss;
 	cvar_t	*m_pCvarShowSteamId;
 	cvar_t	*m_pCvarColorText;
