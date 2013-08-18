@@ -57,8 +57,8 @@ Init
 void CGameStudioModelRenderer::Init( void )
 {
 	// Get model and color replacement cvars
-	cl_forceemenymodels = gEngfuncs.pfnGetCvarPointer( "cl_forceemenymodels" );
-	cl_forceemenycolors = gEngfuncs.pfnGetCvarPointer( "cl_forceemenycolors" );
+	cl_forceenemymodels = gEngfuncs.pfnGetCvarPointer( "cl_forceenemymodels" );
+	cl_forceenemycolors = gEngfuncs.pfnGetCvarPointer( "cl_forceenemycolors" );
 	cl_forceteammatesmodel = gEngfuncs.pfnGetCvarPointer( "cl_forceteammatesmodel" );
 	cl_forceteammatescolors = gEngfuncs.pfnGetCvarPointer( "cl_forceteammatescolors" );
 
@@ -96,10 +96,10 @@ void CGameStudioModelRenderer::InitOnConnect(void)
 ///
 int CGameStudioModelRenderer::ParseModels(void)
 {
-	if (!_stricmp(m_szEnemyModelsList, cl_forceemenymodels->string) &&
+	if (!_stricmp(m_szEnemyModelsList, cl_forceenemymodels->string) &&
 		!_stricmp(m_szTeammatesModel, cl_forceteammatesmodel->string))
 		return m_iEnemyModelsCount;
-	strncpy(m_szEnemyModelsList, cl_forceemenymodels->string, sizeof(m_szEnemyModelsList));
+	strncpy(m_szEnemyModelsList, cl_forceenemymodels->string, sizeof(m_szEnemyModelsList));
 	m_szEnemyModelsList[sizeof(m_szEnemyModelsList) - 1] = 0;
 	strncpy(m_szTeammatesModel, cl_forceteammatesmodel->string, sizeof(m_szTeammatesModel));
 	m_szTeammatesModel[sizeof(m_szTeammatesModel) - 1] = 0;
@@ -146,7 +146,7 @@ int CGameStudioModelRenderer::ParseModels(void)
 		{
 			ConsolePrint("\"");
 			ConsolePrint(buffer);
-			ConsolePrint("\" is excluded from cl_forceemenymodels because it is in cl_forceteammatesmodel\n");
+			ConsolePrint("\" is excluded from cl_forceenemymodels because it is in cl_forceteammatesmodel\n");
 			continue;
 		}
 
@@ -180,11 +180,11 @@ int CGameStudioModelRenderer::ParseModels(void)
 ///
 void CGameStudioModelRenderer::ParseColors(void)
 {
-	if (!_stricmp(m_szEnemyColor, cl_forceemenycolors->string) &&
+	if (!_stricmp(m_szEnemyColor, cl_forceenemycolors->string) &&
 		!_stricmp(m_szTeammatesColor, cl_forceteammatescolors->string))
 		return;
 
-	strncpy(m_szEnemyColor, cl_forceemenycolors->string, sizeof(m_szEnemyColor));
+	strncpy(m_szEnemyColor, cl_forceenemycolors->string, sizeof(m_szEnemyColor));
 	m_szEnemyColor[sizeof(m_szEnemyColor) - 1] = 0;
 	strncpy(m_szTeammatesColor, cl_forceteammatescolors->string, sizeof(m_szTeammatesColor));
 	m_szTeammatesColor[sizeof(m_szTeammatesColor) - 1] = 0;
@@ -387,7 +387,7 @@ void CGameStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 			}
 			else // Enemies
 			{
-				if (cl_forceemenycolors->string[0] != 0)
+				if (cl_forceenemycolors->string[0] != 0)
 				{
 					m_nTopColor = m_iEnemyTopColor;
 					m_nBottomColor = m_iEnemyBottomColor;

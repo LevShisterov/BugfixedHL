@@ -42,9 +42,9 @@ public:
 
 private:
 	// List of allowed enemy models
-	cvar_t	*cl_forceemenymodels;
+	cvar_t	*cl_forceenemymodels;
 	// List of allowed enemy colors
-	cvar_t	*cl_forceemenycolors;
+	cvar_t	*cl_forceenemycolors;
 	// Teammates model
 	cvar_t	*cl_forceteammatesmodel;
 	// Teammates colors (top, bottom)
