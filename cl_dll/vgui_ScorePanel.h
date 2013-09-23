@@ -36,7 +36,8 @@ enum
 {
 	STATUS_REQUEST_IDLE = 0,
 	STATUS_REQUEST_SENT = 1,
-	STATUS_REQUEST_PROCESSING = 2,
+	STATUS_REQUEST_ANSWER_RECEIVED = 2,
+	STATUS_REQUEST_PROCESSING = 3,
 };
 
 using namespace vgui;
@@ -272,6 +273,7 @@ private:
 	CommandButton				*m_pCloseButton;
 	CLabelHeader*	GetPlayerEntry(int x, int y)	{return &m_PlayerEntries[x][y];}
 
+	float			m_fStatusRequestLastTime;
 	float			m_fStatusRequestNextTime;
 
 public:
@@ -309,7 +311,9 @@ public:
 
 	void Open( void );
 
+	void CheckForcedSendStatusRequest(void);
 	void SendStatusRequest(void);
+	float GetStatusRequestLastTime(void) { return m_fStatusRequestLastTime; }
 
 	void MouseOverCell(int row, int col);
 

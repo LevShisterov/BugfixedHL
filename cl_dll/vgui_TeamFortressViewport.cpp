@@ -1939,6 +1939,13 @@ void TeamFortressViewport::paintBackground()
 		int x, y;
 		getApp()->getCursorPos(x, y);
 		m_pScoreBoard->cursorMoved(x, y, m_pScoreBoard);
+
+		// Update the Scoreboard, if it's visible
+		if ( m_pScoreBoard->isVisible() && (m_flScoreBoardLastUpdated < gHUD.m_flTime) )
+		{
+			m_pScoreBoard->Update();
+			m_flScoreBoardLastUpdated = gHUD.m_flTime + 0.5;
+		}
 	}
 
 	// See if the command menu is visible and needs recalculating due to some external change
@@ -1962,17 +1969,10 @@ void TeamFortressViewport::paintBackground()
 	}
 
 	// See if the Spectator Menu needs to be update
-	if (	( g_iUser1 != m_iUser1 || g_iUser2 != m_iUser2 ) ||
-			( m_flSpectatorPanelLastUpdated < gHUD.m_flTime ) )
+	if (( g_iUser1 != m_iUser1 || g_iUser2 != m_iUser2 ) ||
+		( m_flSpectatorPanelLastUpdated < gHUD.m_flTime ) )
 	{
 		UpdateSpectatorPanel();
-	}
-
-	// Update the Scoreboard, if it's visible
-	if ( m_pScoreBoard->isVisible() && (m_flScoreBoardLastUpdated < gHUD.m_flTime) )
-	{
-		m_pScoreBoard->Update();
-		m_flScoreBoardLastUpdated = gHUD.m_flTime + 0.5;
 	}
 
 	int extents[4];
