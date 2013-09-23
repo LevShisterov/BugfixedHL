@@ -134,12 +134,12 @@ bool SanitizeCommands(char *str)
 		if (log > 0)
 		{
 			/*
-			0  - log or not to console
-			1  - log to developer or to common console
-			2  - log only bad or all to console
-			8  - log or not to file
-			9  - log only bad or all to file
-			15 - log full command or only name
+			0  - log (1) or not (0) to console
+			1  - log to common (1) or to developer (0) console
+			2  - log all (1) or only bad (0) to console
+			8  - log (1) or not (0) to file
+			9  - log all (1) or only bad (0) to file
+			15 - log full command (1) or only name (0)
 			*/
 
 			// Full command or only command name
@@ -218,53 +218,79 @@ void SvcPrint(void)
 		}
 		else if (gViewPort && gViewPort->m_pScoreBoard && gViewPort->m_pScoreBoard->m_iStatusRequestState != STATUS_REQUEST_IDLE)
 		{
-			// Proccess status command answer
-			if (str[0] == '#' && str[1] != 0 && str[2] != 0 && str[3] == ' ' ) // start of new player info row (or table header)
+			switch (gViewPort->m_pScoreBoard->m_iStatusRequestState)
 			{
-				gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_PROCESSING; // players info table started
-				int slot = atoi(str + 1);
-				if (slot > 0)
+			case STATUS_REQUEST_SENT:
+				// Detect answer
+				if (!strncmp(str, "hostname:  ", 11))
 				{
-					char *name = strchr(strchr(str + 2, ' '), '"');
-					if (name != NULL)
+					gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_ANSWER_RECEIVED;
+					// Suppress status output
+					*g_EngineReadPos += strlen(str) + 1;
+					return;
+				}
+				else if (gViewPort->m_pScoreBoard->GetStatusRequestLastTime() + 1.0 > gHUD.m_flTime)
+					gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_IDLE;		// no answer
+				break;
+			case STATUS_REQUEST_ANSWER_RECEIVED:
+				// Search for start of table header
+				if (str[0] == '#' && str[1] != 0 && str[2] != 0 && str[3] == ' ')
+					gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_PROCESSING;
+				if (strchr(str, '\n') == NULL)	// if header row is not finished within received string, pend it
+					processingUserRow = true;
+				// Suppress status output
+				*g_EngineReadPos += strlen(str) + 1;
+				return;
+			case STATUS_REQUEST_PROCESSING:
+				if (str[0] == '#' && str[1] != 0 && str[2] != 0 && str[3] == ' ')
+				{
+					// start of new player info row
+					int slot = atoi(str + 1);
+					if (slot > 0)
 					{
-						name ++; // space
-						char *userid = strchr(name, '"');
-						if (userid != NULL)
+						char *name = strchr(strchr(str + 2, ' '), '"');
+						if (name != NULL)
 						{
-							userid += 2; // quote and space
-							char *steamid = strchr(userid, ' ');
-							if (steamid != NULL)
+							name ++; // space
+							char *userid = strchr(name, '"');
+							if (userid != NULL)
 							{
-								steamid++; // space
-								char *steamidend = strchr(steamid, ' ');
-								if (steamidend != NULL)
-									*steamidend = 0;
-								if (!strncmp(steamid, "STEAM_", 6) ||
-									!strncmp(steamid, "VALVE_", 6))
-									strncpy(g_PlayerSteamId[slot], steamid + 6, MAX_STEAMID); // cutout "STEAM_" or "VALVE_" start of the string
-								else
-									strncpy(g_PlayerSteamId[slot], steamid, MAX_STEAMID);
-								g_PlayerSteamId[slot][MAX_STEAMID] = 0;
+								userid += 2; // quote and space
+								char *steamid = strchr(userid, ' ');
+								if (steamid != NULL)
+								{
+									steamid++; // space
+									char *steamidend = strchr(steamid, ' ');
+									if (steamidend != NULL)
+										*steamidend = 0;
+									if (!strncmp(steamid, "STEAM_", 6) ||
+										!strncmp(steamid, "VALVE_", 6))
+										strncpy(g_PlayerSteamId[slot], steamid + 6, MAX_STEAMID); // cutout "STEAM_" or "VALVE_" start of the string
+									else
+										strncpy(g_PlayerSteamId[slot], steamid, MAX_STEAMID);
+									g_PlayerSteamId[slot][MAX_STEAMID] = 0;
+								}
 							}
 						}
 					}
+					if (strchr(str, '\n') == NULL)	// user row is not finished within received string, pend it
+						processingUserRow = true;
 				}
-				if (strchr(str, '\n') == NULL)
-					processingUserRow = true;
+				else if (processingUserRow)
+				{
+					// continuation of user or header row
+					if (strchr(str, '\n') != NULL)	// skip till the end of the row (new line)
+						processingUserRow = false;
+				}
+				else
+				{
+					// end of the table
+					gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_IDLE;
+				}
+				// Suppress status output
+				*g_EngineReadPos += strlen(str) + 1;
+				return;
 			}
-			else if (processingUserRow)
-			{
-				if (strchr(str, '\n') != NULL) // skip till the end of the row (new line)
-					processingUserRow = false;
-			}
-			else if (gViewPort->m_pScoreBoard->m_iStatusRequestState == STATUS_REQUEST_PROCESSING)
-			{
-				gViewPort->m_pScoreBoard->m_iStatusRequestState = STATUS_REQUEST_IDLE;
-			}
-			// Suppress status output
-			*g_EngineReadPos += strlen(str) + 1;
-			return;
 		}
 		else
 		{

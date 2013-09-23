@@ -320,19 +320,33 @@ void ScorePanel::Initialize( void )
 	memset(g_PlayerSteamId, 0, sizeof(g_PlayerSteamId));
 	m_PlayerList.SetScrollPos(0);
 	m_iStatusRequestState = STATUS_REQUEST_IDLE;
-	m_fStatusRequestNextTime = 0;
-	SendStatusRequest();
+	m_fStatusRequestLastTime = 0;
+	m_fStatusRequestNextTime = gHUD.m_flTime + 0.5;	// delayed request on level start
+}
+
+void ScorePanel::CheckForcedSendStatusRequest(void)
+{
+	if (m_fStatusRequestNextTime > 0 && m_fStatusRequestNextTime <= gHUD.m_flTime)
+	{
+		m_fStatusRequestNextTime = 0;
+		SendStatusRequest();
+	}
 }
 
 void ScorePanel::SendStatusRequest(void)
 {
-	if (m_fStatusRequestNextTime >= gHUD.m_flTime + 1.1)
-		m_fStatusRequestNextTime = 0; // time was reset: changelevel, etc...
-	if (m_iStatusRequestState != STATUS_REQUEST_IDLE ||
-		m_fStatusRequestNextTime >= gHUD.m_flTime)
+	if (m_fStatusRequestLastTime > gHUD.m_flTime)
+		m_fStatusRequestLastTime = 0;	// time was reset: changelevel, etc...
+	if (m_iStatusRequestState != STATUS_REQUEST_IDLE &&
+		m_fStatusRequestLastTime + 1.0 > gHUD.m_flTime)
+		return;		// request is in progress
+	if (m_fStatusRequestLastTime + 1.0 > gHUD.m_flTime)
+	{
+		m_fStatusRequestNextTime = m_fStatusRequestLastTime + 1.0;
 		return;
-	m_fStatusRequestNextTime = gHUD.m_flTime + 1.0;
+	}
 	m_iStatusRequestState = STATUS_REQUEST_SENT;
+	m_fStatusRequestLastTime = gHUD.m_flTime;
 	ServerCmd("status");
 }
 
