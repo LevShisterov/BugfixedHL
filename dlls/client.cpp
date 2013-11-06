@@ -129,7 +129,8 @@ void ClientDisconnect( edict_t *pEntity )
 	// Mark player as disconnected
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
-	pl->Disconnect();
+	if (pl)
+		pl->Disconnect();
 }
 
 
