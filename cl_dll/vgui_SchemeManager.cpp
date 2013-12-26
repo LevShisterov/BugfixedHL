@@ -108,17 +108,18 @@ static int g_ResArray[] =
 };
 static int g_NumReses = sizeof(g_ResArray) / sizeof(int);
 
-static byte *LoadFileByResolution( const char *filePrefix, int xRes, const char *filePostfix )
+static byte *LoadFileByResolution( const char *filePrefix, int* xRes, const char *filePostfix )
 {
 	// find our resolution in the res array
 	int resNum = g_NumReses - 1;
-	while ( g_ResArray[resNum] > xRes )
+	while ( g_ResArray[resNum] > *xRes )
 	{
 		resNum--;
 
 		if ( resNum < 0 )
 			return NULL;
 	}
+	*xRes = g_ResArray[resNum];
 
 	// try open the file
 	byte *pFile = NULL;
@@ -166,7 +167,7 @@ CSchemeManager::CSchemeManager( int xRes, int yRes )
 
 	// find the closest matching scheme file to our resolution
 	char token[1024];
-	char *pFile = (char*)LoadFileByResolution( "", xRes, "_textscheme.txt" );
+	char *pFile = (char*)LoadFileByResolution( "", &xRes, "_textscheme.txt" );
 	m_xRes = xRes;
 
 	char *pFileStart = pFile;

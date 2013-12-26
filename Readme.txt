@@ -2,7 +2,7 @@ Bugfixed and improved HL release
 
 URL: http://aghl.ru/forum/viewtopic.php?f=36&t=686
 
-Version: 0.1.792
+Version: 0.1.795
 
 Info:
 
@@ -184,11 +184,10 @@ Client side changes:
     0.1.786 2013-07-29:
     Fixed view bug with cl_bobcycle 0.
     Added cvar hud_shownextmapinscore to show/hide nextmap in score board.
-    0.1.790 2013-09-23:
+    0.1.795 2013-12-26:
     Fixed typo in cl_forceemenymodels cvar.
     Delayed "status" requesting on connect.
-    0.1.792 2013-11-06:
-    -
+    Fixed bitmap fonts loading for non-standard resolutions.
 
 
 Server side changes:
@@ -352,8 +351,6 @@ Server side changes:
     Fixed func_tanklaser to stop its laser if player go away or die when fire from tank.
     0.1.786 2013-07-29:
     Fixed bug with explosions and breakable objects when there is no attacker.
-    0.1.790 2013-09-23:
-    -
-    0.1.792 2013-11-06:
+    0.1.795 2013-12-26:
     Check that player object exists before marking as disconnected.
 
