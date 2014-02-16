@@ -912,7 +912,7 @@ void GameDLLInit( void )
 	cvar_t *coop = CVAR_GET_POINTER("coop");
 	if (!dedicated && deathmatch->value == 0.0 && coop->value == 0.0)
 	{
-		// Set bunnhop and clock_window initially off for singleplayer
+		// Set bunnyhop and clock_window initially off for singleplayer
 		CVAR_SET_FLOAT(bunnyhop.name, 0.0);
 		CVAR_SET_FLOAT("clockwindow", 0.0);
 	}
@@ -935,13 +935,15 @@ void GameDLLInit( void )
 
 		if (startupCfgFile && startupCfgFile[0])
 		{
+			// Check length
 			int len = strlen(startupCfgFile);
-			if (len > sizeof(szCommand) - 14)	// exec...
+			if (len > sizeof(szCommand) - 14)
 			{
 				ALERT(at_console, "Too long path to server config file!\n");
 			}
 			else
 			{
+				// Construct path
 				int i;
 				for (i = len - 1; i >= 0; i--)
 				{
@@ -961,6 +963,7 @@ void GameDLLInit( void )
 				{
 					sprintf(szCommand, "exec startup_%s\n", startupCfgFile);
 				}
+				// Execute
 				ALERT(at_console, "Executing %s server startup config file\n", serverType);
 				SERVER_COMMAND(szCommand);
 			}

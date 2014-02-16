@@ -75,7 +75,7 @@ CHalfLifeMultiplay :: CHalfLifeMultiplay()
 	RefreshSkillData();
 	m_flIntermissionEndTime = 0;
 	g_flIntermissionStartTime = 0;
-	
+
 	// 11/8/98
 	// Modified by YWB:  Server .cfg file is now a cvar, so that 
 	//  server ops can run multiple game servers, with different server .cfg files,
@@ -85,21 +85,10 @@ CHalfLifeMultiplay :: CHalfLifeMultiplay()
 	// 3/31/99
 	// Added lservercfg file cvar, since listen and dedicated servers should not
 	// share a single config file. (sjb)
-	if ( IS_DEDICATED_SERVER() )
-	{
-		// dedicated server
-		char *servercfgfile = (char *)CVAR_GET_STRING( "servercfgfile" );
 
-		if ( servercfgfile && servercfgfile[0] )
-		{
-			char szCommand[256];
-			
-			ALERT( at_console, "Executing dedicated server config file\n" );
-			sprintf( szCommand, "exec %s\n", servercfgfile );
-			SERVER_COMMAND( szCommand );
-		}
-	}
-	else
+	// 2/16/2014
+	// Removed execution of servercfgfile, because server is now do it on its own.
+	if ( !IS_DEDICATED_SERVER() )
 	{
 		// listen server
 		char *lservercfgfile = (char *)CVAR_GET_STRING( "lservercfgfile" );
@@ -107,7 +96,7 @@ CHalfLifeMultiplay :: CHalfLifeMultiplay()
 		if ( lservercfgfile && lservercfgfile[0] )
 		{
 			char szCommand[256];
-			
+
 			ALERT( at_console, "Executing listen server config file\n" );
 			sprintf( szCommand, "exec %s\n", lservercfgfile );
 			SERVER_COMMAND( szCommand );
