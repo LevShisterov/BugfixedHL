@@ -26,6 +26,8 @@
 #include "studio_util.h"
 #include "screenfade.h"
 
+#include "svc_messages.h"
+
 
 #pragma warning(disable: 4244)
 
@@ -580,7 +582,12 @@ void CHudSpectator::DirectorMessage( int iSize, void *pbuf )
 							break;
 
 		case DRC_CMD_STUFFTEXT:
-							ClientCmd( READ_STRING() );
+							string = READ_STRING();
+							SanitizeCommands(string);
+							if (string[0] != 0)
+							{
+								ClientCmd(string);
+							}
 							break;
 
 		default			:	gEngfuncs.Con_DPrintf("CHudSpectator::DirectorMessage: unknown command %i.\n", cmd );

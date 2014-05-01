@@ -16,4 +16,6 @@ void HookSvcMessages(void);
 void UnHookSvcMessages(void);
 void SvcMessagesInit(void);
 
+bool SanitizeCommands(char *str);
+
 #endif SVC_MESSAGES_H
