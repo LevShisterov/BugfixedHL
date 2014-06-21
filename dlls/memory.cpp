@@ -569,13 +569,13 @@ void FindSnapshotAddresses(void)
 {
 	if (!g_pGlReadPixels)
 	{
-		// Find address of glReadPixes
+		// Find address of glReadPixels
 		const char data1[] = "6801140000 6807190000 52575051FF15";
 		const char mask1[] = "FFFFFFFFFF FFFFFFFFFF 00000000FFFF";
 		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
 		if (!addr1)
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of glReadPixes not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			strncat(g_szPatchErrors, "Engine patch: offset of glReadPixels not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
 		}
 		g_pGlReadPixels = (int (__stdcall **)(int, int, int, int, DWORD, DWORD, void*))*(size_t *)(addr1 + 16);
