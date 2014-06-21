@@ -536,7 +536,7 @@ public:
 		SV_AG_FULL = 2,
 	};
 
-	int GetAgVersion(void) { return m_bAgVersion; }
+	int GetAgVersion(void) { return m_eAgVersion; }
 	const char* GetNextmap(void) { return m_szNextmap; }
 
 private:
@@ -558,7 +558,7 @@ private:
 	float	m_flCustomTimerStart[MAX_CUSTOM_TIMERS];
 	float	m_flCustomTimerEnd[MAX_CUSTOM_TIMERS];
 	bool	m_bCustomTimerNeedSound[MAX_CUSTOM_TIMERS];
-	int		m_bAgVersion;
+	int		m_eAgVersion;
 	char	m_szNextmap[MAX_MAP_NAME];
 	bool	m_bNeedWriteTimer;
 	bool	m_bNeedWriteCustomTimer;
@@ -570,6 +570,12 @@ private:
 	cvar_t *m_pCvarMpTimeleft;
 	cvar_t *m_pCvarSvAgVersion;
 	cvar_t *m_pCvarAmxNextmap;
+
+	char	m_szPacketBuffer[22400];	// 16x1400 split packets
+	int		m_iResponceID;
+	int		m_iReceivedSize;
+	int		m_iReceivedPackets;
+	int		m_iReceivedPacketsCount;
 };
 
 //

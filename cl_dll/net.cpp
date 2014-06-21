@@ -227,8 +227,8 @@ void NetCloseSocket(SOCKET s)
 
 char *NetGetRuleValueFromBuffer(const char *buffer, int len, const char *cvar)
 {
-	// Response header
-	if (*((unsigned int*)buffer) != 0xFFFFFFFF) return NULL;
+	// Check response header
+	if (len < 6 || (*(unsigned int*)buffer != 0xFFFFFFFF || buffer[4] != 'E')) return NULL;
 	// Search for a cvar
 	char *current = (char *)buffer + 4;
 	char *end = (char *)buffer + len - strlen(cvar);
