@@ -69,12 +69,13 @@ int CHudTimer::VidInit(void)
 	memset(m_flCustomTimerStart, 0, sizeof(m_flCustomTimerStart));
 	memset(m_flCustomTimerEnd, 0, sizeof(m_flCustomTimerEnd));
 	memset(m_bCustomTimerNeedSound, 0, sizeof(m_bCustomTimerNeedSound));
-	m_bAgVersion = SV_AG_UNKNOWN;
+	m_eAgVersion = SV_AG_UNKNOWN;
 
 	m_bNeedWriteTimer = true;
 	m_bNeedWriteCustomTimer = true;
 	m_bNeedWriteNextmap = true;
 
+	m_iReceivedSize = 0;
 	if (g_timerSocket != NULL)
 	{
 		NetCloseSocket(g_timerSocket);
@@ -143,7 +144,7 @@ void CHudTimer::SyncTimer(float fTime)
 void CHudTimer::SyncTimerLocal(float fTime)
 {
 	float prevEndtime = m_flEndtime;
-	int prevAgVersion = m_bAgVersion;
+	int prevAgVersion = m_eAgVersion;
 
 	// Get timer settings directly from cvars
 	if (m_pCvarMpTimelimit && m_pCvarMpTimeleft)
@@ -163,25 +164,25 @@ void CHudTimer::SyncTimerLocal(float fTime)
 	}
 
 	// Get AG version
-	if (m_bAgVersion == SV_AG_UNKNOWN)
+	if (m_eAgVersion == SV_AG_UNKNOWN)
 	{
 		if (m_pCvarSvAgVersion && m_pCvarSvAgVersion->string[0])
 		{
 			if (!strcmp(m_pCvarSvAgVersion->string, "6.6") || !strcmp(m_pCvarSvAgVersion->string, "6.3"))
 			{
-				m_bAgVersion = SV_AG_FULL;
+				m_eAgVersion = SV_AG_FULL;
 			}
 			else // We will assume its miniAG server, which will be true in almost all cases
 			{
-				m_bAgVersion = SV_AG_MINI;
+				m_eAgVersion = SV_AG_MINI;
 			}
 		}
 		else
 		{
-			m_bAgVersion = SV_AG_NONE;
+			m_eAgVersion = SV_AG_NONE;
 		}
 
-		if (m_bAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
+		if (m_eAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
 	}
 
 	// Get nextmap
@@ -199,7 +200,7 @@ void CHudTimer::SyncTimerLocal(float fTime)
 void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTime, double latency)
 {
 	float prevEndtime = m_flEndtime;
-	int prevAgVersion = m_bAgVersion;
+	int prevAgVersion = m_eAgVersion;
 	char buffer[2048];
 	int len = 0;
 
@@ -212,6 +213,10 @@ void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTim
 	{
 	case SOCKET_NONE:
 	case SOCKET_IDLE:
+		m_iResponceID = 0;
+		m_iReceivedSize = 0;
+		m_iReceivedPackets = 0;
+		m_iReceivedPacketsCount = 0;
 		NetClearSocket(g_timerSocket);
 		NetSendUdp(ip, port, "\xFF\xFF\xFF\xFFV\xFF\xFF\xFF\xFF", 9, &g_timerSocket);
 		g_eRulesRequestStatus = SOCKET_AWAITING_CODE;
@@ -219,86 +224,126 @@ void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTim
 		return;
 	case SOCKET_AWAITING_CODE:
 		len = NetReceiveUdp(ip, port, buffer, sizeof(buffer), g_timerSocket);
-		if (len == 0) return;
-		if (*(int*)buffer == -1 && buffer[4] == 'A' && len == 9)
+		if (len < 5) return;
+		if (*(int*)buffer == -1 /*0xFFFFFFFF*/ && buffer[4] == 'A' && len == 9)
 		{
-			// Answer is challenge response, send again with the code
+			// Answer is challenge response, send request again with the code
 			buffer[4] = 'V';
 			NetSendUdp(ip, port, buffer, 9, &g_timerSocket);
 			g_eRulesRequestStatus = SOCKET_AWAITING_ANSWER;
 			m_flNextSyncTime = fTime;	// set time for timeout checking
 			return;
 		}
-		// Answer is rules response
-		g_eRulesRequestStatus = SOCKET_IDLE;
+		// Answer should be rules response
+		g_eRulesRequestStatus = SOCKET_AWAITING_ANSWER;
 		break;
 	case SOCKET_AWAITING_ANSWER:
 		len = NetReceiveUdp(ip, port, buffer, sizeof(buffer), g_timerSocket);
-		if (len == 0) return;
-		g_eRulesRequestStatus = SOCKET_IDLE;
+		if (len < 5) return;
 		break;
 	}
+
+	// Check for split packet
+	if (*(int*)buffer == -2 /*0xFEFFFFFF*/)
+	{
+		if (len < 9) return;
+		int currentPacket = *((unsigned char *)buffer + 8) >> 4;
+		int totalPackets = *((unsigned char *)buffer + 8) & 0x0F;
+		if (currentPacket >= totalPackets)
+			return;	// broken split packet
+		if (m_iReceivedPackets == 0)
+			m_iResponceID = *(int*)(buffer + 4);
+		else if (*(int*)(buffer + 4) != m_iResponceID)
+			return;	// packet is from different responce
+		if (m_iReceivedPackets & (1 << currentPacket))
+			return;	// already has this packet
+		if (currentPacket < totalPackets - 1 && len != 1400)
+			return;	// strange split packet
+		// Copy into merge buffer
+		int pos = (1400 - 9) * currentPacket;
+		memcpy(m_szPacketBuffer + pos, buffer + 9, len - 9);
+		m_iReceivedSize += len - 9;
+		m_iReceivedPackets |= (1 << currentPacket);
+		m_iReceivedPacketsCount++;
+		// Check for completion
+		if (m_iReceivedPacketsCount < totalPackets)
+			return;
+	}
+	else if (*(int*)buffer == -1 /*0xFFFFFFFF*/)
+	{
+		memcpy(m_szPacketBuffer, buffer, len);
+		m_iReceivedSize += len;
+	}
+	else
+	{
+		return;
+	}
+
+	// Check that this is actually rules responce
+	if (*(int*)m_szPacketBuffer != -1 /*0xFFFFFFFF*/ || m_szPacketBuffer[4] != 'E')
+	{
+		return;
+	}
+
+	g_eRulesRequestStatus = SOCKET_IDLE;
 	m_flNextSyncTime = fTime + 10;	// Don't sync offten, we get update notifications via svc_print
 
 	// Parse rules
-	if (len > 0)
+	// Get map end time
+	char *value = NetGetRuleValueFromBuffer(m_szPacketBuffer, m_iReceivedSize, "mp_timelimit");
+	if (value && value[0])
 	{
-		// Get map end time
-		char *value = NetGetRuleValueFromBuffer(buffer, len, "mp_timelimit");
+		m_flEndtime = atof(value) * 60;
+	}
+	else
+	{
+		m_flEndtime = 0;
+	}
+	value = NetGetRuleValueFromBuffer(m_szPacketBuffer, m_iReceivedSize, "mp_timeleft");
+	if (value && value[0] && !gHUD.m_iIntermission && !m_bDelayTimeleftReading)
+	{
+		float timeleft = atof(value);
+		if (timeleft > 0)
+		{
+			float endtime = timeleft + (int)(fTime - latency + 0.5);
+			if (abs(m_flEndtime - endtime) > 1.5)
+				m_flEndtime = endtime;
+		}
+	}
+	if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
+
+	// Get AG version
+	if (m_eAgVersion == SV_AG_UNKNOWN)
+	{
+		value = NetGetRuleValueFromBuffer(m_szPacketBuffer, m_iReceivedSize, "sv_ag_version");
 		if (value && value[0])
 		{
-			m_flEndtime = atof(value) * 60;
+			if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
+			{
+				m_eAgVersion = SV_AG_FULL;
+			}
+			else // We will assume its miniAG server, which will be true in almost all cases
+			{
+				m_eAgVersion = SV_AG_MINI;
+			}
 		}
 		else
 		{
-			m_flEndtime = 0;
-		}
-		value = NetGetRuleValueFromBuffer(buffer, len, "mp_timeleft");
-		if (value && value[0] && !gHUD.m_iIntermission && !m_bDelayTimeleftReading)
-		{
-			float timeleft = atof(value);
-			if (timeleft > 0)
-			{
-				float endtime = timeleft + (int)(fTime - latency + 0.5);
-				if (abs(m_flEndtime - endtime) > 1.5)
-					m_flEndtime = endtime;
-			}
-		}
-		if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
-
-		// Get AG version
-		if (m_bAgVersion == SV_AG_UNKNOWN)
-		{
-			value = NetGetRuleValueFromBuffer(buffer, len, "sv_ag_version");
-			if (value && value[0])
-			{
-				if (!strcmp(value, "6.6") || !strcmp(value, "6.3"))
-				{
-					m_bAgVersion = SV_AG_FULL;
-				}
-				else // We will assume its miniAG server, which will be true in almost all cases
-				{
-					m_bAgVersion = SV_AG_MINI;
-				}
-			}
-			else
-			{
-				m_bAgVersion = SV_AG_NONE;
-			}
-
-			if (m_bAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
+			m_eAgVersion = SV_AG_NONE;
 		}
 
-		// Get nextmap
-		value = NetGetRuleValueFromBuffer(buffer, len, "amx_nextmap");
-		if (value && value[0])
+		if (m_eAgVersion != prevAgVersion) m_bNeedWriteTimer = true;
+	}
+
+	// Get nextmap
+	value = NetGetRuleValueFromBuffer(m_szPacketBuffer, m_iReceivedSize, "amx_nextmap");
+	if (value && value[0])
+	{
+		if (strcmp(m_szNextmap, value))
 		{
-			if (strcmp(m_szNextmap, value))
-			{
-				m_bNeedWriteNextmap = true;
-				strncpy(m_szNextmap, value, sizeof(m_szNextmap) - 1);
-				m_szNextmap[sizeof(m_szNextmap) - 1] = 0;
-			}
+			m_bNeedWriteNextmap = true;
+			strncpy(m_szNextmap, value, sizeof(m_szNextmap) - 1);
+			m_szNextmap[sizeof(m_szNextmap) - 1] = 0;
 		}
 	}
 }
@@ -331,7 +376,7 @@ void CHudTimer::Think(void)
 			i = 0;
 			*(float *)&buffer[i] = m_flEndtime;
 			i += sizeof(float);
-			*(int *)&buffer[i] = m_bAgVersion;
+			*(int *)&buffer[i] = m_eAgVersion;
 			i += sizeof(int);
 			Demo_WriteBuffer(TYPE_TIMER, i, buffer);
 			m_bNeedWriteTimer = false;
@@ -377,7 +422,7 @@ void CHudTimer::ReadDemoTimerBuffer(int type, const unsigned char *buffer)
 	case TYPE_TIMER:
 		m_flEndtime = *(float *)&buffer[i];
 		i += sizeof(float);
-		m_bAgVersion = *(int *)&buffer[i];
+		m_eAgVersion = *(int *)&buffer[i];
 		i += sizeof(int);
 		break;
 	case TYPE_CUSTOM_TIMER:
