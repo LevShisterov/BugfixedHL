@@ -55,10 +55,14 @@ bool RegexMatch(const char *str, const char *regex)
 	}
 
 	// Try to match
-	int rc = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovector, sizeof(ovector));
+	int rc = pcre_exec(re, NULL, str, strlen(str), 0, 0, ovector, sizeof(ovector) / sizeof(ovector[0]));
+
+	// Free up the regular expression
+	pcre_free(re);
+
+	// Test the result
 	if (rc < 0)
 		return false;	// No match
-
 	return true;
 }
 bool IsCommandGood(const char *str)
