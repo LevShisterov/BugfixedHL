@@ -2651,8 +2651,6 @@ void PM_CheckWaterJump (void)
 	pmove->usehull = savehull;
 }
 
-extern int g_bWillLandNextFrame;
-
 void PM_CheckFalling( void )
 {
 	if ( pmove->onground != -1 &&
@@ -2716,14 +2714,9 @@ void PM_CheckFalling( void )
 		}
 	}
 
-	if ( pmove->onground != -1 )
-	{
+	if ( pmove->onground != -1 ) 
+	{		
 		pmove->flFallVelocity = 0;
-	}
-	else
-	{
-		// TODO: Try to detect that we will land on next frame to send correct jump to the server for bunnyhop
-		g_bWillLandNextFrame = 1;
 	}
 }
 
