@@ -114,6 +114,8 @@ kbutton_t	in_strafe;
 kbutton_t	in_speed;
 kbutton_t	in_use;
 kbutton_t	in_jump;
+kbutton_t	in_longjump;
+kbutton_t	in_bunnyhop;
 kbutton_t	in_attack;
 kbutton_t	in_attack2;
 kbutton_t	in_up;
@@ -461,7 +463,6 @@ extern void __CmdFunc_InputPlayerSpecial(void);
 void IN_Attack2Down(void) 
 {
 	KeyDown(&in_attack2);
-
 	gHUD.m_Spectator.HandleButtonsDown( IN_ATTACK2 );
 }
 
@@ -476,14 +477,16 @@ void IN_JumpDown (void)
 {
 	KeyDown(&in_jump);
 	gHUD.m_Spectator.HandleButtonsDown( IN_JUMP );
-
 }
 void IN_JumpUp (void) {KeyUp(&in_jump);}
+void IN_LongJumpDown(void) { KeyDown(&in_longjump); }
+void IN_LongJumpUp(void) { KeyUp(&in_longjump); }
+void IN_BunnyHopDown(void) { KeyDown(&in_bunnyhop); }
+void IN_BunnyHopUp(void) { KeyUp(&in_bunnyhop); }
 void IN_DuckDown(void)
 {
 	KeyDown(&in_duck);
 	gHUD.m_Spectator.HandleButtonsDown( IN_DUCK );
-
 }
 void IN_DuckUp(void) {KeyUp(&in_duck);}
 void IN_ReloadDown(void) {KeyDown(&in_reload);}
@@ -786,6 +789,10 @@ int	CL_IsDead( void )
 	return ( gHUD.m_Health.m_iHealth <= 0 ) ? 1 : 0;
 }
 
+bool g_bLongJumpState = false;
+bool g_bBunnyHopState = false;
+extern "C" int g_bWillLandNextFrame = 0;
+
 /*
 ============
 CL_ButtonBits
@@ -802,22 +809,72 @@ int CL_ButtonBits( int bResetState )
 	{
 		bits |= IN_ATTACK;
 	}
-	
+
 	if (in_duck.state & 3)
 	{
 		bits |= IN_DUCK;
 	}
- 
+
 	if (in_jump.state & 3)
 	{
 		bits |= IN_JUMP;
+	}
+
+	if (in_longjump.state & 3)
+	{
+		if (!g_bLongJumpState)
+		{
+			bits |= IN_DUCK | IN_JUMP;
+			if (bResetState)
+			{
+				g_bLongJumpState = true;
+			}
+		}
+		else
+		{
+			bits |= IN_DUCK;
+		}
+	}
+	else
+	{
+		if (bResetState)
+		{
+			g_bLongJumpState = false;
+		}
+	}
+
+	if (in_bunnyhop.state & 3)
+	{
+		if (!g_bWillLandNextFrame)
+		{
+			bits |= IN_JUMP;
+			if (bResetState)
+			{
+				g_bWillLandNextFrame = 0;
+			}
+		}
+		//if (!g_bBunnyHopState)
+		//{
+		//	bits |= IN_JUMP;
+		//	if (bResetState)
+		//	{
+		//		g_bBunnyHopState = true;
+		//	}
+		//}
+		//else
+		//{
+		//	if (bResetState)
+		//	{
+		//		g_bBunnyHopState = false;
+		//	}
+		//}
 	}
 
 	if ( in_forward.state & 3 )
 	{
 		bits |= IN_FORWARD;
 	}
-	
+
 	if (in_back.state & 3)
 	{
 		bits |= IN_BACK;
@@ -884,6 +941,8 @@ int CL_ButtonBits( int bResetState )
 		in_attack.state &= ~2;
 		in_duck.state &= ~2;
 		in_jump.state &= ~2;
+		in_longjump.state &= ~2;
+		in_bunnyhop.state &= ~2;
 		in_forward.state &= ~2;
 		in_back.state &= ~2;
 		in_use.state &= ~2;
@@ -965,6 +1024,10 @@ void InitInput (void)
 	gEngfuncs.pfnAddCommand ("-use", IN_UseUp);
 	gEngfuncs.pfnAddCommand ("+jump", IN_JumpDown);
 	gEngfuncs.pfnAddCommand ("-jump", IN_JumpUp);
+	gEngfuncs.pfnAddCommand ("+ljump", IN_LongJumpDown);
+	gEngfuncs.pfnAddCommand ("-ljump", IN_LongJumpUp);
+	gEngfuncs.pfnAddCommand ("+bhop", IN_BunnyHopDown);
+	gEngfuncs.pfnAddCommand ("-bhop", IN_BunnyHopUp);
 	gEngfuncs.pfnAddCommand ("impulse", IN_Impulse);
 	gEngfuncs.pfnAddCommand ("+klook", IN_KLookDown);
 	gEngfuncs.pfnAddCommand ("-klook", IN_KLookUp);
