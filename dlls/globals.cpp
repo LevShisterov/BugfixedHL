@@ -39,3 +39,4 @@ DLL_GLOBAL const Vector	g_vecZero = Vector(0,0,0);
 DLL_GLOBAL int			g_Language;
 
 extern "C" int g_iOnGround = 0;
+extern "C" int g_iWaterlevel = 0;

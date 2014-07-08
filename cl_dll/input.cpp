@@ -49,6 +49,7 @@ extern "C" float anglemod( float a );
 bool g_bLongJumpState = false;
 bool g_bJumped = false;
 extern "C" int g_iOnGround = 0;
+extern "C" int g_iWaterlevel = 0;
 
 void IN_Init (void);
 void IN_Move ( float frametime, usercmd_t *cmd);
@@ -845,7 +846,12 @@ int CL_ButtonBits( int bResetState )
 
 	if (in_bunnyhop.state & 3)
 	{
-		if (g_iOnGround)
+		if (g_iWaterlevel >= 2)
+		{
+			// Under water, swim up
+			bits |= IN_JUMP;
+		}
+		else if (g_iOnGround)
 		{
 			if (!g_bJumped)
 			{
