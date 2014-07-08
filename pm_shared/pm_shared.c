@@ -2983,6 +2983,7 @@ void PM_PlayerMove ( qboolean server )
 		if ( pLadder )
 		{
 			g_onladder = 1;
+			g_iOnGround = 1;	// allow to jump off
 		}
 	}
 
