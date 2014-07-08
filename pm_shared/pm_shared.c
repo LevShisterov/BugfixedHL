@@ -149,6 +149,8 @@ static char grgchTextureType[CTEXTURESMAX];
 int g_onladder = 0;
 int g_bBunnyHop = 1;
 extern int g_iOnGround;
+extern int g_iWaterlevel;
+
 
 void PM_SwapTextures( int i, int j )
 {
@@ -1536,6 +1538,8 @@ qboolean PM_CheckWater ()
 		if (cont <= CONTENTS_WATER && cont > CONTENTS_TRANSLUCENT ) 
 			pmove->waterlevel = 3;  // In over our eyes
 	}
+
+	g_iWaterlevel = pmove->waterlevel;
 
 	return pmove->waterlevel > 1;
 }
