@@ -148,6 +148,7 @@ static char grgchTextureType[CTEXTURESMAX];
 
 int g_onladder = 0;
 int g_bBunnyHop = 1;
+extern int g_iOnGround;
 
 void PM_SwapTextures( int i, int j )
 {
@@ -2714,9 +2715,14 @@ void PM_CheckFalling( void )
 		}
 	}
 
-	if ( pmove->onground != -1 ) 
-	{		
+	if ( pmove->onground != -1 )
+	{
 		pmove->flFallVelocity = 0;
+		g_iOnGround = 1;	// Set flag for bunnyhop, to jump when touch the ground
+	}
+	else
+	{
+		g_iOnGround = 0;
 	}
 }
 
