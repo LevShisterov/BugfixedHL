@@ -486,8 +486,8 @@ void IN_JumpDown (void)
 void IN_JumpUp (void) {KeyUp(&in_jump);}
 void IN_LongJumpDown(void) { KeyDown(&in_longjump); }
 void IN_LongJumpUp(void) { KeyUp(&in_longjump); }
-void IN_BunnyHopDown(void) { KeyDown(&in_bunnyhop); }
-void IN_BunnyHopUp(void) { KeyUp(&in_bunnyhop); }
+void IN_BunnyHopDown(void) { KeyDown(&in_bunnyhop); KeyDown(&in_up); }
+void IN_BunnyHopUp(void) { KeyUp(&in_bunnyhop); KeyUp(&in_up); }
 void IN_DuckDown(void)
 {
 	KeyDown(&in_duck);
@@ -846,12 +846,7 @@ int CL_ButtonBits( int bResetState )
 
 	if (in_bunnyhop.state & 3)
 	{
-		if (g_iWaterlevel >= 2)
-		{
-			// Under water, swim up
-			bits |= IN_JUMP;
-		}
-		else if (g_iOnGround)
+		if (g_iOnGround)
 		{
 			if (!g_bJumped)
 			{
@@ -865,6 +860,12 @@ int CL_ButtonBits( int bResetState )
 		else
 		{
 			g_bJumped = false;
+
+			if (g_iWaterlevel > 0 && g_iWaterlevel <= 2)
+			{
+				// Over the water, glide on the surface
+				bits |= IN_JUMP;
+			}
 		}
 	}
 
