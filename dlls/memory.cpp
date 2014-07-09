@@ -23,7 +23,6 @@
 #define MAX_PATTERN 128
 
 
-typedef void (__fastcall *ThisCallInt)(void *, int, int);
 typedef void (__fastcall *ThisCallIntInt)(void *, int, int, int);
 
 
@@ -72,7 +71,7 @@ uint32_t g_pEngineClConnectionlessPacketOffset = 0;
 
 /* GameUI fix variables */
 int g_iLinesCounter = 0;
-ThisCallInt g_pFunctionReplacedByCounter;
+ThisCallIntInt g_pFunctionReplacedByCounter;
 ThisCallIntInt g_pFunctionReplacedBySubst;
 size_t (*g_pGet_VGUI_System009)(void);
 size_t *g_pSystem = 0;
@@ -444,14 +443,14 @@ void CL_ConnectionlessPacket(void)
 }
 
 // GameUI copy from console bug fix functions
-void __fastcall ConsoleCopyCount(void *pthis, int a, int add)
+void __fastcall ConsoleCopyCount(void *pthis, int a, int b, int c)
 {
 	g_iLinesCounter++;
-	g_pFunctionReplacedByCounter(pthis, a, add);
+	g_pFunctionReplacedByCounter(pthis, a, b, c);
 }
 void __fastcall ConsoleCopySubst(void *pthis, int a, int pobj, int count)
 {
-	// This function is called from System009 member at offset 0x0A, we can correct count parameter here and call actial function
+	// This function is called from System009 member at offset 0x0A, we can correct count parameter here and call actual function
 	g_pFunctionReplacedBySubst(pthis, a, pobj, count + g_iLinesCounter);
 	g_iLinesCounter = 0;
 	// Unhook function in System009
@@ -461,7 +460,7 @@ void __fastcall ConsoleCopySubst(void *pthis, int a, int pobj, int count)
 }
 size_t __cdecl ConsoleCopyGetSystem(void)
 {
-	// We are take System009 by ourselvs and replace a function there at offset 0x0A, to be able to correct parameters of a later call
+	// We are take System009 by ourselves and replace a function there at offset 0x0A, to be able to correct parameters of a later call
 	size_t *pSystem = (size_t *)g_pGet_VGUI_System009();
 	g_pSystem = (size_t *)*pSystem;
 	g_pFunctionReplacedBySubst = (ThisCallIntInt)HookDWord((size_t)g_pSystem + 32, (size_t)ConsoleCopySubst);
@@ -530,7 +529,7 @@ void FindEngineMessagesBufferVariables(void)
 		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
 		if (!addr1)
 		{
-			strncat(g_szPatchErrors, "Engine patch: offsets of EngineBuffer variables (A1283DCD02) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			strncat(g_szPatchErrors, "Engine patch: offsets of EngineBuffer variables not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
 		}
 
@@ -561,7 +560,7 @@ void FindUserMessagesEntry(void)
 		}
 		else
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of UserMessages entry (81FB000100) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			strncat(g_szPatchErrors, "Engine patch: offset of UserMessages entry not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 		}
 	}
 }
@@ -712,7 +711,7 @@ void PatchFpsBugPlace(void)
 		}
 		else
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of FPS bug place (DD052834FA) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			strncat(g_szPatchErrors, "Engine patch: offset of FPS bug place not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 		}
 	}
 	else
@@ -783,7 +782,7 @@ void PatchConnectionlessPacketHandler(void)
 		}
 		else
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of CL_ConnectionlessPacket (833AFF750A) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			strncat(g_szPatchErrors, "Engine patch: offset of CL_ConnectionlessPacket not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 		}
 	}
 	else
@@ -804,29 +803,51 @@ void PatchGameUiConsoleCopy(void)
 		const char data1[] = "66833C0F0A 752D6A018D4C2420 8BF0E8C6090000 6A0156 8D4C24";
 		const char mask1[] = "FFFFFF00FF FFFFFFFFFFFFFFFF FFFFFF00000000 FFFFFF FFFFFF";
 		size_t addr1 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data1, mask1);
-		if (!addr1)
+		if (addr1)
 		{
-			strncat(g_szPatchErrors, "GameUI patch: offset in CopySelected (66833C0F0A) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-			return;
+			addr1 += 28;
+		}
+		else
+		{
+			const char data2[] = "6A01568D4C2424 89442430 E83B090000 8B44241C 8D542418 528D0C70 51E8";
+			const char mask2[] = "FFFFFFFF000000 FF000000 FF00000000 FF000000 FF000000 FFFF0000 FFFF";
+			addr1 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data2, mask2);
+			if (!addr1)
+			{
+				strncat(g_szPatchErrors, "GameUI patch: offset in CopySelected not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+				return;
+			}
+			addr1 += 12;
 		}
 
-		// Find the place where Get_VGUI_System009 is get before call to its member
-		const char data2[] = "508D147152 E8350A0000 83C408E8";
-		const char mask2[] = "FFFFFFFFFF FF00000000 FFFFFFFF";
-		size_t addr2 = MemoryFindForward(addr1, addr1 + 256, data2, mask2);
-		if (!addr2)
+		// Find the place where Get_VGUI_System009 is got before call to its member
+		const char data3[] = "508D147152 E8350A0000 83C408E8";
+		const char mask3[] = "FFFFFFFFFF FF00000000 FFFFFFFF";
+		size_t addr2 = MemoryFindForward(addr1, addr1 + 256, data3, mask3);
+		if (addr2)
 		{
-			strncat(g_szPatchErrors, "GameUI patch: offset of GetSystem009 (508D147152) not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-			return;
+			addr2 += 14;
+		}
+		else
+		{
+			const char data4[] = "E81D87FEFF 8B4C241C8B102BEB 55518BC8 FF5220 8B4424245D3BC7";
+			const char mask4[] = "FF00000000 FF000000FF000000 FFFFFFFF FF0000 FF000000FFFFFF";
+			addr2 = MemoryFindForward(addr1, addr1 + 256, data4, mask4);
+			if (!addr2)
+			{
+				strncat(g_szPatchErrors, "GameUI patch: offset of GetSystem009 not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+				return;
+			}
+			addr2 += 1;
 		}
 
 		// Inject counting function
-		size_t offset1 = (size_t)ConsoleCopyCount - (addr1 + 20);
-		g_pFunctionReplacedByCounter = (ThisCallInt)(HookDWord(addr1 + 16, offset1) + addr1 + 20);
+		size_t offset1 = (size_t)ConsoleCopyCount - (addr1 + 4);
+		g_pFunctionReplacedByCounter = (ThisCallIntInt)(HookDWord(addr1, offset1) + addr1 + 4);
 
 		// Inject intercept function
-		size_t offset2 = (size_t)ConsoleCopyGetSystem - (addr2 + 18);
-		g_pGet_VGUI_System009 = (size_t (*)(void))(HookDWord(addr2 + 14, offset2) + addr2 + 18);
+		size_t offset2 = (size_t)ConsoleCopyGetSystem - (addr2 + 4);
+		g_pGet_VGUI_System009 = (size_t (*)(void))(HookDWord(addr2, offset2) + addr2 + 4);
 	}
 }
 
