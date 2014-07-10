@@ -250,7 +250,6 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\train.cpp" />
     <ClCompile Include="..\tri.cpp" />
     <ClCompile Include="..\util.cpp" />
-    <ClCompile Include="..\version.cpp" />
     <ClCompile Include="..\vgui_ClassMenu.cpp" />
     <ClCompile Include="..\vgui_ConsolePanel.cpp" />
     <ClCompile Include="..\vgui_ControlConfigPanel.cpp" />

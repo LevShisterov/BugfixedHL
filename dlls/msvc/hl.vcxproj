@@ -264,7 +264,6 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\tripmine.cpp" />
     <ClCompile Include="..\turret.cpp" />
     <ClCompile Include="..\util.cpp" />
-    <ClCompile Include="..\version.cpp" />
     <ClCompile Include="..\weapons.cpp" />
     <ClCompile Include="..\world.cpp" />
     <ClCompile Include="..\wpn_shared\hl_wpn_glock.cpp" />

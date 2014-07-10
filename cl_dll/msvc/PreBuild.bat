@@ -197,9 +197,10 @@ echo #endif //__APPVERSION_H__>>"%srcdir%\appversion.h"
 echo.>>"%srcdir%\appversion.h"
 
 ::
-:: Do update of version.cpp file last modify time to force it recompile
+:: Update last modify time on files that use appversion.h header to force them to recompile
 ::
-copy /b "%srcdir%\version.cpp"+,, "%srcdir%\version.cpp"
+copy /b "%srcdir%\msvc\client.rc"+,, "%srcdir%\msvc\client.rc"
+copy /b "%srcdir%\hud.cpp"+,, "%srcdir%\hud.cpp"
 
 :_exit
 exit /B 0

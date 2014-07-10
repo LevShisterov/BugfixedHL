@@ -199,7 +199,8 @@ echo.>>"%srcdir%\appversion.h"
 ::
 :: Do update of version.cpp file last modify time to force it recompile
 ::
-copy /b "%srcdir%\version.cpp"+,, "%srcdir%\version.cpp"
+copy /b "%srcdir%\msvc\hl.rc"+,, "%srcdir%\msvc\hl.rc"
+copy /b "%srcdir%\game.cpp"+,, "%srcdir%\game.cpp"
 
 :_exit
 exit /B 0
