@@ -2,7 +2,7 @@ Bugfixed and improved HL release
 
 URL: http://aghl.ru/forum/viewtopic.php?f=36&t=686
 
-Version: 0.1.795
+Version: 0.1.836
 
 Info:
 
@@ -188,6 +188,13 @@ Client side changes:
     Fixed typo in cl_forceemenymodels cvar.
     Delayed "status" requesting on connect.
     Fixed bitmap fonts loading for non-standard resolutions.
+    0.1.836 2014-07-10:
+    Added commands filtering in director stufftext message.
+    Fixed bug and free resources in regex match function (fixes crash on exit on Windows XP).
+    Fixed rules parsing for multi-packet response format (fixes miniag detection and its timer hiding).
+    #41: Added +bhop command to do bunnyhop. Optimized +bhop command for over and under water conditions (used +moveup simulation for faster floating up under water).
+    #41: Added +ljump command for long jumping.
+    Added support for patching GameUI.dll from 3248 build.
 
 
 Server side changes:
@@ -353,4 +360,8 @@ Server side changes:
     Fixed bug with explosions and breakable objects when there is no attacker.
     0.1.795 2013-12-26:
     Check that player object exists before marking as disconnected.
+    0.1.836 2014-07-10:
+    Fixed delta.lst to allow attachment to entities with numbers higher then 255.
+    #36: Don't execute servercfgfile on map change.
+    Actually use player fields encode data for custom encoder, not entity fields.
 
