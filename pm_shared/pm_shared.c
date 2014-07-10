@@ -711,34 +711,34 @@ returns the blocked flags:
 0x02 == step / wall
 ==================
 */
-int PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+int PM_ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 {
 	float	backoff;
 	float	change;
-	float angle;
+	float	angle;
 	int		i, blocked;
-	
-	angle = normal[ 2 ];
 
-	blocked = 0x00;            // Assume unblocked.
-	if (angle > 0)      // If the plane that is blocking us has a positive z component, then assume it's a floor.
-		blocked |= 0x01;		// 
-	if (!angle)         // If the plane has no Z, it is vertical (wall/step)
-		blocked |= 0x02;		// 
-	
+	angle = normal[2];
+
+	blocked = 0x00;			// Assume unblocked.
+	if (angle > 0)			// If the plane that is blocking us has a positive z component, then assume it's a floor.
+		blocked |= 0x01;
+	if (!angle)				// If the plane has no Z, it is vertical (wall/step)
+		blocked |= 0x02;
+
 	// Determine how far along plane to slide based on incoming direction.
 	// Scale by overbounce factor.
-	backoff = DotProduct (in, normal) * overbounce;
+	backoff = DotProduct(in, normal) * overbounce;
 
-	for (i=0 ; i<3 ; i++)
+	for (i = 0; i < 3; i++)
 	{
-		change = normal[i]*backoff;
+		change = normal[i] * backoff;
 		out[i] = in[i] - change;
 		// If out velocity is too small, zero it out.
 		if (out[i] > -STOP_EPSILON && out[i] < STOP_EPSILON)
 			out[i] = 0;
 	}
-	
+
 	// Return blocking flags.
 	return blocked;
 }
@@ -790,7 +790,7 @@ PM_FlyMove
 The basic solid body movement clip that slides along multiple planes
 ============
 */
-int PM_FlyMove (void)
+int PM_FlyMove(void)
 {
 	int			bumpcount, numbumps;
 	vec3_t		dir;
@@ -798,35 +798,49 @@ int PM_FlyMove (void)
 	int			numplanes;
 	vec3_t		planes[MAX_CLIP_PLANES];
 	vec3_t		primal_velocity, original_velocity;
-	vec3_t      new_velocity;
+	vec3_t		new_velocity;
 	int			i, j;
 	pmtrace_t	trace;
-	vec3_t		end;
-	float		time_left, allFraction;
+	vec3_t		end, moveoffset;
+	float		time_left, allFraction, length;
 	int			blocked;
-		
-	numbumps  = 4;           // Bump up to four times
-	
-	blocked   = 0;           // Assume not blocked
-	numplanes = 0;           //  and not sliding along any planes
-	VectorCopy (pmove->velocity, original_velocity);  // Store original velocity
-	VectorCopy (pmove->velocity, primal_velocity);
-	
-	allFraction = 0;
-	time_left = pmove->frametime;   // Total time for this movement operation.
 
-	for (bumpcount=0 ; bumpcount<numbumps ; bumpcount++)
+	numbumps	= 4;			// Bump up to four times
+	blocked		= 0;			// Assume not blocked
+	numplanes	= 0;			//  and not sliding along any planes
+
+	VectorCopy(pmove->velocity, original_velocity);  // Store original velocity
+	VectorCopy(pmove->velocity, primal_velocity);
+
+	allFraction = 0;
+	time_left = pmove->frametime;	// Total time for this movement operation.
+
+	for (bumpcount = 0; bumpcount < numbumps; bumpcount++)
 	{
 		if (!pmove->velocity[0] && !pmove->velocity[1] && !pmove->velocity[2])
 			break;
 
 		// Assume we can move all the way from the current origin to the
 		//  end point.
-		for (i=0 ; i<3 ; i++)
+		for (i = 0; i < 3; i++)
 			end[i] = pmove->origin[i] + time_left * pmove->velocity[i];
 
 		// See if we can make it from origin to end point.
-		trace = pmove->PM_PlayerTrace (pmove->origin, end, PM_NORMAL, -1 );
+		trace = pmove->PM_PlayerTrace(pmove->origin, end, PM_NORMAL, -1);
+
+		// Check if we are stuck on the surface (HACKHACK: this solves precision error in the engine for small movements)
+		if (trace.fraction == 0.0)
+		{
+			// Move end point a bit away from the wall and try to move again
+			VectorSubtract(end, pmove->origin, moveoffset);
+			length = Length(moveoffset);
+			if (length > 0.0)
+			{
+				for (i = 0; i < 3; i++)
+					end[i] += trace.plane.normal[i] * 0.001 / length;
+				trace = pmove->PM_PlayerTrace(pmove->origin, end, PM_NORMAL, -1);
+			}
+		}
 
 		allFraction += trace.fraction;
 		// If we started in a solid object, or we were in solid space
@@ -834,7 +848,7 @@ int PM_FlyMove (void)
 		//  are blocked by floor and wall.
 		if (trace.allsolid)
 		{	// entity is trapped in another solid
-			VectorCopy (vec3_origin, pmove->velocity);
+			VectorCopy(vec3_origin, pmove->velocity);
 			//Con_DPrintf("Trapped 4\n");
 			return 4;
 		}
@@ -844,15 +858,15 @@ int PM_FlyMove (void)
 		//  zero the plane counter.
 		if (trace.fraction > 0)
 		{	// actually covered some distance
-			VectorCopy (trace.endpos, pmove->origin);
-			VectorCopy (pmove->velocity, original_velocity);
+			VectorCopy(trace.endpos, pmove->origin);
+			VectorCopy(pmove->velocity, original_velocity);
 			numplanes = 0;
 		}
 
 		// If we covered the entire distance, we are done
 		//  and can return.
 		if (trace.fraction == 1)
-			 break;		// moved the entire distance
+			break;		// moved the entire distance
 
 		//if (!trace.ent)
 		//	Sys_Error ("PM_PlayerTrace: !trace.ent");
@@ -868,8 +882,8 @@ int PM_FlyMove (void)
 		{
 			blocked |= 1;		// floor
 		}
-		// If the plane has a zero z component in the normal, then it's a 
-		//  step or wall
+		// If the plane has a zero z component in the normal, then
+		//  it's a step or wall
 		if (!trace.plane.normal[2])
 		{
 			blocked |= 2;		// step / wall
@@ -879,98 +893,98 @@ int PM_FlyMove (void)
 		// Reduce amount of pmove->frametime left by total time left * fraction
 		//  that we covered.
 		time_left -= time_left * trace.fraction;
-		
+
 		// Did we run out of planes to clip against?
 		if (numplanes >= MAX_CLIP_PLANES)
 		{	// this shouldn't really happen
 			//  Stop our movement if so.
-			VectorCopy (vec3_origin, pmove->velocity);
+			VectorCopy(vec3_origin, pmove->velocity);
 			//Con_DPrintf("Too many planes 4\n");
 
 			break;
 		}
 
 		// Set up next clipping plane
-		VectorCopy (trace.plane.normal, planes[numplanes]);
+		VectorCopy(trace.plane.normal, planes[numplanes]);
 		numplanes++;
-//
 
-// modify original_velocity so it parallels all of the clip planes
-//
-		if ( pmove->movetype == MOVETYPE_WALK &&
-			((pmove->onground == -1) || (pmove->friction != 1)) )	// relfect player velocity
+		//
+		// modify original_velocity so it parallels all of the clip planes
+		//
+		if (pmove->movetype == MOVETYPE_WALK &&
+			((pmove->onground == -1) || (pmove->friction != 1)))	// relfect player velocity
 		{
-			for ( i = 0; i < numplanes; i++ )
+			for (i = 0; i < numplanes; i++)
 			{
-				if ( planes[i][2] > 0.7  )
+				if (planes[i][2] > 0.7)
 				{// floor or slope
-					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1 );
-					VectorCopy( new_velocity, original_velocity );
+					PM_ClipVelocity(original_velocity, planes[i], new_velocity, 1);
+					VectorCopy(new_velocity, original_velocity);
 				}
-				else															
-					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1.0 + pmove->movevars->bounce * (1-pmove->friction) );
+				else
+				{
+					PM_ClipVelocity(original_velocity, planes[i], new_velocity, 1.0 + pmove->movevars->bounce * (1 - pmove->friction));
+				}
 			}
 
-			VectorCopy( new_velocity, pmove->velocity );
-			VectorCopy( new_velocity, original_velocity );
+			VectorCopy(new_velocity, pmove->velocity);
+			VectorCopy(new_velocity, original_velocity);
 		}
 		else
 		{
-			for (i=0 ; i<numplanes ; i++)
+			for (i = 0; i < numplanes; i++)
 			{
-				PM_ClipVelocity (
-					original_velocity,
-					planes[i],
-					pmove->velocity,
-					1);
-				for (j=0 ; j<numplanes ; j++)
+				PM_ClipVelocity(original_velocity, planes[i], pmove->velocity, 1);
+				for (j = 0; j < numplanes; j++)
+				{
 					if (j != i)
 					{
 						// Are we now moving against this plane?
-						if (DotProduct (pmove->velocity, planes[j]) < 0)
+						if (DotProduct(pmove->velocity, planes[j]) < 0)
 							break;	// not ok
 					}
+				}
 				if (j == numplanes)  // Didn't have to clip, so we're ok
 					break;
 			}
-			
+
 			// Did we go all the way through plane set
 			if (i != numplanes)
 			{	// go along this plane
 				// pmove->velocity is set in clipping call, no need to set again.
-				;  
+				;
 			}
 			else
 			{	// go along the crease
 				if (numplanes != 2)
 				{
 					//Con_Printf ("clip velocity, numplanes == %i\n",numplanes);
-					VectorCopy (vec3_origin, pmove->velocity);
+					VectorCopy(vec3_origin, pmove->velocity);
 					//Con_DPrintf("Trapped 4\n");
 
 					break;
 				}
-				CrossProduct (planes[0], planes[1], dir);
-				d = DotProduct (dir, pmove->velocity);
-				VectorScale (dir, d, pmove->velocity );
+				CrossProduct(planes[0], planes[1], dir);
+				d = DotProduct(dir, pmove->velocity);
+				VectorScale(dir, d, pmove->velocity);
 			}
 
-	//
-	// if original velocity is against the original velocity, stop dead
-	// to avoid tiny occilations in sloping corners
-	//
-			if (DotProduct (pmove->velocity, primal_velocity) <= 0)
+			//
+			// if original velocity is against the original velocity, stop dead
+			// to avoid tiny occilations in sloping corners
+			//
+			if (DotProduct(pmove->velocity, primal_velocity) <= 0)
 			{
 				//Con_DPrintf("Back\n");
-				VectorCopy (vec3_origin, pmove->velocity);
+				VectorCopy(vec3_origin, pmove->velocity);
 				break;
 			}
 		}
 	}
 
-	if ( allFraction == 0 )
+	if (allFraction == 0)
 	{
-		VectorCopy (vec3_origin, pmove->velocity);
+		VectorCopy(vec3_origin, pmove->velocity);
 		//Con_DPrintf( "Don't stick\n" );
 	}
 
