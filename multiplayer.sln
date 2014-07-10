@@ -1,9 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cl_dll", "cl_dll\msvc8\cl_dll.vcproj", "{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "cl_dll\msvc\client.vcxproj", "{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hl", "dlls\msvc8\hl.vcproj", "{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hl", "dlls\msvc\hl.vcxproj", "{9A8C60F8-0F08-49CD-ABDB-131AAADEE359}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

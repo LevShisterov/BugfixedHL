@@ -1,0 +1,332 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}</ProjectGuid>
+    <RootNamespace>client</RootNamespace>
+    <ProjectName>client</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\$(Configuration)\</OutDir>
+    <IntDir>.\$(Configuration)\obj\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\$(Configuration)\</OutDir>
+    <IntDir>.\$(Configuration)\obj\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEvent>
+      <Message>Setup version from SVN revision</Message>
+      <Command>IF EXIST "$(ProjectDir)PreBuild.bat" (
+CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
+)
+</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>Force build to run Pre-Build event</Message>
+      <Command>echo Empty Action
+</Command>
+      <Inputs>subversion.always.run;%(Inputs)</Inputs>
+      <Outputs>subversion.always.run;%(Outputs)</Outputs>
+    </CustomBuildStep>
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\Debug/client.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\utils\vgui\include;..\..\engine;..\..\common;..\..\pm_shared;..\..\dlls;..\jpeg;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;CLIENT_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS;PCRE_STATIC;HAVE_CONFIG_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>dbghelp.lib;psapi.lib;winmm.lib;wsock32.lib;../../utils/vgui/lib/win32_vc6/vgui.lib;../dinput/dinput8.lib;../dinput/dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)client.dll</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+    <PostBuildEvent>
+      <Message>Automatic deployment script</Message>
+      <Command>IF EXIST "$(ProjectDir)PostBuild.bat" (CALL "$(ProjectDir)PostBuild.bat" "$(TargetDir)" "$(TargetName)" "$(TargetExt)" "$(ProjectDir)")</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEvent>
+      <Message>Setup version from SVN revision</Message>
+      <Command>IF EXIST "$(ProjectDir)PreBuild.bat" (
+CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
+)
+</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>Force build to run Pre-Build event</Message>
+      <Command>echo Empty Action
+</Command>
+      <Inputs>subversion.always.run;%(Inputs)</Inputs>
+      <Outputs>subversion.always.run;%(Outputs)</Outputs>
+    </CustomBuildStep>
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\Release/client.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\utils\vgui\include;..\..\engine;..\..\common;..\..\pm_shared;..\..\dlls;..\jpeg;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;CLIENT_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS;PCRE_STATIC;HAVE_CONFIG_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>dbghelp.lib;psapi.lib;winmm.lib;wsock32.lib;../../utils/vgui/lib/win32_vc6/vgui.lib;../dinput/dinput8.lib;../dinput/dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)client.dll</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Automatic deployment script</Message>
+      <Command>IF EXIST "$(ProjectDir)PostBuild.bat" (CALL "$(ProjectDir)PostBuild.bat" "$(TargetDir)" "$(TargetName)" "$(TargetExt)" "$(ProjectDir)")</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\common\interface.cpp" />
+    <ClCompile Include="..\..\dlls\com_utils.cpp" />
+    <ClCompile Include="..\..\dlls\crossbow.cpp" />
+    <ClCompile Include="..\..\dlls\crowbar.cpp" />
+    <ClCompile Include="..\..\dlls\egon.cpp" />
+    <ClCompile Include="..\..\dlls\gauss.cpp" />
+    <ClCompile Include="..\..\dlls\handgrenade.cpp" />
+    <ClCompile Include="..\..\dlls\hornetgun.cpp" />
+    <ClCompile Include="..\..\dlls\memory.cpp" />
+    <ClCompile Include="..\..\dlls\mp5.cpp" />
+    <ClCompile Include="..\..\dlls\path.cpp" />
+    <ClCompile Include="..\..\dlls\pcre\pcre_chartables.c" />
+    <ClCompile Include="..\..\dlls\pcre\pcre_compile.c" />
+    <ClCompile Include="..\..\dlls\pcre\pcre_exec.c" />
+    <ClCompile Include="..\..\dlls\pcre\pcre_globals.c" />
+    <ClCompile Include="..\..\dlls\pcre\pcre_newline.c" />
+    <ClCompile Include="..\..\dlls\pcre\pcre_tables.c" />
+    <ClCompile Include="..\..\dlls\pcre\pcre_try_flipped.c" />
+    <ClCompile Include="..\..\dlls\python.cpp" />
+    <ClCompile Include="..\..\dlls\rpg.cpp" />
+    <ClCompile Include="..\..\dlls\satchel.cpp" />
+    <ClCompile Include="..\..\dlls\shotgun.cpp" />
+    <ClCompile Include="..\..\dlls\squeakgrenade.cpp" />
+    <ClCompile Include="..\..\dlls\tripmine.cpp" />
+    <ClCompile Include="..\..\dlls\wpn_shared\hl_wpn_glock.cpp" />
+    <ClCompile Include="..\..\game_shared\vgui_checkbutton2.cpp" />
+    <ClCompile Include="..\..\game_shared\vgui_grid.cpp" />
+    <ClCompile Include="..\..\game_shared\vgui_helpers.cpp" />
+    <ClCompile Include="..\..\game_shared\vgui_listbox.cpp" />
+    <ClCompile Include="..\..\game_shared\vgui_loadtga.cpp" />
+    <ClCompile Include="..\..\game_shared\vgui_scrollbar2.cpp" />
+    <ClCompile Include="..\..\game_shared\vgui_slider2.cpp" />
+    <ClCompile Include="..\..\game_shared\voice_banmgr.cpp" />
+    <ClCompile Include="..\..\game_shared\voice_status.cpp" />
+    <ClCompile Include="..\..\pm_shared\pm_debug.c" />
+    <ClCompile Include="..\..\pm_shared\pm_math.c" />
+    <ClCompile Include="..\..\pm_shared\pm_shared.c" />
+    <ClCompile Include="..\ammo.cpp" />
+    <ClCompile Include="..\ammohistory.cpp" />
+    <ClCompile Include="..\ammo_secondary.cpp" />
+    <ClCompile Include="..\battery.cpp" />
+    <ClCompile Include="..\cdll_int.cpp" />
+    <ClCompile Include="..\com_weapons.cpp" />
+    <ClCompile Include="..\death.cpp" />
+    <ClCompile Include="..\demo.cpp" />
+    <ClCompile Include="..\entity.cpp" />
+    <ClCompile Include="..\events.cpp" />
+    <ClCompile Include="..\ev_common.cpp" />
+    <ClCompile Include="..\ev_hldm.cpp" />
+    <ClCompile Include="..\flashlight.cpp" />
+    <ClCompile Include="..\GameStudioModelRenderer.cpp" />
+    <ClCompile Include="..\geiger.cpp" />
+    <ClCompile Include="..\health.cpp" />
+    <ClCompile Include="..\hl\hl_baseentity.cpp" />
+    <ClCompile Include="..\hl\hl_events.cpp" />
+    <ClCompile Include="..\hl\hl_objects.cpp" />
+    <ClCompile Include="..\hl\hl_weapons.cpp" />
+    <ClCompile Include="..\hud.cpp" />
+    <ClCompile Include="..\hud_msg.cpp" />
+    <ClCompile Include="..\hud_redraw.cpp" />
+    <ClCompile Include="..\hud_servers.cpp" />
+    <ClCompile Include="..\hud_spectator.cpp" />
+    <ClCompile Include="..\hud_timer.cpp" />
+    <ClCompile Include="..\hud_update.cpp" />
+    <ClCompile Include="..\input.cpp" />
+    <ClCompile Include="..\inputw32.cpp" />
+    <ClCompile Include="..\in_camera.cpp" />
+    <ClCompile Include="..\jpeg\jpge.cpp" />
+    <ClCompile Include="..\menu.cpp" />
+    <ClCompile Include="..\message.cpp" />
+    <ClCompile Include="..\net.cpp" />
+    <ClCompile Include="..\overview.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\parsemsg.cpp" />
+    <ClCompile Include="..\results.cpp" />
+    <ClCompile Include="..\saytext.cpp" />
+    <ClCompile Include="..\statusbar.cpp" />
+    <ClCompile Include="..\status_icons.cpp" />
+    <ClCompile Include="..\StudioModelRenderer.cpp" />
+    <ClCompile Include="..\studio_util.cpp" />
+    <ClCompile Include="..\svc_messages.cpp" />
+    <ClCompile Include="..\text_message.cpp" />
+    <ClCompile Include="..\train.cpp" />
+    <ClCompile Include="..\tri.cpp" />
+    <ClCompile Include="..\util.cpp" />
+    <ClCompile Include="..\version.cpp" />
+    <ClCompile Include="..\vgui_ClassMenu.cpp" />
+    <ClCompile Include="..\vgui_ConsolePanel.cpp" />
+    <ClCompile Include="..\vgui_ControlConfigPanel.cpp" />
+    <ClCompile Include="..\vgui_CustomObjects.cpp" />
+    <ClCompile Include="..\vgui_int.cpp" />
+    <ClCompile Include="..\vgui_MOTDWindow.cpp" />
+    <ClCompile Include="..\vgui_SchemeManager.cpp" />
+    <ClCompile Include="..\vgui_ScorePanel.cpp" />
+    <ClCompile Include="..\vgui_ServerBrowser.cpp" />
+    <ClCompile Include="..\vgui_SpectatorPanel.cpp" />
+    <ClCompile Include="..\vgui_TeamFortressViewport.cpp" />
+    <ClCompile Include="..\vgui_teammenu.cpp" />
+    <ClCompile Include="..\view.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="client.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\common\itrackeruser.h" />
+    <ClInclude Include="..\..\dlls\com_utils.h" />
+    <ClInclude Include="..\..\dlls\memory.h" />
+    <ClInclude Include="..\..\dlls\path.h" />
+    <ClInclude Include="..\..\dlls\pcre\config.h" />
+    <ClInclude Include="..\..\dlls\pcre\pcre.h" />
+    <ClInclude Include="..\..\dlls\pcre\pcre_internal.h" />
+    <ClInclude Include="..\..\dlls\pcre\ucp.h" />
+    <ClInclude Include="..\..\game_shared\voice_banmgr.h" />
+    <ClInclude Include="..\..\game_shared\voice_status.h" />
+    <ClInclude Include="..\..\game_shared\voice_vgui_tweakdlg.h" />
+    <ClInclude Include="..\..\pm_shared\pm_debug.h" />
+    <ClInclude Include="..\..\pm_shared\pm_defs.h" />
+    <ClInclude Include="..\..\pm_shared\pm_info.h" />
+    <ClInclude Include="..\..\pm_shared\pm_materials.h" />
+    <ClInclude Include="..\..\pm_shared\pm_movevars.h" />
+    <ClInclude Include="..\..\pm_shared\pm_shared.h" />
+    <ClInclude Include="..\ammo.h" />
+    <ClInclude Include="..\ammohistory.h" />
+    <ClInclude Include="..\camera.h" />
+    <ClInclude Include="..\cl_dll.h" />
+    <ClInclude Include="..\com_weapons.h" />
+    <ClInclude Include="..\demo.h" />
+    <ClInclude Include="..\eventscripts.h" />
+    <ClInclude Include="..\ev_hldm.h" />
+    <ClInclude Include="..\GameStudioModelRenderer.h" />
+    <ClInclude Include="..\health.h" />
+    <ClInclude Include="..\hud.h" />
+    <ClInclude Include="..\hud_iface.h" />
+    <ClInclude Include="..\hud_servers.h" />
+    <ClInclude Include="..\hud_servers_priv.h" />
+    <ClInclude Include="..\hud_spectator.h" />
+    <ClInclude Include="..\in_defs.h" />
+    <ClInclude Include="..\jpeg\jpge.h" />
+    <ClInclude Include="..\kbutton.h" />
+    <ClInclude Include="..\net.h" />
+    <ClInclude Include="..\overview.h" />
+    <ClInclude Include="..\parsemsg.h" />
+    <ClInclude Include="..\results.h" />
+    <ClInclude Include="..\StudioModelRenderer.h" />
+    <ClInclude Include="..\studio_util.h" />
+    <ClInclude Include="..\svc_messages.h" />
+    <ClInclude Include="..\util.h" />
+    <ClInclude Include="..\util_vector.h" />
+    <ClInclude Include="..\version.h" />
+    <ClInclude Include="..\vgui_ConsolePanel.h" />
+    <ClInclude Include="..\vgui_ControlConfigPanel.h" />
+    <ClInclude Include="..\vgui_int.h" />
+    <ClInclude Include="..\vgui_SchemeManager.h" />
+    <ClInclude Include="..\vgui_ScorePanel.h" />
+    <ClInclude Include="..\vgui_ServerBrowser.h" />
+    <ClInclude Include="..\vgui_SpectatorPanel.h" />
+    <ClInclude Include="..\vgui_TeamFortressViewport.h" />
+    <ClInclude Include="..\view.h" />
+    <ClInclude Include="..\wrect.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
