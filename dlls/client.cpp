@@ -121,7 +121,8 @@ void ClientDisconnect( edict_t *pEntity )
 	// Mark player as disconnected
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
-	pl->Disconnect();
+	if (pl)
+		pl->Disconnect();
 }
 
 
@@ -1464,23 +1465,23 @@ void Player_Encode( struct delta_s *pFields, const unsigned char *from, const un
 	localplayer =  ( t->number - 1 ) == ENGINE_CURRENT_PLAYER();
 	if ( localplayer )
 	{
-		DELTA_UNSETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN0 ].field );
-		DELTA_UNSETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN1 ].field );
-		DELTA_UNSETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN2 ].field );
+		DELTA_UNSETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN0 ].field );
+		DELTA_UNSETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN1 ].field );
+		DELTA_UNSETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN2 ].field );
 	}
 
 	if ( ( t->movetype == MOVETYPE_FOLLOW ) &&
 		 ( t->aiment != 0 ) )
 	{
-		DELTA_UNSETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN0 ].field );
-		DELTA_UNSETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN1 ].field );
-		DELTA_UNSETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN2 ].field );
+		DELTA_UNSETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN0 ].field );
+		DELTA_UNSETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN1 ].field );
+		DELTA_UNSETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN2 ].field );
 	}
 	else if ( t->aiment != f->aiment )
 	{
-		DELTA_SETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN0 ].field );
-		DELTA_SETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN1 ].field );
-		DELTA_SETBYINDEX( pFields, entity_field_alias[ FIELD_ORIGIN2 ].field );
+		DELTA_SETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN0 ].field );
+		DELTA_SETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN1 ].field );
+		DELTA_SETBYINDEX( pFields, player_field_alias[ FIELD_ORIGIN2 ].field );
 	}
 }
 
@@ -1675,7 +1676,16 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 	}
 
 	cd->flags			= pev->flags;
-	cd->health			= pev->health;
+
+	// Clamp value for delta compression
+	if (pev->health <= 0.0)
+		cd->health		= 0.0;
+	else if (pev->health <= 1.0)
+		cd->health		= 1.0;
+	else if ((int)pev->health < 0)
+		cd->health		= 0x7FFFFF00;	// (int)(float)0x7FFFFF00 == 0x7FFFFF00, (int)(float)0x7FFFFFF0 != 0x7FFFFFF0
+	else
+		cd->health		= pev->health;
 
 	cd->viewmodel		= MODEL_INDEX( STRING( pev->viewmodel ) );
 
