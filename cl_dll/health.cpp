@@ -195,11 +195,11 @@ int CHudHealth::Draw(float flTime)
 	else
 		a = MIN_ALPHA;
 
-	// Apply wider range health from client_state_t structure
+	// Apply wider range health from client_state_t structure, if available
 	cl_entity_t *player = gEngfuncs.GetLocalPlayer();
 	int health = player->curstate.health;
 	health = clamp(health, 0, 999);
-	if (m_iHealth != health)
+	if (m_iHealth != health && health > 255)
 	{
 		m_fFade = FADE_TIME;
 		m_iHealth = health;
