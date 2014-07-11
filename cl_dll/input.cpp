@@ -47,6 +47,7 @@ extern cl_enginefunc_t gEngfuncs;
 extern "C" float anglemod( float a );
 
 bool g_bLongJumpState = false;
+bool g_bDecentJumped = false;
 bool g_bJumped = false;
 extern "C" int g_iOnGround = 0;
 extern "C" int g_iWaterlevel = 0;
@@ -82,6 +83,9 @@ cvar_t	*cl_yawspeed;
 cvar_t	*cl_pitchspeed;
 cvar_t	*cl_anglespeedkey;
 cvar_t	*cl_vsmoothing;
+cvar_t	*cl_jumptype;
+
+
 /*
 ===============================================================================
 
@@ -102,7 +106,6 @@ state bit 2 is edge triggered on the down to up transition
 
 ===============================================================================
 */
-
 
 kbutton_t	in_mlook;
 kbutton_t	in_klook;
@@ -486,8 +489,8 @@ void IN_JumpDown (void)
 void IN_JumpUp (void) {KeyUp(&in_jump);}
 void IN_LongJumpDown(void) { KeyDown(&in_longjump); }
 void IN_LongJumpUp(void) { KeyUp(&in_longjump); }
-void IN_BunnyHopDown(void) { KeyDown(&in_bunnyhop); KeyDown(&in_up); }
-void IN_BunnyHopUp(void) { KeyUp(&in_bunnyhop); KeyUp(&in_up); }
+void IN_BunnyHopDown(void) { KeyDown(&in_bunnyhop); }
+void IN_BunnyHopUp(void) { KeyUp(&in_bunnyhop); }
 void IN_DuckDown(void)
 {
 	KeyDown(&in_duck);
@@ -677,7 +680,7 @@ if active == 1 then we are 1) not playing back demos ( where our commands are ig
 ================
 */
 void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active )
-{	
+{
 	float spd;
 	vec3_t viewangles;
 	static vec3_t oldangles;
@@ -696,21 +699,22 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 
 		if ( in_strafe.state & 1 )
 		{
-			cmd->sidemove += cl_sidespeed->value * CL_KeyState (&in_right);
-			cmd->sidemove -= cl_sidespeed->value * CL_KeyState (&in_left);
+			cmd->sidemove += cl_sidespeed->value * CL_KeyState(&in_right);
+			cmd->sidemove -= cl_sidespeed->value * CL_KeyState(&in_left);
 		}
 
-		cmd->sidemove += cl_sidespeed->value * CL_KeyState (&in_moveright);
-		cmd->sidemove -= cl_sidespeed->value * CL_KeyState (&in_moveleft);
+		cmd->sidemove += cl_sidespeed->value * CL_KeyState(&in_moveright);
+		cmd->sidemove -= cl_sidespeed->value * CL_KeyState(&in_moveleft);
 
-		cmd->upmove += cl_upspeed->value * CL_KeyState (&in_up);
-		cmd->upmove -= cl_upspeed->value * CL_KeyState (&in_down);
+		// simulate moveup underwater for +bhop, +ljump and +jump actions
+		cmd->upmove += cl_upspeed->value * max(CL_KeyState(&in_up), g_iWaterlevel >= 2 ? max(CL_KeyState(&in_bunnyhop), CL_KeyState(&in_jump)) : 0);
+		cmd->upmove -= cl_upspeed->value * CL_KeyState(&in_down);
 
 		if ( !(in_klook.state & 1 ) )
-		{	
-			cmd->forwardmove += cl_forwardspeed->value * CL_KeyState (&in_forward);
-			cmd->forwardmove -= cl_backspeed->value * CL_KeyState (&in_back);
-		}	
+		{
+			cmd->forwardmove += cl_forwardspeed->value * CL_KeyState(&in_forward);
+			cmd->forwardmove -= cl_backspeed->value * CL_KeyState(&in_back);
+		}
 
 		// adjust for speed key
 		if ( in_speed.state & 1 )
@@ -789,7 +793,7 @@ CL_IsDead
 Returns 1 if health is <= 0
 ============
 */
-int	CL_IsDead( void )
+int CL_IsDead( void )
 {
 	return ( gHUD.m_Health.m_iHealth <= 0 ) ? 1 : 0;
 }
@@ -818,7 +822,36 @@ int CL_ButtonBits( int bResetState )
 
 	if (in_jump.state & 3)
 	{
-		bits |= IN_JUMP;
+		if (cl_jumptype->value == 0.0)
+		{
+			bits |= IN_JUMP;
+		}
+		else
+		{
+			if (g_iOnGround)
+			{
+				if (!g_bDecentJumped)
+				{
+					bits |= IN_JUMP;
+				}
+				if (bResetState)
+				{
+					g_bDecentJumped = true;
+				}
+			}
+			else
+			{
+				if (g_iWaterlevel == 2)
+				{
+					// Over the water, glide on the surface, but only if we are over deep water
+					bits |= IN_JUMP;
+				}
+			}
+		}
+	}
+	else
+	{
+		g_bDecentJumped = false;
 	}
 
 	if (in_longjump.state & 3)
@@ -861,9 +894,9 @@ int CL_ButtonBits( int bResetState )
 		{
 			g_bJumped = false;
 
-			if (g_iWaterlevel > 0 && g_iWaterlevel <= 2)
+			if (g_iWaterlevel == 2)
 			{
-				// Over the water, glide on the surface
+				// Over the water, glide on the surface, but only if we are over deep water
 				bits |= IN_JUMP;
 			}
 		}
@@ -1063,8 +1096,9 @@ void InitInput (void)
 	cl_pitchdown		= gEngfuncs.pfnRegisterVariable ( "cl_pitchdown", "89.9999", 0 );
 
 	cl_vsmoothing		= gEngfuncs.pfnRegisterVariable ( "cl_vsmoothing", "0.05", FCVAR_ARCHIVE );
+	cl_jumptype			= gEngfuncs.pfnRegisterVariable ( "cl_jumptype", "0", FCVAR_ARCHIVE );
 
-	m_pitch			    = gEngfuncs.pfnRegisterVariable ( "m_pitch","0.022", FCVAR_ARCHIVE );
+	m_pitch				= gEngfuncs.pfnRegisterVariable ( "m_pitch","0.022", FCVAR_ARCHIVE );
 	m_yaw				= gEngfuncs.pfnRegisterVariable ( "m_yaw","0.022", FCVAR_ARCHIVE );
 	m_forward			= gEngfuncs.pfnRegisterVariable ( "m_forward","1", FCVAR_ARCHIVE );
 	m_side				= gEngfuncs.pfnRegisterVariable ( "m_side","0.8", FCVAR_ARCHIVE );
