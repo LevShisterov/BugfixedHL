@@ -827,15 +827,10 @@ int PM_FlyMove(void)
 		// Check if we are stuck on the surface (HACKHACK: this solves precision error in the engine for small movements)
 		if (trace.fraction == 0.0)
 		{
-			// Move end point a bit away from the wall and try to move again
-			VectorSubtract(end, pmove->origin, moveoffset);
-			length = Length(moveoffset);
-			if (length > 0.0)
-			{
-				for (i = 0; i < 3; i++)
-					end[i] += trace.plane.normal[i] * 0.005 / length;
-				trace = pmove->PM_PlayerTrace(pmove->origin, end, PM_NORMAL, -1);
-			}
+			// Move end point to a thousandth fraction of the unit vector away from the wall and try to move again
+			for (i = 0; i < 3; i++)
+				end[i] += trace.plane.normal[i] * 0.001;
+			trace = pmove->PM_PlayerTrace(pmove->origin, end, PM_NORMAL, -1);
 		}
 
 		allFraction += trace.fraction;
