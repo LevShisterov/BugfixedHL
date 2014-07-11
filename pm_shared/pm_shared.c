@@ -797,8 +797,8 @@ int PM_FlyMove(void)
 	vec3_t		new_velocity;
 	int			i, j;
 	pmtrace_t	trace;
-	vec3_t		end, moveoffset;
-	float		time_left, allFraction, length;
+	vec3_t		end;
+	float		time_left, allFraction;
 	int			blocked;
 
 	numbumps	= 4;			// Bump up to four times
