@@ -837,7 +837,7 @@ int PM_FlyMove(void)
 			if (length > 0.0)
 			{
 				for (i = 0; i < 3; i++)
-					end[i] += trace.plane.normal[i] * 0.001 / length;
+					end[i] += trace.plane.normal[i] * 0.005 / length;
 				trace = pmove->PM_PlayerTrace(pmove->origin, end, PM_NORMAL, -1);
 			}
 		}
