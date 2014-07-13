@@ -822,7 +822,7 @@ int CL_ButtonBits( int bResetState )
 
 	if (in_jump.state & 3)
 	{
-		if (cl_jumptype->value == 0.0)
+		if (cl_jumptype->value == 0.0 || g_iUser1)	// Simple jump in spectator
 		{
 			bits |= IN_JUMP;
 		}
@@ -879,7 +879,11 @@ int CL_ButtonBits( int bResetState )
 
 	if (in_bunnyhop.state & 3)
 	{
-		if (g_iOnGround)
+		if (g_iUser1)	// Simple jump in spectator
+		{
+			bits |= IN_JUMP;
+		}
+		else if (g_iOnGround)
 		{
 			if (!g_bJumped)
 			{
@@ -1096,7 +1100,7 @@ void InitInput (void)
 	cl_pitchdown		= gEngfuncs.pfnRegisterVariable ( "cl_pitchdown", "89.9999", 0 );
 
 	cl_vsmoothing		= gEngfuncs.pfnRegisterVariable ( "cl_vsmoothing", "0.05", FCVAR_ARCHIVE );
-	cl_jumptype			= gEngfuncs.pfnRegisterVariable ( "cl_jumptype", "0", FCVAR_ARCHIVE );
+	cl_jumptype			= gEngfuncs.pfnRegisterVariable ( "cl_jumptype", "1", FCVAR_ARCHIVE );
 
 	m_pitch				= gEngfuncs.pfnRegisterVariable ( "m_pitch","0.022", FCVAR_ARCHIVE );
 	m_yaw				= gEngfuncs.pfnRegisterVariable ( "m_yaw","0.022", FCVAR_ARCHIVE );
