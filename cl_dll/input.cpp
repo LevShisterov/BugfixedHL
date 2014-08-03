@@ -46,9 +46,9 @@ extern cl_enginefunc_t gEngfuncs;
 // Defined in pm_math.c
 extern "C" float anglemod( float a );
 
-bool g_bLongJumpState = false;
 bool g_bDecentJumped = false;
-bool g_bJumped = false;
+bool g_bLongJumped = false;
+bool g_bBunnyhopJumped = false;
 extern "C" int g_iOnGround = 0;
 extern "C" int g_iWaterlevel = 0;
 
@@ -707,7 +707,7 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 		cmd->sidemove -= cl_sidespeed->value * CL_KeyState(&in_moveleft);
 
 		// simulate moveup underwater for +bhop, +ljump and +jump actions
-		cmd->upmove += cl_upspeed->value * max(CL_KeyState(&in_up), g_iWaterlevel >= 2 ? max(CL_KeyState(&in_bunnyhop), CL_KeyState(&in_jump)) : 0);
+		cmd->upmove += cl_upspeed->value * max(CL_KeyState(&in_up), g_iWaterlevel >= 2 ? max(max(CL_KeyState(&in_bunnyhop), CL_KeyState(&in_jump)), CL_KeyState(&in_longjump)) : 0);
 		cmd->upmove -= cl_upspeed->value * CL_KeyState(&in_down);
 
 		if ( !(in_klook.state & 1 ) )
@@ -856,24 +856,32 @@ int CL_ButtonBits( int bResetState )
 
 	if (in_longjump.state & 3)
 	{
-		if (!g_bLongJumpState)
+		if (g_iOnGround && !g_bLongJumped)
 		{
 			bits |= IN_DUCK | IN_JUMP;
 			if (bResetState)
 			{
-				g_bLongJumpState = true;
+				g_bLongJumped = true;
 			}
 		}
 		else
 		{
-			bits |= IN_DUCK;
+			if (g_iWaterlevel == 2)
+			{
+				// Over the water, glide on the surface, but only if we are over deep water
+				bits |= IN_JUMP;
+			}
+			else if (g_iWaterlevel < 2)
+			{
+				bits |= IN_DUCK;
+			}
 		}
 	}
 	else
 	{
 		if (bResetState)
 		{
-			g_bLongJumpState = false;
+			g_bLongJumped = false;
 		}
 	}
 
@@ -885,18 +893,18 @@ int CL_ButtonBits( int bResetState )
 		}
 		else if (g_iOnGround)
 		{
-			if (!g_bJumped)
+			if (!g_bBunnyhopJumped)
 			{
 				bits |= IN_JUMP;
 			}
 			if (bResetState)
 			{
-				g_bJumped = !g_bJumped;
+				g_bBunnyhopJumped = !g_bBunnyhopJumped;
 			}
 		}
 		else
 		{
-			g_bJumped = false;
+			g_bBunnyhopJumped = false;
 
 			if (g_iWaterlevel == 2)
 			{
