@@ -918,6 +918,10 @@ void GameDLLInit( void )
 	}
 	else
 	{
+		// Set bunnyhop and clock_window to default values for multiplayer
+		CVAR_SET_FLOAT(bunnyhop.name, 1.0);
+		CVAR_SET_FLOAT("clockwindow", 0.5);
+
 		// Execute server startup config file for multiplayer only.
 		char szCommand[256], buffer[256], *startupCfgFile, *serverType;
 		if (dedicated)
