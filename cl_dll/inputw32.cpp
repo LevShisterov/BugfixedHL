@@ -228,7 +228,8 @@ void IN_StartupMouse (void)
 			newmouseparms[1] = originalmouseparms[1];
 		}
 
-		if ( gEngfuncs.CheckParm ("-noforcemparms", NULL ) ) 
+		if ( gEngfuncs.CheckParm ("-noforcemparms", NULL ) ||
+			 gEngfuncs.CheckParm ("-noforcemparams", NULL) )
 		{
 			newmouseparms[0] = originalmouseparms[0];
 			newmouseparms[1] = originalmouseparms[1];
