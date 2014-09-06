@@ -423,22 +423,27 @@ void CGameStudioModelRenderer::SetPlayerRemapColors(int playerIndex)
 ///
 void CGameStudioModelRenderer::ForceModelCommand(void)
 {
-	if (gEngfuncs.Cmd_Argc() <= 1)
+	int argc = gEngfuncs.Cmd_Argc();
+	if (argc <= 1)
 	{
 		gEngfuncs.Con_Printf( "usage:  forcemodel \"slot number or player name\" [\"model name\"]\n" );
 		return;
 	}
 
 	model_t *m_pModel = NULL;
-	char *modelName = gEngfuncs.Cmd_Argv(2);
-	if (modelName && modelName[0])
+	if (argc > 1)
 	{
-		char path[256];
-		sprintf(path, "models/player/%s/%s.mdl", gEngfuncs.Cmd_Argv(2), gEngfuncs.Cmd_Argv(2));
-		m_pModel = IEngineStudio.Mod_ForName(path, 0);
-		if (m_pModel == NULL)
+		char *modelName = gEngfuncs.Cmd_Argv(2);
+		if (modelName && modelName[0])
 		{
-			return;
+			char path[256];
+			sprintf(path, "models/player/%s/%s.mdl", gEngfuncs.Cmd_Argv(2), gEngfuncs.Cmd_Argv(2));
+			m_pModel = IEngineStudio.Mod_ForName(path, 0);
+			if (m_pModel == NULL)
+			{
+				gEngfuncs.Con_Printf( "Model \"%s\" not found\n", path );
+				return;
+			}
 		}
 	}
 
@@ -446,6 +451,11 @@ void CGameStudioModelRenderer::ForceModelCommand(void)
 	if (slot)
 	{
 		int playerIndex = slot - 1;
+		if (playerIndex < 0 || playerIndex >= MAX_PLAYERS)
+		{
+			gEngfuncs.Con_Printf( "Wrong slot number: %i. Slot number should be between 1 and %i\n", slot, MAX_PLAYERS );
+			return;
+		}
 		m_szPlayerRemapModel[playerIndex][0] = 0;
 		m_rgpPlayerRemapModel[playerIndex] = m_pModel;
 		m_rgbPlayerRemapModelForced[playerIndex] = m_pModel != NULL;
@@ -482,28 +492,41 @@ void CGameStudioModelRenderer::ForceModelCommand(void)
 ///
 void CGameStudioModelRenderer::ForceColorsCommand(void)
 {
-	if (gEngfuncs.Cmd_Argc() <= 1)
+	int argc = gEngfuncs.Cmd_Argc();
+	if (argc <= 1)
 	{
 		gEngfuncs.Con_Printf( "usage:  forcecolors \"slot number or player name\" [\"top and bottom colors\"]\n" );
 		return;
 	}
 
 	int topColor = -1, bottomColor = -1;
-	char *colors = gEngfuncs.Cmd_Argv(2);
-	if (colors && colors[0])
+	if (argc > 1)
 	{
-		char *bottom = strchr(m_szEnemyColor, ' ');
-
-		topColor = clamp(atoi(colors), 0, 254);
-		bottomColor = bottom != NULL ? clamp(atoi(bottom), 0, 254) : 0;
+		char *colors = gEngfuncs.Cmd_Argv(2);
+		if (colors && colors[0])
+		{
+			while (*colors == ' ') colors++;
+			topColor = clamp(atoi(colors), -1, 254);
+			char *bottom = strchr(m_szEnemyColor, ' ');
+			if ((bottom == NULL || bottom[0] == 0) && argc > 2)
+			{
+				bottom = gEngfuncs.Cmd_Argv(3);
+			}
+			bottomColor = bottom != NULL ? clamp(atoi(bottom), -1, 254) : 0;
+		}
 	}
 
 	int slot = atoi(gEngfuncs.Cmd_Argv(1));
 	if (slot)
 	{
 		int playerIndex = slot - 1;
+		if (playerIndex < 0 || playerIndex >= MAX_PLAYERS)
+		{
+			gEngfuncs.Con_Printf( "Wrong slot number: %i. Slot number should be between 1 and %i\n", slot, MAX_PLAYERS );
+			return;
+		}
 		m_rgiPlayerRemapColors[playerIndex][0] = topColor;
-		m_rgiPlayerRemapColors[playerIndex][2] = bottomColor;
+		m_rgiPlayerRemapColors[playerIndex][1] = bottomColor;
 		m_rgbPlayerRemapColorsForced[playerIndex] = topColor >= 0;
 	}
 	else
@@ -527,7 +550,7 @@ void CGameStudioModelRenderer::ForceColorsCommand(void)
 
 			int playerIndex = i;
 			m_rgiPlayerRemapColors[playerIndex][0] = topColor;
-			m_rgiPlayerRemapColors[playerIndex][2] = bottomColor;
+			m_rgiPlayerRemapColors[playerIndex][1] = bottomColor;
 			m_rgbPlayerRemapColorsForced[playerIndex] = topColor >= 0;
 		}
 	}
