@@ -120,7 +120,7 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 		CreateDirectoryFull(path);
 	}
 
-	// Check for existing file and apply counter
+	// Construct file name without counter
 	g_bFormatError = false;
 	_invalid_parameter_handler oldHandler = _set_invalid_parameter_handler(InvalidParameterHandler);
 	int oldMode = _CrtSetReportMode(_CRT_ASSERT, 0);
@@ -137,7 +137,24 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 		_set_invalid_parameter_handler(oldHandler);
 		return false;
 	}
-	if (GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES)
+
+	// Do not return the same file name twice
+	static char prevPath[MAX_PATH];
+	static int prevCounter = 0;
+	bool matchedPrev = false;
+	if (strcmp(path, prevPath) == 0)
+	{
+		matchedPrev = true;
+	}
+	else
+	{
+		strncpy(prevPath, path, MAX_PATH - 1);
+		prevPath[MAX_PATH - 1] = 0;
+		prevCounter = 0;
+	}
+
+	// Check for existing file and apply counter
+	if (matchedPrev || GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES)
 	{
 		char counter[MAX_PATH];
 		strcpy(counter, m_pCvarResultsCounterFormat->string);
@@ -162,8 +179,8 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 			sprintf_s(frmt, MAX_PATH, "%%s%s.%%s", defaultCounterFormat);
 		else
 			sprintf_s(frmt, MAX_PATH, "%%s%s.%%s", m_pCvarResultsCounterFormat->string);
-		int i = 0;
-		for (i = 1; i < 1000; i++)
+		int i = matchedPrev ? prevCounter + 1 : 1;
+		for (; i < 1000; i++)
 		{
 			sprintf_s(file, MAX_PATH, frmt, filename, i, extension);
 			sprintf_s(path, MAX_PATH, frmt, fullpath, i, extension);
@@ -198,6 +215,7 @@ bool GetResultsFilename(const char *extension, char filename[MAX_PATH], char ful
 			_set_invalid_parameter_handler(oldHandler);
 			return false;
 		}
+		prevCounter = i;
 	}
 	_CrtSetReportMode(_CRT_ASSERT, oldMode);
 	_set_invalid_parameter_handler(oldHandler);
