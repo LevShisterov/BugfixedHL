@@ -318,7 +318,7 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	{
 		if ( cmdc > 1 )
 		{
-			sprintf( szTemp, "%s", (char *)CMD_ARGS() );
+			_snprintf(szTemp, sizeof(szTemp), "%s", (char *)CMD_ARGS());
 		}
 		else
 		{
@@ -330,12 +330,12 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	{
 		if ( cmdc > 1 )
 		{
-			sprintf( szTemp, "%s %s", (char *)pcmd, (char *)CMD_ARGS() );
+			_snprintf(szTemp, sizeof(szTemp), "%s %s", (char *)pcmd, (char *)CMD_ARGS());
 		}
 		else
 		{
 			// Just a one word command, use the first word...sigh
-			sprintf( szTemp, "%s", (char *)pcmd );
+			_snprintf(szTemp, sizeof(szTemp), "%s", (char *)pcmd);
 		}
 	}
 	p = szTemp;
@@ -385,9 +385,9 @@ void Host_Say( edict_t *pEntity, int teamonly )
 
 	// turn on color set 2  (color on,  no sound)
 	if ( teamonly )
-		sprintf( text, "%c(TEAM) %s: ", 2, STRING( pEntity->v.netname ) );
+		_snprintf(text, sizeof(text), "%c(TEAM) %s: ", 2, STRING(pEntity->v.netname));
 	else
-		sprintf( text, "%c%s: ", 2, STRING( pEntity->v.netname ) );
+		_snprintf(text, sizeof(text), "%c%s: ", 2, STRING(pEntity->v.netname));
 
 	j = sizeof(text) - 2 - strlen(text);  // -2 for \n and null terminator
 	if ( (int)strlen(p) > j )
@@ -425,7 +425,6 @@ void Host_Say( edict_t *pEntity, int teamonly )
 			WRITE_BYTE( ENTINDEX(pEntity) );
 			WRITE_STRING( text );
 		MESSAGE_END();
-
 	}
 
 	// print to the sending client
@@ -699,7 +698,7 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 		// Set the name
 		g_engfuncs.pfnSetClientKeyValue(ENTINDEX(pEntity), infobuffer, "name", sName);
 
-		sprintf(text, "* %s changed name to %s\n", STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue(infobuffer, "name"));
+		_snprintf(text, sizeof(text), "* %s changed name to %s\n", STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue(infobuffer, "name"));
 		UTIL_SayTextAll(text, pPlayer);
 
 		// team match?
