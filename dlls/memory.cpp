@@ -11,6 +11,7 @@
 
 #include <windows.h>
 #include <psapi.h>
+#include <process.h>
 
 #include "hud.h"
 #include "memory.h"
@@ -19,11 +20,34 @@
 #include "cl_util.h"
 #include "results.h"
 #include "parsemsg.h"
+#include "com_utils.h"
 
 #define MAX_PATTERN 128
 
 
 typedef void (__fastcall *ThisCallIntInt)(void *, int, int, int);
+
+struct SnapshotData
+{
+public:
+	SnapshotData()
+	{
+		this->next = NULL;
+	}
+	SnapshotData(const char *fullpath, int width, int height, uint8_t *pImageData)
+	{
+		strcpy(this->fullpath, fullpath);
+		this->width = width;
+		this->height = height;
+		this->pImageData = pImageData;
+		this->next = NULL;
+	}
+
+	char fullpath[MAX_PATH];
+	int width, height;
+	uint8_t *pImageData;
+	SnapshotData *next;
+};
 
 
 bool g_bPatchStatusPrinted = false;
@@ -43,14 +67,14 @@ int *g_EngineReadPos = 0;
 UserMessage **g_pUserMessages = 0;
 
 /* FPS bugfix variables */
-cvar_t *m_pCvarEngineFixFpsBug = 0;
+cvar_t *m_pCvarEngineFixFpsBug = NULL;
 size_t g_FpsBugPlace = 0;
 uint8_t g_FpsBugPlaceBackup[16];
 double *g_flFrameTime = 0;
 double g_flFrameTimeReminder = 0;
 
 /* Snapshot variables */
-cvar_t *m_pCvarEngineSnapshotHook = 0, *m_pCvarSnapshotJpeg = 0, *m_pCvarSnapshotJpegQuality = 0;
+cvar_t *m_pCvarEngineSnapshotHook = NULL, *m_pCvarSnapshotJpeg = NULL, *m_pCvarSnapshotJpegQuality = NULL, *m_pCvarSnapshotJpegPoolSize = NULL;
 void (*g_pEngineSnapshotCommandHandler)(void) = 0;
 int (*g_pEngineCreateSnapshot)(char *filename) = 0;
 int (__stdcall **g_pGlReadPixels)(int x, int y, int width, int height, DWORD format, DWORD type, void *data) = 0;
@@ -60,6 +84,10 @@ bool (*g_pVideoMode)(void);	// Some engine function about video mode or window s
 #define GL_PACK_ALIGNMENT	0x0D05
 #define GL_RGB				0x1907
 #define GL_UNSIGNED_BYTE	0x1401
+bool bRunSnapshotThread = false;
+CXMutex gSnapshotMutex;
+HANDLE hSnapshotThread = NULL;
+SnapshotData SnapshotDataRoot;
 
 /* Commands variables */
 void (*g_pOldMotdWriteHandler)(void) = 0;
@@ -308,6 +336,59 @@ void __stdcall FpsBugFix(int a1, int64_t *a2)
 	*((double *)(a2 + 1)) = a1;
 }
 
+// Snapshot compressing code
+unsigned int __stdcall SnapshotCompressingThread(void *param)
+{
+	SnapshotData *data;
+
+	while (bRunSnapshotThread)
+	{
+		// Get data
+		data = SnapshotDataRoot.next;
+		// Compress and save
+		if (data)
+		{
+			jpge::params params;
+			params.m_quality = clamp((int)m_pCvarSnapshotJpegQuality->value, 1, 100);
+			params.m_subsampling = jpge::H1V1;
+			params.m_two_pass_flag = true;
+			bool res = jpge::compress_image_to_jpeg_file(data->fullpath, data->width, data->height, 3, data->pImageData, true, params);
+			if (!res)
+			{
+				gEngfuncs.Con_Printf("Couldn't create snapshot: compression failed.\n");
+			}
+			free(data->pImageData);
+		}
+
+		// Test next
+		gSnapshotMutex.Lock();
+		if (data)
+		{
+			SnapshotDataRoot.next = data->next;
+			delete data;
+		}
+		if (SnapshotDataRoot.next == NULL)
+		{
+			gSnapshotMutex.Unlock();
+			SuspendThread(hSnapshotThread);
+		}
+		else
+		{
+			gSnapshotMutex.Unlock();
+		}
+	}
+
+	// Clear all left data
+	while (data = SnapshotDataRoot.next)
+	{
+		free(data->pImageData);
+		SnapshotDataRoot.next = data->next;
+		delete data;
+	}
+
+	_endthreadex(0);
+	return 0;
+}
 // Our snapshot command handler that perform saving to jpeg
 void SnapshotCmdHandler(void)
 {
@@ -326,6 +407,7 @@ void SnapshotCmdHandler(void)
 					gEngfuncs.Con_Printf("Couldn't construct snapshot filename.\n");
 					return;
 				}
+
 				// Get screen size
 				int width, height;
 				if (g_pIsFbo && *g_pIsFbo || g_pVideoMode && g_pVideoMode())
@@ -351,17 +433,42 @@ void SnapshotCmdHandler(void)
 						(*g_pglPixelStorei)(GL_PACK_ALIGNMENT, 1);
 					// Get image data
 					(*g_pGlReadPixels)(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, (void *)pImageData);
-					// Compress and save
-					jpge::params params;
-					params.m_quality = clamp((int)m_pCvarSnapshotJpegQuality->value, 1, 100);
-					params.m_subsampling = jpge::H1V1;
-					params.m_two_pass_flag = true;
-					bool res = jpge::compress_image_to_jpeg_file(fullpath, width, height, 3, pImageData, true, params);
-					if (!res)
+
+					// Pass data to the thread
+					SnapshotData *data = new SnapshotData(fullpath, width, height, pImageData);
+					gSnapshotMutex.Lock();
+					SnapshotData *lastData = &SnapshotDataRoot;
+					int count = 0;
+					while (lastData->next != NULL)
 					{
-						gEngfuncs.Con_Printf("Couldn't create snapshot: something bad happen.\n");
+						lastData = lastData->next;
+						count++;
 					}
-					free(pImageData);
+					// Limit max simultaneous amount of snapshots
+					if (m_pCvarSnapshotJpegPoolSize->value < 1.0f || count < (int)m_pCvarSnapshotJpegPoolSize->value)
+					{
+						lastData->next = data;
+					}
+					else
+					{
+						gEngfuncs.Con_Printf("Can't create snapshot: compressing thread data pool is full. Check snapshot_jpeg_poolsize cvar value.\n");
+						free(data->pImageData);
+						delete data;
+					}
+					gSnapshotMutex.Unlock();
+
+					// Start the thread
+					if (hSnapshotThread == NULL)
+					{
+						if ((hSnapshotThread = (HANDLE)_beginthreadex(NULL, 0, &SnapshotCompressingThread, NULL, 0, NULL)) == NULL)
+						{
+							gEngfuncs.Con_Printf("Couldn't start separate compressing thread.\n");
+						}
+					}
+					else
+					{
+						ResumeThread(hSnapshotThread);
+					}
 				}
 				else
 				{
@@ -920,6 +1027,15 @@ void UnPatchEngine(void)
 {
 	if (!g_EngineModuleBase) return;
 
+	bRunSnapshotThread = false;
+	if (hSnapshotThread != NULL)
+	{
+		ResumeThread(hSnapshotThread);
+		WaitForSingleObject(hSnapshotThread, 500);
+		CloseHandle(hSnapshotThread);
+		hSnapshotThread = NULL;
+	}
+
 	PatchConnectionlessPacketHandler();
 	PatchFpsBugPlace();
 
@@ -990,6 +1106,7 @@ void MemoryPatcherInit(void)
 	m_pCvarEngineSnapshotHook = gEngfuncs.pfnRegisterVariable("engine_snapshot_hook", "1", FCVAR_ARCHIVE);
 	m_pCvarSnapshotJpeg = gEngfuncs.pfnRegisterVariable("snapshot_jpeg", "1", FCVAR_ARCHIVE);
 	m_pCvarSnapshotJpegQuality = gEngfuncs.pfnRegisterVariable("snapshot_jpeg_quality", "95", FCVAR_ARCHIVE);
+	m_pCvarSnapshotJpegPoolSize = gEngfuncs.pfnRegisterVariable("snapshot_jpeg_poolsize", "10", FCVAR_ARCHIVE);
 
 	// Patch GameUI
 	PatchGameUi();
@@ -1003,6 +1120,8 @@ void MemoryPatcherHudFrame(void)
 	// Late patching when engine is initialized fully
 	PatchEngineInit();
 	FindSnapshotAddresses();
+
+	bRunSnapshotThread = true;
 
 	if (g_szPatchErrors[0] != 0)
 	{

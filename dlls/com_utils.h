@@ -11,6 +11,8 @@
 
 #ifdef _WIN32
 
+#include <windows.h>
+
 /*============
 String functions
 strrepl: replaces substrings in a string
@@ -18,3 +20,30 @@ strrepl: replaces substrings in a string
 bool strrepl(char *str, int size, const char *find, const char *repl);
 
 #endif
+
+
+/*============
+CXMutex
+============*/
+class CXMutex {
+	public:
+		CXMutex();
+		~CXMutex();
+		void Lock();
+		void Unlock();
+		bool TryLock();
+
+	protected:
+
+#if defined(linux)
+		pthread_mutex_t m_Mutex;
+#else
+		CRITICAL_SECTION m_CritSect;
+#endif
+};
+
+
+/*============
+CXTime: returns high resolution time
+============*/
+extern double CXTime();
