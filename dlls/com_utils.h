@@ -19,13 +19,19 @@ strrepl: replaces substrings in a string
 ============*/
 bool strrepl(char *str, int size, const char *find, const char *repl);
 
+#else // _WIN32
+
+#include <pthread.h>
+#include <sys/time.h>
+
 #endif
 
 
 /*============
 CXMutex
 ============*/
-class CXMutex {
+class CXMutex
+{
 	public:
 		CXMutex();
 		~CXMutex();
@@ -35,10 +41,10 @@ class CXMutex {
 
 	protected:
 
-#if defined(linux)
-		pthread_mutex_t m_Mutex;
-#else
+#ifdef _WIN32
 		CRITICAL_SECTION m_CritSect;
+#else
+		pthread_mutex_t m_Mutex;
 #endif
 };
 
