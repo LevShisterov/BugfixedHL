@@ -638,6 +638,7 @@ void TeamFortressViewport::Initialize( void )
 	{
 		m_sTeamNames[i][0] = 0;
 	}
+	m_iNumberOfTeams = 0;
 
 	App::getInstance()->setCursorOveride( App::getInstance()->getScheme()->getCursor(Scheme::scu_none) );
 }

@@ -67,15 +67,11 @@ int CHudGeiger::Draw (float flTime)
 	float flvol;
 	int rg[3];
 	int i;
-	
-	if (m_iGeigerRange < 1000 && m_iGeigerRange > 0)
+
+	if (m_iGeigerRange < 800 && m_iGeigerRange > 0)
 	{
 		// peicewise linear is better than continuous formula for this
-		if (m_iGeigerRange > 800)
-		{
-			pct = 0;			//Con_Printf ( "range > 800\n");
-		}
-		else if (m_iGeigerRange > 600)
+		if (m_iGeigerRange > 600)
 		{
 			pct = 2;
 			flvol = 0.4;		//Con_Printf ( "range > 600\n");
@@ -167,16 +163,15 @@ int CHudGeiger::Draw (float flTime)
 
 		if ((rand() & 127) < pct || (rand() & 127) < pct)
 		{
-			//S_StartDynamicSound (-1, 0, rgsfx[rand() % i], r_origin, flvol, 1.0, 0, 100);	
+			//S_StartDynamicSound (-1, 0, rgsfx[rand() % i], r_origin, flvol, 1.0, 0, 100);
 			char sz[256];
-			
+
 			int j = rand() & 1;
 			if (i > 2)
 				j += rand() & 1;
 
 			sprintf(sz, "player/geiger%d.wav", j + 1);
 			PlaySound(sz, flvol);
-			
 		}
 	}
 

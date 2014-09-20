@@ -74,3 +74,107 @@ bool strrepl(char *str, int size, const char *find, const char *repl)
 }
 
 #endif
+
+
+/*============
+CXMutex (Linux)
+============*/
+#if defined(linux)
+CXMutex::CXMutex() {
+	pthread_mutex_init(&m_Mutex, NULL);
+}
+
+CXMutex::~CXMutex() {
+	pthread_mutex_destroy(&m_Mutex);
+}
+
+void CXMutex::Lock() {
+	pthread_mutex_lock(&m_Mutex);
+}
+
+void CXMutex::Unlock() {
+	pthread_mutex_unlock(&m_Mutex);
+}
+
+bool CXMutex::TryLock() {
+	return (pthread_mutex_trylock(&m_Mutex) == 0);
+}
+
+#else
+/*============
+CXMutex (Windows)
+============*/
+CXMutex::CXMutex() {
+	InitializeCriticalSection(&m_CritSect);
+}
+
+CXMutex::~CXMutex() {
+	DeleteCriticalSection(&m_CritSect);
+}
+
+void CXMutex::Lock() {
+	EnterCriticalSection(&m_CritSect);
+}
+
+void CXMutex::Unlock() {
+	LeaveCriticalSection(&m_CritSect);
+}
+
+bool CXMutex::TryLock() {
+	return (TryEnterCriticalSection(&m_CritSect) != FALSE);
+}
+#endif //defined(linux)
+
+CXMutex gCXInitMutex;
+
+
+/*============
+CXTime: returns high resolution time
+============*/
+double CXTime() {
+	double res;
+	static double startval = 0;
+	static bool bStartValDefined = false;
+
+#if defined(linux)
+
+	timeval tv;
+	gettimeofday(&tv, NULL);
+	res = (double)tv.tv_sec + (double)tv.tv_usec * 0.000001;
+
+#else
+
+	static bool bWinTimersInitialized = false;
+	static LARGE_INTEGER TimerFreq;
+
+	LARGE_INTEGER CurTick;
+
+	if (!bWinTimersInitialized) {
+		gCXInitMutex.Lock();
+		if (!bWinTimersInitialized) {
+			if (QueryPerformanceFrequency(&TimerFreq) != TRUE) {
+				throw "CX_Time(): QueryPerformanceFrequency() failed.";
+			}
+			bWinTimersInitialized = true;
+		}
+		gCXInitMutex.Unlock();
+	}
+	if (!QueryPerformanceCounter(&CurTick)) {
+		throw "CX_Time(): QueryPerformanceCounter() failed.";
+	}
+	res = (double)CurTick.QuadPart / (double)TimerFreq.QuadPart;
+
+#endif
+
+	if (!bStartValDefined) {
+		gCXInitMutex.Lock();
+		if (!bStartValDefined) {
+			bStartValDefined = true;
+			startval = res;
+		}
+		gCXInitMutex.Unlock();
+	}
+
+	res -= startval;
+	return res;
+}
