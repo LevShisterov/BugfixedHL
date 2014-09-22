@@ -2343,7 +2343,7 @@ int TeamFortressViewport::MsgFunc_TeamScore( const char *pszName, int iSize, voi
 	if ( i > m_pScoreBoard->m_iNumTeams )
 		return 1;
 
-	// use this new score data instead of combined player scoresw
+	// use this new score data instead of combined player scores
 	g_TeamInfo[i].scores_overriden = TRUE;
 	g_TeamInfo[i].frags = READ_SHORT();
 	g_TeamInfo[i].deaths = READ_SHORT();

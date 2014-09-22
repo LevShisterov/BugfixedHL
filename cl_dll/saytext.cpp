@@ -18,14 +18,15 @@
 // implementation of CHudSayText class
 //
 
-#include "hud.h"
-#include "cl_util.h"
-#include "parsemsg.h"
-
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <windows.h>
 
+#include "hud.h"
+#include "cl_util.h"
+#include "parsemsg.h"
+#include "results.h"
 #include "vgui_TeamFortressViewport.h"
 
 #define MAX_LINES	5
@@ -43,10 +44,6 @@ static float flScrollTime = 0;  // the time at which the lines next scroll up
 
 static int Y_START = 0;
 static int line_height = 0;
-static char time_buf[12];
-
-static struct tm *current;
-static time_t now;
 
 DECLARE_MESSAGE( m_SayText, SayText );
 
@@ -165,31 +162,38 @@ int CHudSayText :: MsgFunc_SayText( const char *pszName, int iSize, void *pbuf )
 void CHudSayText :: SayTextPrint( const char *pszBuf, int iBufSize, int clientIndex )
 {
 	// Print to the console
-	if (*pszBuf == 2 && clientIndex > 0 || *pszBuf == 1 && clientIndex == 0)
+	if (pszBuf[0] == 2 && clientIndex > 0 || pszBuf[0] == 1 && clientIndex == 0)
 	{
 		RGBA color;
 		bool colored = ParseColor(m_pCvarConSayColor->string, color);
 
 		// Prepend time for say messages from players and the server
+		time_t now;
 		time(&now);
 		if (now)
 		{
-			current = localtime(&now);
+			struct tm *current = localtime(&now);
+			char time_buf[32];
 			sprintf(time_buf, "[%02i:%02i:%02i] ", current->tm_hour, current->tm_min, current->tm_sec);
 			if (colored)
 				ConsolePrintColor(time_buf, color);
 			else
 				ConsolePrint(time_buf);
+			sprintf(time_buf, "[%04i-%02i-%02i %02i:%02i:%02i] ", current->tm_year + 1900, current->tm_mon + 1, current->tm_mday, current->tm_hour, current->tm_min, current->tm_sec);
+			ResultsAddLog(time_buf, true);
 		}
 
+		// Cut indicator in first byte
 		if (colored)
 			ConsolePrintColor(pszBuf + 1, color);
 		else
 			ConsolePrint(pszBuf + 1);
+		ResultsAddLog(pszBuf + 1, true);
 	}
 	else
 	{
 		ConsolePrint(pszBuf);
+		ResultsAddLog(pszBuf, false);
 	}
 
 	if ( gViewPort && gViewPort->AllowedToPrintText() == FALSE )

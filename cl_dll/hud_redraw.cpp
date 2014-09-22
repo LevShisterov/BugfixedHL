@@ -21,6 +21,7 @@
 
 #include "vgui_TeamFortressViewport.h"
 #include "demo_api.h"
+#include "results.h"
 
 #define MAX_LOGO_FRAMES 56
 
@@ -44,6 +45,8 @@ void CHud::Think(void)
 {
 	int newfov;
 	HUDLIST *pList = m_pHudList;
+
+	ResultsThink();
 
 	while (pList)
 	{
@@ -87,7 +90,7 @@ void CHud::Think(void)
 }
 
 // Redraw
-// step through the local data,  placing the appropriate graphics & text as appropriate
+// step through the local data, placing the appropriate graphics & text as appropriate
 // returns 1 if they've changed, 0 otherwise
 int CHud :: Redraw( float flTime, int intermission )
 {

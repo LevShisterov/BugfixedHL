@@ -401,6 +401,7 @@ Called by engine every frame that client .dll is loaded
 void DLLEXPORT HUD_Frame( double time )
 {
 	MemoryPatcherHudFrame();
+	ResultsFrame(time);
 
 	ServersThink( time );
 

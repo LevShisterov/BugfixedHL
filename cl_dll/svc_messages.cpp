@@ -176,7 +176,7 @@ bool SanitizeCommands(char *str)
 						time(&now);
 						struct tm *current = localtime(&now);
 						if (current != NULL)
-							fprintf(f, "[%04i-%02i-%02i %02i:%02i:%02i] ", current->tm_year + 1900, current->tm_mon, current->tm_mday, current->tm_hour, current->tm_min, current->tm_sec);
+							fprintf(f, "[%04i-%02i-%02i %02i:%02i:%02i] ", current->tm_year + 1900, current->tm_mon + 1, current->tm_mday, current->tm_hour, current->tm_min, current->tm_sec);
 						// Action
 						char *a = isGood ? "[allowed] " : "[blocked] ";
 						fputs(a, f);
