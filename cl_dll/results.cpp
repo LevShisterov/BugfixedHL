@@ -266,7 +266,7 @@ void ResultsAddLog(const char *text, bool chat)
 	int len = strlen(text);
 	if (text[len - 1] == '\n')
 	{
-		*((char *)text[len - 1]) = 0;
+		*((char *)&text[len - 1]) = 0;
 		fprintf(g_pLogFile, "%s\r\n", text);
 	}
 	else
