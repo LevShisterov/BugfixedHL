@@ -129,6 +129,7 @@ void UnPatchEngine(void);
 void PatchEngineInit(void);
 void MemoryPatcherInit(void);
 void MemoryPatcherHudFrame(void);
+void StopServerBrowserThreads(void);
 
 
 extern void **g_EngineBuf;

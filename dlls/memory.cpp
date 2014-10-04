@@ -12,6 +12,8 @@
 #include <windows.h>
 #include <psapi.h>
 #include <process.h>
+#include <tlhelp32.h>
+#include <Winternl.h>
 
 #include "hud.h"
 #include "memory.h"
@@ -54,10 +56,13 @@ bool g_bPatchStatusPrinted = false;
 char g_szPatchErrors[2048];
 
 /* Engine addresses */
-size_t g_EngineModuleBase = 0, g_EngineModuleSize = 0, g_EngineModuleEnd = 0;
+size_t g_EngineModuleBase = 0, g_EngineModuleEnd = 0;
 
 /* GameUI addresses */
-size_t g_GameUiModuleBase = 0, g_GameUiModuleSize = 0, g_GameUiModuleEnd = 0;
+size_t g_GameUiModuleBase = 0, g_GameUiModuleEnd = 0;
+
+/* ServerBrowser addresses */
+size_t g_ServerBrowserBase = 0, g_ServerBrowserEnd = 0;
 
 /* Messages variables */
 size_t g_SvcMessagesTable = 0;
@@ -108,7 +113,11 @@ size_t *g_pSystem = 0;
 CGameConsole003 **g_pGameConsole003 = 0;
 size_t g_PanelColorOffset = 0;
 
-bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleSize)
+#define ThreadQuerySetWin32StartAddress 9
+typedef NTSTATUS NTAPI NtQueryInformationThreadProto(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength, PULONG ReturnLength);
+
+
+bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &moduleEnd)
 {
 	HANDLE hProcess = GetCurrentProcess();
 	HMODULE hModuleDll = GetModuleHandle(moduleName);
@@ -116,23 +125,24 @@ bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &module
 	MODULEINFO moduleInfo;
 	GetModuleInformation(hProcess, hModuleDll, &moduleInfo, sizeof(moduleInfo));
 	moduleBase = (size_t)moduleInfo.lpBaseOfDll;
-	moduleSize = (size_t)moduleInfo.SizeOfImage;
+	moduleEnd = (size_t)moduleInfo.lpBaseOfDll + (size_t)moduleInfo.SizeOfImage - 1;
 	return true;
 }
 // Searches for engine address in memory
 void GetEngineModuleAddress(void)
 {
-	if (!GetModuleAddress("hw.dll", g_EngineModuleBase, g_EngineModuleSize) &&	// Try Hardware engine
-		!GetModuleAddress("sw.dll", g_EngineModuleBase, g_EngineModuleSize) &&	// Try Software engine
-		!GetModuleAddress("hl.exe", g_EngineModuleBase, g_EngineModuleSize))	// Try Encrypted engine
+	if (!GetModuleAddress("hw.dll", g_EngineModuleBase, g_EngineModuleEnd) &&	// Try Hardware engine
+		!GetModuleAddress("sw.dll", g_EngineModuleBase, g_EngineModuleEnd) &&	// Try Software engine
+		!GetModuleAddress("hl.exe", g_EngineModuleBase, g_EngineModuleEnd))		// Try Encrypted engine
 		return;
-	g_EngineModuleEnd = g_EngineModuleBase + g_EngineModuleSize - 1;
 }
 void GetGameUiModuleAddress(void)
 {
-	if (!GetModuleAddress("GameUI.dll", g_GameUiModuleBase, g_GameUiModuleSize))
-		return;
-	g_GameUiModuleEnd = g_GameUiModuleBase + g_GameUiModuleSize - 1;
+	GetModuleAddress("GameUI.dll", g_GameUiModuleBase, g_GameUiModuleEnd);
+}
+void GetServerBrowserModuleAddress(void)
+{
+	GetModuleAddress("ServerBrowser.dll", g_ServerBrowserBase, g_ServerBrowserEnd);
 }
 
 // Converts HEX string containing pairs of symbols 0-9, A-F, a-f with possible space splitting into byte array
@@ -1004,6 +1014,7 @@ void FindColorOffset(void)
 	}
 }
 
+
 // Applies engine patches
 void PatchEngine(void)
 {
@@ -1112,9 +1123,52 @@ void MemoryPatcherInit(void)
 	PatchGameUi();
 }
 
+// Stops ServerBrowser stale threads
+void StopServerBrowserThreads(void)
+{
+	if (g_ServerBrowserBase != 0)
+	{
+		DWORD dwPID = GetCurrentProcessId();
+		HANDLE hTool = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+		if (hTool != INVALID_HANDLE_VALUE)
+		{
+			THREADENTRY32 te;
+			te.dwSize = sizeof(te);
+			if (Thread32First(hTool, &te))
+			{
+				NtQueryInformationThreadProto *pNtQueryInformationThread;
+				HMODULE hNTDLL = LoadLibrary("NTDLL.DLL");
+				pNtQueryInformationThread = (NtQueryInformationThreadProto *)GetProcAddress(hNTDLL, "NtQueryInformationThread");
+				do
+				{
+					if (te.dwSize >= FIELD_OFFSET(THREADENTRY32, th32OwnerProcessID) + sizeof(te.th32OwnerProcessID) &&
+						te.th32OwnerProcessID == dwPID)
+					{
+						HANDLE hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+						size_t startAddress = NULL;
+						unsigned long size;
+						pNtQueryInformationThread(hThread, (THREADINFOCLASS)ThreadQuerySetWin32StartAddress, &startAddress, sizeof(size_t), &size);
+						if (startAddress != NULL && startAddress >= g_ServerBrowserBase && startAddress <= g_ServerBrowserEnd)
+						{
+							TerminateThread(hThread, 0);
+						}
+						CloseHandle(hThread);
+					}
+					te.dwSize = sizeof(te);
+				} while (Thread32Next(hTool, &te));
+				FreeLibrary(hNTDLL);
+			}
+			CloseHandle(hTool);
+		}
+	}
+}
+
 // Output patch status
 void MemoryPatcherHudFrame(void)
 {
+	if (g_ServerBrowserBase == 0)
+		GetServerBrowserModuleAddress();
+
 	if (g_bPatchStatusPrinted) return;
 
 	// Late patching when engine is initialized fully

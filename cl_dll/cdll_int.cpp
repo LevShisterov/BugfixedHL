@@ -267,6 +267,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 		UnHookSvcMessages();
 		UnPatchEngine();
+		StopServerBrowserThreads();
 
 		if (hVehHandler != NULL)
 		{
