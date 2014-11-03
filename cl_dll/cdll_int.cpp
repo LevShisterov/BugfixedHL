@@ -324,6 +324,7 @@ void DLLEXPORT HUD_Init( void )
 	MemoryPatcherInit();
 	SvcMessagesInit();
 	ResultsInit();
+	SetAffinity();
 }
 
 

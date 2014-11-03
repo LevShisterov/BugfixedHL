@@ -1163,6 +1163,32 @@ void StopServerBrowserThreads(void)
 	}
 }
 
+// Set process affinity
+void SetAffinity(void)
+{
+	HANDLE hProcess = GetCurrentProcess();
+	DWORD_PTR processAffinityMask = 0;
+	DWORD_PTR systemAffinityMask = 0;
+	if (GetProcessAffinityMask(hProcess, &processAffinityMask, &systemAffinityMask))
+	{
+		if (processAffinityMask && systemAffinityMask)
+		{
+			// Find first available CPU on the system
+			int i;
+			for (i = 0; i < 64; i++)
+			{
+				if (systemAffinityMask & (1 << i))
+					break;
+			}
+			// Clear first CPU from the mask
+			processAffinityMask &= ~(1 << i);
+			// Set new mask if there were more than 1 CPU
+			if (processAffinityMask)
+				SetProcessAffinityMask(hProcess, processAffinityMask);
+		}
+	}
+}
+
 // Output patch status
 void MemoryPatcherHudFrame(void)
 {
