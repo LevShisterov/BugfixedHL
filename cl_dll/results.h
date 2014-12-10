@@ -14,6 +14,7 @@
 
 bool GetResultsFilename(const char *extension, char fileName[MAX_PATH], char fullPath[MAX_PATH]);
 void ResultsAddLog(const char *line, bool chat);
+void ResultsStop(void);
 void ResultsFrame(double time);
 void ResultsThink(void);
 void ResultsInit(void);
