@@ -304,6 +304,7 @@ int DLLEXPORT HUD_VidInit( void )
 	gHUD.VidInit();
 	VGui_Startup();
 	g_StudioRenderer.InitOnConnect();
+	ResultsStop();
 	return 1;
 }
 
