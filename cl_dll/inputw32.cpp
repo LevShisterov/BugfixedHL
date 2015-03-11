@@ -66,6 +66,17 @@ extern cvar_t *cl_movespeedkey;
 cvar_t		*m_filter;
 cvar_t		*sensitivity;
 
+// Custom mouse acceleration (0 disable, 1 to enable, 2 enable with separate yaw/pitch rescale)
+static cvar_t *m_customaccel;
+//Formula: mousesensitivity = ( rawmousedelta^m_customaccel_exponent ) * m_customaccel_scale + sensitivity
+// If mode is 2, then x and y sensitivity are scaled by m_pitch and m_yaw respectively.
+// Custom mouse acceleration value.
+static cvar_t *m_customaccel_scale;
+//Max mouse move scale factor, 0 for no limit
+static cvar_t *m_customaccel_max;
+//Mouse move is raised to this power before being scaled by scale factor
+static cvar_t *m_customaccel_exponent;
+
 int			mouse_buttons;
 int			mouse_oldbuttonstate;
 POINT		current_pos;
@@ -317,6 +328,57 @@ void DLLEXPORT IN_MouseEvent (int mstate)
 	mouse_oldbuttonstate = mstate;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Allows modulation of mouse scaling/senstivity value and application
+//  of custom algorithms.
+// Input  : *x - 
+//			*y - 
+//-----------------------------------------------------------------------------
+void IN_ScaleMouse( float *x, float *y )
+{
+	float mx = *x;
+	float my = *y;
+
+	// This is the default sensitivity
+	float mouse_senstivity = gHUD.GetSensitivity();
+	if (mouse_senstivity == 0)
+		mouse_senstivity = sensitivity->value;
+
+	// Using special accleration values
+	if ( m_customaccel->value != 0 ) 
+	{ 
+		float raw_mouse_movement_distance = sqrt( mx * mx + my * my );
+		float acceleration_scale = m_customaccel_scale->value;
+		float accelerated_sensitivity_max = m_customaccel_max->value;
+		float accelerated_sensitivity_exponent = m_customaccel_exponent->value;
+		float accelerated_sensitivity = ( (float)pow( raw_mouse_movement_distance, accelerated_sensitivity_exponent ) * acceleration_scale + mouse_senstivity );
+
+		if ( accelerated_sensitivity_max > 0.0001f && 
+			accelerated_sensitivity > accelerated_sensitivity_max )
+		{
+			accelerated_sensitivity = accelerated_sensitivity_max;
+		}
+
+		*x *= accelerated_sensitivity; 
+		*y *= accelerated_sensitivity; 
+
+		// Further re-scale by yaw and pitch magnitude if user requests alternate mode 2
+		// This means that they will need to up their value for m_customaccel_scale greatly (>40x) since m_pitch/yaw default
+		//  to 0.022
+		if ( m_customaccel->value == 2 )
+		{ 
+			*x *= m_yaw->value; 
+			*y *= m_pitch->value; 
+		} 
+	}
+	else
+	{ 
+		// Just apply the default
+		*x *= mouse_senstivity;
+		*y *= mouse_senstivity;
+	}
+}
+
 /*
 ===========
 IN_MouseMove
@@ -360,16 +422,8 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 		old_mouse_x = mx;
 		old_mouse_y = my;
 
-		if ( gHUD.GetSensitivity() != 0 )
-		{
-			mouse_x *= gHUD.GetSensitivity();
-			mouse_y *= gHUD.GetSensitivity();
-		}
-		else
-		{
-			mouse_x *= sensitivity->value;
-			mouse_y *= sensitivity->value;
-		}
+		// Apply custom mouse scaling/acceleration
+		IN_ScaleMouse( &mouse_x, &mouse_y );
 
 		// add mouse X/Y movement to cmd
 		if ( (in_strafe.state & 1) || (lookstrafe->value && (in_mlook.state & 1) ))
@@ -980,6 +1034,11 @@ void IN_Init (void)
 	joy_yawsensitivity		= gEngfuncs.pfnRegisterVariable ( "joyyawsensitivity", "-1.0", 0 );
 	joy_wwhack1				= gEngfuncs.pfnRegisterVariable ( "joywwhack1", "0.0", 0 );
 	joy_wwhack2				= gEngfuncs.pfnRegisterVariable ( "joywwhack2", "0.0", 0 );
+
+	m_customaccel			= gEngfuncs.pfnRegisterVariable ( "m_customaccel", "0", FCVAR_ARCHIVE );
+	m_customaccel_scale		= gEngfuncs.pfnRegisterVariable ( "m_customaccel_scale", "0.04", FCVAR_ARCHIVE );
+	m_customaccel_max		= gEngfuncs.pfnRegisterVariable ( "m_customaccel_max", "0", FCVAR_ARCHIVE );
+	m_customaccel_exponent	= gEngfuncs.pfnRegisterVariable ( "m_customaccel_exponent", "1", FCVAR_ARCHIVE );
 
 	gEngfuncs.pfnAddCommand ("force_centerview", Force_CenterView_f);
 	gEngfuncs.pfnAddCommand ("joyadvancedupdate", Joy_AdvancedUpdate_f);
