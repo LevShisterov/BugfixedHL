@@ -1565,7 +1565,8 @@ PM_CatagorizePosition
 void PM_CatagorizePosition (void)
 {
 	vec3_t		point;
-	pmtrace_t		tr;
+	pmtrace_t	tr;
+	physent_t	*pLadder;
 
 	// if the player hull point one unit down is solid, the player
 	// is on ground
@@ -1602,7 +1603,7 @@ void PM_CatagorizePosition (void)
 		{
 			// Then we are not in water jump sequence
 			pmove->waterjumptime = 0;
-			physent_t *pLadder = PM_Ladder();
+			pLadder = PM_Ladder();
 			// If we could make the move, drop us down that 1 pixel
 			// Skip for noclip move type, roaming observer mode and if we are on a ladder so we will not stick to a floor
 			if (pmove->movetype != MOVETYPE_NOCLIP && pmove->iuser1 != OBS_ROAMING && pLadder == NULL)
