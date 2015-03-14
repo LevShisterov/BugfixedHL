@@ -114,6 +114,8 @@ typedef struct hull_s
 
 #define PLAYER_LONGJUMP_SPEED 350 // how fast we longjump
 
+#define PLAYER_DUCKING_MULTIPLIER 0.333
+
 // double to float warning
 #pragma warning(disable : 4244)
 #define max(a, b)  (((a) > (b)) ? (a) : (b))
@@ -1547,6 +1549,8 @@ qboolean PM_CheckWater ()
 	return pmove->waterlevel > 1;
 }
 
+physent_t *PM_Ladder(void);
+
 /*
 =============
 PM_CatagorizePosition
@@ -1557,14 +1561,14 @@ void PM_CatagorizePosition (void)
 	vec3_t		point;
 	pmtrace_t		tr;
 
-// if the player hull point one unit down is solid, the player
-// is on ground
+	// if the player hull point one unit down is solid, the player
+	// is on ground
 
-// see if standing on something solid	
+	// see if standing on something solid
 
 	// Doing this before we move may introduce a potential latency in water detection, but
 	// doing it after can get us stuck on the bottom in water if the amount we move up
-	// is less than the 1 pixel 'threshold' we're about to snap to.	Also, we'll call
+	// is less than the 1 pixel 'threshold' we're about to snap to. Also, we'll call
 	// this several times per frame, so we really need to avoid sticking to the bottom of
 	// water on each call, and the converse case will correct itself if called twice.
 	PM_CheckWater();
@@ -1592,9 +1596,10 @@ void PM_CatagorizePosition (void)
 		{
 			// Then we are not in water jump sequence
 			pmove->waterjumptime = 0;
+			physent_t *pLadder = PM_Ladder();
 			// If we could make the move, drop us down that 1 pixel
-			// Skip for noclip move type and roaming observer mode so we will not stick to a floor
-			if ( pmove->movetype != MOVETYPE_NOCLIP && pmove->iuser1 != OBS_ROAMING )
+			// Skip for noclip move type, roaming observer mode and if we are on a ladder so we will not stick to a floor
+			if (pmove->movetype != MOVETYPE_NOCLIP && pmove->iuser1 != OBS_ROAMING && pLadder == NULL)
 				if (pmove->waterlevel < 2 && !tr.startsolid && !tr.allsolid)
 					VectorCopy (tr.endpos, pmove->origin);
 		}
@@ -1998,9 +2003,9 @@ void PM_Duck( void )
 
 	if ( pmove->flags & FL_DUCKING )
 	{
-		pmove->cmd.forwardmove *= 0.333;
-		pmove->cmd.sidemove    *= 0.333;
-		pmove->cmd.upmove      *= 0.333;
+		pmove->cmd.forwardmove *= PLAYER_DUCKING_MULTIPLIER;
+		pmove->cmd.sidemove    *= PLAYER_DUCKING_MULTIPLIER;
+		pmove->cmd.upmove      *= PLAYER_DUCKING_MULTIPLIER;
 	}
 
 	if ( ( pmove->cmd.buttons & IN_DUCK ) || ( pmove->bInDuck ) || ( pmove->flags & FL_DUCKING ) )
@@ -2095,10 +2100,10 @@ void PM_LadderMove( physent_t *pLadder )
 		vec3_t vpn, v_right;
 
 		float climbSpeed = MAX_CLIMB_SPEED;
-		if (pmove->maxspeed < MAX_CLIMB_SPEED)
+		if (climbSpeed > pmove->maxspeed)
 			climbSpeed = pmove->maxspeed;
 		if (pmove->flags & FL_DUCKING)
-			climbSpeed *= 0.333;
+			climbSpeed *= PLAYER_DUCKING_MULTIPLIER;
 
 		AngleVectors( pmove->angles, vpn, v_right, NULL );
 
@@ -2986,7 +2991,7 @@ void PM_PlayerMove ( qboolean server )
 	PM_UpdateStepSound();
 
 	PM_Duck();
-	
+
 	// Don't run ladder code if dead or on a train
 	if ( !pmove->dead && !(pmove->flags & FL_ONTRAIN) )
 	{
