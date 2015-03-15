@@ -459,10 +459,16 @@ void ResultsFrame(double time)
 	}
 
 	// Demo watchdog: If user stopped demo that was autorecorded, clean mark so we don't stop the demo later
-	g_bDemoRecordingFrame++;
-	if (g_bDemoRecording && g_bDemoRecordingFrame > 10 && !gEngfuncs.pDemoAPI->IsRecording())
+	if (g_bDemoRecording)
 	{
-		g_bDemoRecording = false;
+		if (g_bDemoRecordingFrame < 10)
+		{
+			g_bDemoRecordingFrame++;
+		}
+		else if (!gEngfuncs.pDemoAPI->IsRecording())
+		{
+			g_bDemoRecording = false;
+		}
 	}
 }
 
@@ -470,7 +476,7 @@ void ResultsFrame(double time)
 void ResultsThink(void)
 {
 	// Do start, but not in single-player and only once
-	if (g_iLastMaxClients > 1 && !g_bDemoRecordingStartIssued)
+	if (g_iLastMaxClients > 1 && !g_bDemoRecordingStartIssued && !gHUD.m_iIntermission)
 	{
 		g_bDemoRecordingStartIssued = true;
 
