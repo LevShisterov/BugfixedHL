@@ -193,6 +193,8 @@ int gmsgViewMode = 0;
 int gmsgVGUIMenu = 0;
 int gmsgStatusIcon = 0;
 
+int gmsgHitInfo = 0;
+
 const char* const gCustomMessages[]  = {
 	"IconInfo",
 	"CheatCheck",
@@ -254,6 +256,8 @@ void LinkUserMessages( void )
 	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
 	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);		// Opens team selection menu with map briefing
 	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);	// Displays specified status icon sprite in hud
+
+	gmsgHitInfo = REG_USER_MSG("HitInfo", 12);
 
 	// Register messages from some custom mods to prevent "Host_Error: UserMsg: Not Present on Client"
 	for (int i = 0; gCustomMessages[i] != NULL; i++)

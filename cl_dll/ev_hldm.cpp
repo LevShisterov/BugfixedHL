@@ -403,6 +403,11 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
 		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
 
+		int m_iBalls;
+		m_iBalls = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
+		gEngfuncs.pEfxAPI->R_BeamPoints(vecSrc, tr.endpos, m_iBalls, 60.0, 1.0, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+
+
 		tracer = EV_HLDM_CheckTracer( idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCount );
 
 		// do damage, paint decals

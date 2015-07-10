@@ -1493,6 +1493,8 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 	ApplyMultiDamage(pev, pevAttacker);
 }
 
+extern int gmsgHitInfo;
+
 
 /*
 ================
@@ -1537,6 +1539,15 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		if (tr.flFraction != 1.0)
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
+
+			MESSAGE_BEGIN(MSG_ONE, gmsgHitInfo, NULL, pev);
+				WRITE_COORD(vecSrc.x);
+				WRITE_COORD(vecSrc.y);
+				WRITE_COORD(vecSrc.z);
+				WRITE_COORD(tr.vecEndPos.x);
+				WRITE_COORD(tr.vecEndPos.y);
+				WRITE_COORD(tr.vecEndPos.z);
+			MESSAGE_END();
 
 			if ( iDamage )
 			{

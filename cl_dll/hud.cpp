@@ -27,6 +27,9 @@
 #include "vgui_int.h"
 #include "vgui_TeamFortressViewport.h"
 #include "GameStudioModelRenderer.h"
+#include "cdll_int.h"
+#include "event_api.h"
+#include "r_efx.h"
 
 #include "demo.h"
 #include "demo_api.h"
@@ -325,6 +328,23 @@ int __MsgFunc_AllowSpec(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
+int __MsgFunc_HitInfo(const char *pszName, int iSize, void *pbuf)
+{
+	Vector vecSrc, vecEnd;
+
+	BEGIN_READ(pbuf, iSize);
+
+	vecSrc.x = READ_COORD();
+	vecSrc.y = READ_COORD();
+	vecSrc.z = READ_COORD();
+	vecEnd.x = READ_COORD();
+	vecEnd.y = READ_COORD();
+	vecEnd.z = READ_COORD();
+
+	gEngfuncs.pEfxAPI->R_ShowLine(vecSrc, vecEnd);
+	return 0;
+}
+
 // This is called every time the DLL is loaded
 void CHud :: Init( void )
 {
@@ -365,6 +385,8 @@ void CHud :: Init( void )
 
 	// VGUI Menus
 	HOOK_MESSAGE( VGUIMenu );
+
+	HOOK_MESSAGE( HitInfo );
 
 	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE );		// controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round
