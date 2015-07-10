@@ -345,6 +345,46 @@ int __MsgFunc_HitInfo(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
+int __MsgFunc_Hitbox(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	READ_BYTE(); //hitbox id
+
+	Vector base, zEdge, xEdge, yEdge;
+	base.x = READ_COORD(); base.y = READ_COORD(); base.z = READ_COORD();
+	zEdge.x = READ_COORD(); zEdge.y = READ_COORD(); zEdge.z = READ_COORD();
+	xEdge.x = READ_COORD(); xEdge.y = READ_COORD(); xEdge.z = READ_COORD();
+	yEdge.x = READ_COORD(); yEdge.y = READ_COORD(); yEdge.z = READ_COORD();
+
+	int m_iBalls;
+	m_iBalls = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
+
+	float w = 0.5;
+	Vector farBase = base + yEdge;
+
+	gEngfuncs.pEfxAPI->R_BeamPoints(base, farBase + zEdge + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+
+	/*
+	gEngfuncs.pEfxAPI->R_BeamPoints(base, base + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(base, base + zEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(base + zEdge, base + zEdge + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(base + xEdge, base + zEdge + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+
+	
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase, farBase + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase, farBase + zEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase + zEdge, farBase + zEdge + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase + xEdge, farBase + zEdge + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase + xEdge, base + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase + zEdge, base + zEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase + zEdge + xEdge, base + zEdge + xEdge, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	gEngfuncs.pEfxAPI->R_BeamPoints(farBase, base, m_iBalls, 30.0, w, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
+	*/
+
+	return 0;
+}
+
 // This is called every time the DLL is loaded
 void CHud :: Init( void )
 {
@@ -387,6 +427,8 @@ void CHud :: Init( void )
 	HOOK_MESSAGE( VGUIMenu );
 
 	HOOK_MESSAGE( HitInfo );
+
+	HOOK_MESSAGE(Hitbox);
 
 	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE );		// controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round

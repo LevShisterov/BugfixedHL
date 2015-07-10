@@ -22,6 +22,7 @@
 #include "nodes.h"
 #include "player.h"
 #include "gamerules.h"
+#include "hitbox_tracer.h"
 
 #ifndef CLIENT_DLL
 #define BOLT_AIR_VELOCITY	2000
@@ -367,7 +368,10 @@ void CCrossbow::FireSniperBolt()
 #ifndef CLIENT_DLL
 	if ( tr.pHit->v.takedamage )
 	{
-		ClearMultiDamage( );
+		if (tr.iHitgroup) {
+			TraceHitboxes(m_pPlayer);
+		}
+		ClearMultiDamage();
 		CBaseEntity::Instance(tr.pHit)->TraceAttack(m_pPlayer->pev, 120, vecDir, &tr, DMG_BULLET | DMG_NEVERGIB ); 
 		ApplyMultiDamage( pev, m_pPlayer->pev );
 	}

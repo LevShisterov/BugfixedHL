@@ -1,9 +1,3 @@
-//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//=============================================================================
 
 // This header defines the interface convention used in the valve engine.
 // To make an interface and expose it:
@@ -20,10 +14,27 @@
 //    for legacy code). In this case, you need to make a new version name for your new interface, and make a wrapper interface and 
 //    expose it for the old interface.
 
+//#if _MSC_VER >= 1300  // VC7
+//#include "tier1/interface.h"
+//#else
+
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#ifdef __cplusplus
+#if !defined ( _WIN32 )
+
+#include <dlfcn.h> // dlopen,dlclose, et al
+#include <unistd.h>
+
+#define HMODULE void *
+#define GetProcAddress dlsym
+
+#define _snprintf snprintf
+
+#endif
+
+void *Sys_GetProcAddress(const char *pModuleName, const char *pName);
+void *Sys_GetProcAddress(void *pModuleHandle, const char *pName);
 
 // All interfaces derive from this.
 class IBaseInterface
@@ -45,7 +56,7 @@ typedef IBaseInterface* (*InstantiateInterfaceFn)();
 class InterfaceReg
 {
 public:
-				InterfaceReg(InstantiateInterfaceFn fn, const char *pName);
+	InterfaceReg(InstantiateInterfaceFn fn, const char *pName);
 
 public:
 
@@ -68,6 +79,7 @@ public:
 //
 // A single class can support multiple interfaces through multiple inheritance
 //
+// Use this if you want to write the factory function.
 #define EXPOSE_INTERFACE_FN(functionName, interfaceName, versionName) \
 	static InterfaceReg __g_Create##className##_reg(functionName, versionName);
 
@@ -77,7 +89,7 @@ public:
 
 // Use this to expose a singleton interface with a global variable you've created.
 #define EXPOSE_SINGLE_INTERFACE_GLOBALVAR(className, interfaceName, versionName, globalVarName) \
-	static IBaseInterface* __Create##className##interfaceName##_interface() {return (interfaceName *)&globalVarName;}\
+	static IBaseInterface* __Create##className##interfaceName##_interface() {return (IBaseInterface *)&globalVarName;}\
 	static InterfaceReg __g_Create##className##interfaceName##_reg(__Create##className##interfaceName##_interface, versionName);
 
 // Use this to expose a singleton interface. This creates the global variable for you automatically.
@@ -86,10 +98,10 @@ public:
 	EXPOSE_SINGLE_INTERFACE_GLOBALVAR(className, interfaceName, versionName, __g_##className##_singleton)
 
 
-#ifdef WIN32
+#ifdef _WIN32
 	#define EXPORT_FUNCTION __declspec(dllexport)
 #else
-	#define EXPORT_FUNCTION
+	#define EXPORT_FUNCTION __attribute__ ((visibility("default")))
 #endif
 
 
@@ -109,21 +121,30 @@ extern "C"
 };
 
 
-// Handle to an interface (HInterfaceModule_t* is just there for type safety).
-typedef struct HInterfaceModule_t* HINTERFACEMODULE;
-
-
-// Use these to load and unload a module.
-extern HINTERFACEMODULE		Sys_LoadModule(const char *pModuleName);
-extern void					Sys_FreeModule(HINTERFACEMODULE hModule);
-
-// Use these to get the factory function from either a loaded module or the current module.
-extern CreateInterfaceFn	Sys_GetFactory( HINTERFACEMODULE hModule );
 extern CreateInterfaceFn	Sys_GetFactoryThis( void );
 
-#endif // __cplusplus
+
+//-----------------------------------------------------------------------------
+// UNDONE: This is obsolete, use the module load/unload/get instead!!!
+//-----------------------------------------------------------------------------
+extern CreateInterfaceFn	Sys_GetFactory( const char *pModuleName );
+
+
+// load/unload components
+class CSysModule;
+
+//-----------------------------------------------------------------------------
+// Load & Unload should be called in exactly one place for each module
+// The factory for that module should be passed on to dependent components for
+// proper versioning.
+//-----------------------------------------------------------------------------
+extern CSysModule			*Sys_LoadModule( const char *pModuleName );
+extern void					Sys_UnloadModule( CSysModule *pModule );
+
+extern CreateInterfaceFn	Sys_GetFactory( CSysModule *pModule );
+
 
 #endif
-
+//#endif // MSVC 6.0
 
 

@@ -75,7 +75,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\dlls;..\..\engine;..\..\common;..\..\pm_shared;..\..\game_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\dlls;..\..\engine;..\..\common;..\..\pm_shared;..\..\game_shared;..\..\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -131,7 +131,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\dlls;..\..\engine;..\..\common;..\..\pm_shared;..\..\game_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\dlls;..\..\engine;..\..\common;..\..\pm_shared;..\..\game_shared;..\..\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -199,6 +199,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\gamerules.cpp" />
     <ClCompile Include="..\gargantua.cpp" />
     <ClCompile Include="..\gauss.cpp" />
+    <ClCompile Include="..\gdll_rehlds_api.cpp" />
     <ClCompile Include="..\genericmonster.cpp" />
     <ClCompile Include="..\ggrenade.cpp" />
     <ClCompile Include="..\globals.cpp" />
@@ -208,6 +209,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\headcrab.cpp" />
     <ClCompile Include="..\healthkit.cpp" />
     <ClCompile Include="..\hgrunt.cpp" />
+    <ClCompile Include="..\hitbox_tracer.cpp" />
     <ClCompile Include="..\hornet.cpp" />
     <ClCompile Include="..\hornetgun.cpp" />
     <ClCompile Include="..\houndeye.cpp" />
@@ -303,6 +305,8 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClInclude Include="..\func_break.h" />
     <ClInclude Include="..\game.h" />
     <ClInclude Include="..\gamerules.h" />
+    <ClInclude Include="..\gdll_rehlds_api.h" />
+    <ClInclude Include="..\hitbox_tracer.h" />
     <ClInclude Include="..\hornet.h" />
     <ClInclude Include="..\items.h" />
     <ClInclude Include="..\maprules.h" />

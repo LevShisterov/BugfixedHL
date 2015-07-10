@@ -20,6 +20,7 @@
 #include	"decals.h"
 #include	"gamerules.h"
 #include	"game.h"
+#include	"gdll_rehlds_api.h"
 
 void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
@@ -108,6 +109,10 @@ int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion )
 	}
 	
 	memcpy( pFunctionTable, &gFunctionTable, sizeof( DLL_FUNCTIONS ) );
+
+	if (!GGll_Rehlds_API_Init())
+		return FALSE;
+
 	return TRUE;
 }
 
@@ -121,6 +126,10 @@ int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
 	}
 	
 	memcpy( pFunctionTable, &gFunctionTable, sizeof( DLL_FUNCTIONS ) );
+
+	if (!GGll_Rehlds_API_Init())
+		return FALSE;
+
 	return TRUE;
 }
 
