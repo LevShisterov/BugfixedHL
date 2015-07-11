@@ -405,8 +405,7 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 
 		int m_iBalls;
 		m_iBalls = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
-		gEngfuncs.pEfxAPI->R_BeamPoints(vecSrc, tr.endpos, m_iBalls, 60.0, 1.0, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
-
+		gEngfuncs.pEfxAPI->R_BeamPoints(vecSrc, tr.endpos, m_iBalls, 30.0, 1.0, 0.0, 128.0, 0, 0, 0, 0, 255, 0);
 
 		tracer = EV_HLDM_CheckTracer( idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCount );
 
