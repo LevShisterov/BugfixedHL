@@ -439,6 +439,7 @@ void CHud :: Init( void )
 	CVAR_CREATE( "cl_forceteammatescolors", "", FCVAR_ARCHIVE );
 	m_pCvarBunnyHop = CVAR_CREATE( "cl_bunnyhop", "1", 0 );		// controls client-side bunnyhop enabling
 	CVAR_CREATE( "cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );		// controls autoswitching to best weapon on pickup
+	CVAR_CREATE( "cl_fixeventangles", "1", FCVAR_ARCHIVE );
 
 	default_fov = CVAR_CREATE( "default_fov", "90", 0 );
 	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );

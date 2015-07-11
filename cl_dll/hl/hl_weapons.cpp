@@ -1081,10 +1081,19 @@ void _DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s
 {
 	g_runfuncs = runfuncs;
 
+	static cvar_t *cl_fixeventangles = NULL;
+	if (cl_fixeventangles == NULL)
+		cl_fixeventangles = gEngfuncs.pfnGetCvarPointer("cl_fixeventangles");
+
 #if defined( CLIENT_WEAPONS )
 	if ( cl_lw && cl_lw->value )
 	{
+		Vector angles1 = v_angles;
+		Vector angles2 = cmd->viewangles;
+		if (cl_fixeventangles && cl_fixeventangles->value > 0.0f)
+			v_angles = angles2;
 		HUD_WeaponsPostThink( from, to, cmd, time, random_seed );
+		v_angles = angles1;
 	}
 	else
 #endif
@@ -1095,7 +1104,10 @@ void _DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s
 	if ( g_irunninggausspred == 1 )
 	{
 		Vector forward;
-		gEngfuncs.pfnAngleVectors( v_angles, forward, NULL, NULL );
+		if (cl_fixeventangles && cl_fixeventangles->value > 0.0f)
+			gEngfuncs.pfnAngleVectors(cmd->viewangles, forward, NULL, NULL);
+		else
+			gEngfuncs.pfnAngleVectors(v_angles, forward, NULL, NULL);
 		to->client.velocity = to->client.velocity - forward * g_flApplyVel * 5; 
 		g_irunninggausspred = false;
 	}
