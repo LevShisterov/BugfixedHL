@@ -92,7 +92,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>dbghelp.lib;psapi.lib;winmm.lib;wsock32.lib;../../utils/vgui/lib/win32_vc6/vgui.lib;../dinput/dinput8.lib;../dinput/dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;dbghelp.lib;psapi.lib;winmm.lib;wsock32.lib;../../utils/vgui/lib/win32_vc6/vgui.lib;../dinput/dinput8.lib;../dinput/dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)client.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -147,7 +147,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>dbghelp.lib;psapi.lib;winmm.lib;wsock32.lib;../../utils/vgui/lib/win32_vc6/vgui.lib;../dinput/dinput8.lib;../dinput/dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;dbghelp.lib;psapi.lib;winmm.lib;wsock32.lib;../../utils/vgui/lib/win32_vc6/vgui.lib;../dinput/dinput8.lib;../dinput/dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)client.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -216,6 +216,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\GameStudioModelRenderer.cpp" />
     <ClCompile Include="..\geiger.cpp" />
     <ClCompile Include="..\health.cpp" />
+    <ClCompile Include="..\hitbox_renderer.cpp" />
     <ClCompile Include="..\hl\hl_baseentity.cpp" />
     <ClCompile Include="..\hl\hl_events.cpp" />
     <ClCompile Include="..\hl\hl_objects.cpp" />
@@ -295,6 +296,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClInclude Include="..\ev_hldm.h" />
     <ClInclude Include="..\GameStudioModelRenderer.h" />
     <ClInclude Include="..\health.h" />
+    <ClInclude Include="..\hitbox_renderer.h" />
     <ClInclude Include="..\hud.h" />
     <ClInclude Include="..\hud_iface.h" />
     <ClInclude Include="..\hud_servers.h" />
