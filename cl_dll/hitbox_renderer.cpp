@@ -29,6 +29,10 @@ color3f_t g_HitboxColors[] = {
 
 void DrawHitbox(int id, Vector base, Vector xEdge, Vector yEdge, Vector zEdge) {
 	hitbox_t* phb = &g_Hitboxes[g_iHitbox++];
+	if (g_iHitbox >= ARRAYSIZE(g_Hitboxes)) {
+		g_iHitbox = 0;
+	}
+
 	phb->id = id;
 	phb->basepoint = base;
 	phb->xEdge = xEdge;
