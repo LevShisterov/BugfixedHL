@@ -1,5 +1,7 @@
 #pragma once
 
 extern int	gmsgHitbox;
+extern int gmsgHitInfo;
 
-extern void TraceHitboxes(CBasePlayer* who);
+
+void TraceHitboxes2(CBasePlayer* who, Vector &start, const TraceResult &tr);

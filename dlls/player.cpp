@@ -251,15 +251,15 @@ void LinkUserMessages( void )
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3); 
 
-	gmsgSpectator = REG_USER_MSG( "Spectator", 2 );	// sends observer status on entering and exiting observer mode (it is not used in client dll)
+	gmsgSpectator = REG_USER_MSG( "Spectator", 2 );	// sends observer stat`us on entering and exiting observer mode (it is not used in client dll)
 	gmsgAllowSpec = REG_USER_MSG( "AllowSpec", 1 );	// sends allow_spectators value (this will enable Spectate command button in Team select panel)
 
 	gmsgViewMode = REG_USER_MSG("ViewMode", 0);		// Switches client to first person mode
 	gmsgVGUIMenu = REG_USER_MSG("VGUIMenu", 1);		// Opens team selection menu with map briefing
 	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);	// Displays specified status icon sprite in hud
 
-	gmsgHitInfo = REG_USER_MSG("HitInfo", 12);
-	gmsgHitbox = REG_USER_MSG("Hitbox", -1);
+	gmsgHitInfo = REG_USER_MSG("HitInfo2", -1);
+	gmsgHitbox = REG_USER_MSG("Hitbox3", -1);
 
 	// Register messages from some custom mods to prevent "Host_Error: UserMsg: Not Present on Client"
 	for (int i = 0; gCustomMessages[i] != NULL; i++)

@@ -329,35 +329,50 @@ int __MsgFunc_AllowSpec(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
-int __MsgFunc_HitInfo(const char *pszName, int iSize, void *pbuf)
-{
-	Vector vecSrc, vecEnd;
+float ReadHiresFloat() {
+	unsigned char c1 = READ_BYTE();
+	unsigned char c2 = READ_BYTE();
+	unsigned char c3 = READ_BYTE();
 
+	int i = c1 | c2 << 8 | (c3 & 0x7F) << 16;
+	if (c3 & 0x80) {
+		i = -i;
+	}
+
+	return (double)i / 512.0;
+}
+
+int __MsgFunc_HitInfo2(const char *pszName, int iSize, void *pbuf)
+{
 	BEGIN_READ(pbuf, iSize);
 
-	vecSrc.x = READ_COORD();
-	vecSrc.y = READ_COORD();
-	vecSrc.z = READ_COORD();
-	vecEnd.x = READ_COORD();
-	vecEnd.y = READ_COORD();
-	vecEnd.z = READ_COORD();
+	hitinfo_t hi;
+	memset(&hi, 0, sizeof(hi));
 
-	gEngfuncs.pEfxAPI->R_ShowLine(vecSrc, vecEnd);
+	hi.traceId = READ_SHORT();
+	hi.serverTraceStart.x = ReadHiresFloat(); hi.serverTraceStart.y = ReadHiresFloat(); hi.serverTraceStart.z = ReadHiresFloat();
+	hi.serverTraceEnd.x = ReadHiresFloat(); hi.serverTraceEnd.y = ReadHiresFloat(); hi.serverTraceEnd.z = ReadHiresFloat();
+	hi.hitGroup = READ_BYTE();
+
+	DrawHitInfo(hi);
+
 	return 0;
 }
 
-int __MsgFunc_Hitbox(const char *pszName, int iSize, void *pbuf)
+int __MsgFunc_Hitbox3(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
-	int hbId = READ_BYTE(); //hitbox id
+	hitbox_t hb;
 
-	Vector base, zEdge, xEdge, yEdge;
-	base.x = READ_COORD(); base.y = READ_COORD(); base.z = READ_COORD();
-	zEdge.x = READ_COORD(); zEdge.y = READ_COORD(); zEdge.z = READ_COORD();
-	xEdge.x = READ_COORD(); xEdge.y = READ_COORD(); xEdge.z = READ_COORD();
-	yEdge.x = READ_COORD(); yEdge.y = READ_COORD(); yEdge.z = READ_COORD();
+	short traceId = READ_SHORT();
+	int id = READ_CHAR();
+	hb.groupId = READ_SHORT();
+	hb.basepoint.x = ReadHiresFloat(); hb.basepoint.y = ReadHiresFloat(); hb.basepoint.z = ReadHiresFloat();
+	hb.zEdge.x = ReadHiresFloat(); hb.zEdge.y = ReadHiresFloat(); hb.zEdge.z = ReadHiresFloat();
+	hb.xEdge.x = ReadHiresFloat(); hb.xEdge.y = ReadHiresFloat(); hb.xEdge.z = ReadHiresFloat();
+	hb.yEdge.x = ReadHiresFloat(); hb.yEdge.y = ReadHiresFloat(); hb.yEdge.z = ReadHiresFloat();
 
-	DrawHitbox(hbId, base, xEdge, yEdge, zEdge);
+	DrawHitBox(traceId, id, hb);
 
 	return 0;
 }
@@ -403,9 +418,9 @@ void CHud :: Init( void )
 	// VGUI Menus
 	HOOK_MESSAGE( VGUIMenu );
 
-	HOOK_MESSAGE( HitInfo );
+	HOOK_MESSAGE( HitInfo2 );
 
-	HOOK_MESSAGE(Hitbox);
+	HOOK_MESSAGE(Hitbox3);
 
 	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE );		// controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round

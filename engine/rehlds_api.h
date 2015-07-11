@@ -34,8 +34,8 @@
 #include "interface.h"
 
 struct model_t;
-struct event_args_t;
 struct packet_entities_t;
+struct event_args_t;
 
 #define REHLDS_API_VERSION_MAJOR 1
 #define REHLDS_API_VERSION_MINOR 3
@@ -202,7 +202,7 @@ struct RehldsFuncs_t {
 	void(*MSG_WriteBitVec3Coord)(const float *fa);
 	void(*MSG_EndBitWriting)(sizebuf_t *buf);
 	void*(*SZ_GetSpace)(sizebuf_t *buf, int length);
-	bool(*GetHitboxCorners)(int hitboxId, float* /* [8*3] */ corners);
+	bool(*GetHitboxCorners)(int hitboxId, float* /* [8*3] */ corners, int* pGroupId);
 };
 
 class IRehldsApi {

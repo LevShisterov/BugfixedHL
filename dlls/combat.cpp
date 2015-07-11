@@ -29,6 +29,7 @@
 #include "animation.h"
 #include "weapons.h"
 #include "func_break.h"
+#include	"hitbox_tracer.h"
 
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern DLL_GLOBAL int			g_iSkillLevel;
@@ -1493,9 +1494,6 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 	ApplyMultiDamage(pev, pevAttacker);
 }
 
-extern int gmsgHitInfo;
-
-
 /*
 ================
 FireBullets
@@ -1540,14 +1538,7 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
 
-			MESSAGE_BEGIN(MSG_ONE, gmsgHitInfo, NULL, pev);
-				WRITE_COORD(vecSrc.x);
-				WRITE_COORD(vecSrc.y);
-				WRITE_COORD(vecSrc.z);
-				WRITE_COORD(tr.vecEndPos.x);
-				WRITE_COORD(tr.vecEndPos.y);
-				WRITE_COORD(tr.vecEndPos.z);
-			MESSAGE_END();
+			TraceHitboxes2((CBasePlayer*)this, vecSrc, tr);
 
 			if ( iDamage )
 			{

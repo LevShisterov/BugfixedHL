@@ -1,16 +1,25 @@
 #pragma once
 
 struct hitbox_t {
-	int id;
-	double dieTime;
+	bool used;
+	short groupId;
 	Vector basepoint;
 	Vector xEdge, yEdge, zEdge;
 };
 
-#define MAX_HITBOXES 192
+struct hitinfo_t {
+	bool used;
+	short traceId;
+	hitbox_t hitboxes[32];
+	double dieTime;
+	Vector serverTraceStart;
+	Vector serverTraceEnd;
+	int hitGroup;
+};
 
-extern hitbox_t g_Hitboxes[MAX_HITBOXES];
-extern int g_iHitbox;
+extern hitinfo_t g_HitInfo[16];
+extern int g_iHitInfo;
 
-extern void DrawHitbox(int id, Vector base, Vector xEdge, Vector yEdge, Vector zEdge);
+extern void DrawHitInfo(const hitinfo_t& hi);
+extern void DrawHitBox(short traceId, int hbId, const hitbox_t& hb);
 extern void RenderHitboxes();
