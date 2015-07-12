@@ -1211,11 +1211,11 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 
 	if (ent != host) {
 		int clientId = ENTINDEX(ent) - 1;
-		if (clientId >= 0 && clientId < 32) {
+		if (ent->v.flags & FL_CLIENT) {
 			int selfId = ENTINDEX(host) - 1;
 			IGameClient* me = g_RehldsSvs->GetClient(selfId);
 			float rewTime = me->GetLastCommand()->lerp_msec / 1000.0f + me->GetLatency();
-			if (g_RehldsFuncs->SV_SetupMoveEx(me, &rewTime)) {
+			//if (g_RehldsFuncs->SV_SetupMoveEx(me, &rewTime)) {
 				MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, NULL, host);
 				WRITE_BYTE(TE_BOX);
 
@@ -1233,9 +1233,9 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 				WRITE_BYTE(0);
 
 				MESSAGE_END();
-			}
+			//}
 
-			g_RehldsFuncs->SV_RestoreMove(me);
+			//g_RehldsFuncs->SV_RestoreMove(me);
 		}
 		
 	}
