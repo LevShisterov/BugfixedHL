@@ -38,7 +38,7 @@ struct packet_entities_t;
 struct event_args_t;
 
 #define REHLDS_API_VERSION_MAJOR 1
-#define REHLDS_API_VERSION_MINOR 3
+#define REHLDS_API_VERSION_MINOR 4
 
 //Steam_NotifyClientConnect hook
 typedef IHookChain<qboolean, IGameClient*, const void*, unsigned int> IRehldsHook_Steam_NotifyClientConnect;
@@ -203,6 +203,9 @@ struct RehldsFuncs_t {
 	void(*MSG_EndBitWriting)(sizebuf_t *buf);
 	void*(*SZ_GetSpace)(sizebuf_t *buf, int length);
 	bool(*GetHitboxCorners)(int hitboxId, float* /* [8*3] */ corners, int* pGroupId);
+	void(*SetupHitboxTracing)();
+	bool(*SV_SetupMoveEx)(IGameClient* client, float* rewindTime);
+	void(*SV_RestoreMove)(IGameClient* client);
 };
 
 class IRehldsApi {

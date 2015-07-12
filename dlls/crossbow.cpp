@@ -363,6 +363,10 @@ void CCrossbow::FireSniperBolt()
 	Vector vecSrc = m_pPlayer->GetGunPosition( ) - gpGlobals->v_up * 2;
 	Vector vecDir = gpGlobals->v_forward;
 
+#ifndef CLIENT_DLL
+	SetupHitboxesTracing();
+#endif
+
 	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 8192, dont_ignore_monsters, m_pPlayer->edict(), &tr);
 
 #ifndef CLIENT_DLL

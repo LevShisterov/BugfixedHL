@@ -33,6 +33,7 @@ class IGameClient;
 #include "archtypes.h"
 #include "const.h"
 #include "netadr.h"
+#include "usercmd.h"
 
 #include "common_rehlds.h"
 #include "userid_rehlds.h"
@@ -43,6 +44,7 @@ class IGameClient;
 
 class INetChan;
 class IGameClient;
+
 
 class IGameClient {
 public:
@@ -66,6 +68,9 @@ public:
 
 	virtual bool IsConnected() = 0;
 	virtual void SetConnected(bool connected) = 0;
+
+	virtual usercmd_t* GetLastCommand() = 0;
+	virtual float GetLatency() = 0;
 
 
 	// this must be the last virtual function in class

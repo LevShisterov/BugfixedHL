@@ -1531,6 +1531,7 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		Vector vecEnd;
 
 		vecEnd = vecSrc + vecDir * flDistance;
+		SetupHitboxesTracing();
 		UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(pev)/*pentIgnore*/, &tr);
 		
 		// do damage, paint decals

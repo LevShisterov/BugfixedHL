@@ -18,6 +18,10 @@ void WriteHiresFloat(float fl) {
 	WRITE_BYTE(((i >> 16) & 0x7F) | (neg << 7));
 }
 
+void SetupHitboxesTracing() {
+	g_RehldsFuncs->SetupHitboxTracing();
+}
+
 void TraceHitboxes2(CBasePlayer* who, Vector &start, const TraceResult &tr) {
 	short traceId = g_TraceCount++;
 

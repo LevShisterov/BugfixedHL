@@ -62,7 +62,7 @@ public:
 	// Merge cached bones with current bones for model
 	virtual void StudioMergeBones ( model_t *m_pSubModel );
 
-	// Determine interpolation fraction
+	// Determine interpolation fraction;
 	virtual float StudioEstimateInterpolant( void );
 
 	// Determine current frame for rendering
