@@ -21,7 +21,7 @@ void WriteHiresFloat(float fl) {
 void TraceHitboxes2(CBasePlayer* who, Vector &start, const TraceResult &tr) {
 	short traceId = g_TraceCount++;
 
-	MESSAGE_BEGIN(MSG_ONE, gmsgHitInfo, NULL, who->edict());
+	MESSAGE_BEGIN(MSG_ALL, gmsgHitInfo, NULL);
 	WRITE_SHORT(traceId);
 	WriteHiresFloat(start.x); WriteHiresFloat(start.y); WriteHiresFloat(start.z);
 	WriteHiresFloat(tr.vecEndPos.x); WriteHiresFloat(tr.vecEndPos.y); WriteHiresFloat(tr.vecEndPos.z);
@@ -34,7 +34,7 @@ void TraceHitboxes2(CBasePlayer* who, Vector &start, const TraceResult &tr) {
 		if (!g_RehldsFuncs->GetHitboxCorners(i, corners, &groupId))
 			continue;
 
-		MESSAGE_BEGIN(MSG_ONE, gmsgHitbox, NULL, who->edict());
+		MESSAGE_BEGIN(MSG_ALL, gmsgHitbox, NULL);
 		WRITE_SHORT(traceId);
 		WRITE_CHAR(i);
 		WRITE_SHORT(groupId);
