@@ -2,7 +2,7 @@ Bugfixed and improved HL release
 
 URL: http://aghl.ru/forum/viewtopic.php?f=36&t=686
 
-Version: 0.1.836
+Version: 0.1.910
 
 Info:
 
@@ -195,6 +195,27 @@ Client side changes:
     #41: Added +bhop command to do bunnyhop. Optimized +bhop command for over and under water conditions (used +moveup simulation for faster floating up under water).
     #41: Added +ljump command for long jumping.
     Added support for patching GameUI.dll from 3248 build.
+    0.1.910 2015-07-15:
+    Added workaround for sticks when sliding on inclined surfaces: movement prediction.
+    #41: Added ability to do decent jump with +jump action.
+    #41: Added cl_jumptype cvar to switch decent jumping: 0 - default HLDM style, 1 - decent jump (default).
+    #41: Fixed +bhop and +jump behavior in spectator mode.
+    #41: Added ability to float up in the water with +ljump command same as with +jump.
+    Float up faster with +jump (same as with +bhop).
+    Fixed bugs in forcemodel and forcemodels commands.
+    Allow forcecolors to be used without quotes around colors.
+    Added -noforcemparams parameter with the same meaning as -noforcemparms, so this is just fixed spelling.
+    Fixed hiding of team buttons in teams menu when joining DM server after TDM.
+    Results code refactoring.
+    Fixed month output in protect log.
+    Added auto-demo and log writing.
+    Added agrecord command.
+    Added results_demo_autorecord, results_demo_keepdays, results_log_chat and results_log_other cvars.
+    Compress snapshot in to jpeg in separate thread.
+    Added snapshot_jpeg_poolsize cvar to limit max simultaneous snapshots can be taken.
+    Fixed client crash on resolution change: stop stale ServerBrowser threads.
+    Set process affinity to not use first CPU if more than one is available.
+    Added custom mouse acceleration cvars and code from new Valve HLSDK.
 
 
 Server side changes:
@@ -364,4 +385,10 @@ Server side changes:
     Fixed delta.lst to allow attachment to entities with numbers higher then 255.
     #36: Don't execute servercfgfile on map change.
     Actually use player fields encode data for custom encoder, not entity fields.
-
+    0.1.910 2015-07-15:
+    Added workaround for sticks when sliding on inclined surfaces.
+    Revert mp_bunnyhop and clockwindow cvars to default values for multiplayer.
+    Fixed potential buffer overflow in Host_Say and ClientUserInfoChanged.
+    Fixed stick to a floor when trying to climb onto a ladder while crouch.
+    #27: Added mp_selfgauss cvar to turn on/off selfgauss.
+    
