@@ -92,14 +92,14 @@ void RenderPlayerTraces() {
 
 		float size = 2.0f;
 		glBegin(GL_POINTS);
-		glVertex3fv(trace->p + Vector(-size, -size, -size));
-		glVertex3fv(trace->p + Vector(-size, +size, -size));
-		glVertex3fv(trace->p + Vector(+size, -size, -size));
-		glVertex3fv(trace->p + Vector(+size, +size, -size));
-		glVertex3fv(trace->p + Vector(-size, -size, +size));
-		glVertex3fv(trace->p + Vector(-size, +size, +size));
-		glVertex3fv(trace->p + Vector(+size, -size, +size));
-		glVertex3fv(trace->p + Vector(+size, +size, +size));
+		glVertex3fv(trace->p + Vector(-size, -size, -size + 40.0f));
+		glVertex3fv(trace->p + Vector(-size, +size, -size + 40.0f));
+		glVertex3fv(trace->p + Vector(+size, -size, -size + 40.0f));
+		glVertex3fv(trace->p + Vector(+size, +size, -size + 40.0f));
+		glVertex3fv(trace->p + Vector(-size, -size, +size + 40.0f));
+		glVertex3fv(trace->p + Vector(-size, +size, +size + 40.0f));
+		glVertex3fv(trace->p + Vector(+size, -size, +size + 40.0f));
+		glVertex3fv(trace->p + Vector(+size, +size, +size + 40.0f));
 		glEnd();
 	}
 }
