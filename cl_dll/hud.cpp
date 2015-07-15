@@ -377,6 +377,27 @@ int __MsgFunc_Hitbox3(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
+int __MsgFunc_TracePlrPos(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	int clientId = READ_BYTE();
+	int rewTime = READ_LONG();
+	Vector realPos, unlaggedPos;
+
+	realPos.x = ReadHiresFloat(); realPos.y = ReadHiresFloat(); realPos.z = ReadHiresFloat();
+	int unlagged = READ_BYTE();
+	if (unlagged) {
+		unlaggedPos.x = ReadHiresFloat(); unlaggedPos.y = ReadHiresFloat(); unlaggedPos.z = ReadHiresFloat();
+		gEngfuncs.Con_DPrintf("Recvd player pos; rewTime = %d msec\n", rewTime);
+	}
+
+	unsigned int delay = (unsigned int)(CVAR_GET_FLOAT("ex_interp") * 1000.0f);
+	Vector color = Vector(1.0f, 0.0f, 0.0f);
+	TracePlayerPos(realPos, color, delay);
+
+	return 0;
+}
+
 // This is called every time the DLL is loaded
 void CHud :: Init( void )
 {
@@ -421,6 +442,8 @@ void CHud :: Init( void )
 	HOOK_MESSAGE( HitInfo2 );
 
 	HOOK_MESSAGE(Hitbox3);
+	HOOK_MESSAGE(TracePlrPos);
+	
 
 	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE );		// controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round

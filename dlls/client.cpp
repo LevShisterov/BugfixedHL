@@ -41,6 +41,7 @@
 #include "path.h"
 #include "gdll_rehlds_api.h"
 #include <ctype.h>
+#include "hitbox_tracer.h"
 
 
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
@@ -1137,6 +1138,8 @@ void SetupVisibility( edict_t *pViewEntity, edict_t *pClient, unsigned char **pv
 
 #include "entity_state.h"
 
+extern int gmsgTracePlayerPos;
+
 /*
 AddToFullPack
 
@@ -1215,27 +1218,34 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 			int selfId = ENTINDEX(host) - 1;
 			IGameClient* me = g_RehldsSvs->GetClient(selfId);
 			float rewTime = me->GetLastCommand()->lerp_msec / 1000.0f + me->GetLatency();
-			//if (g_RehldsFuncs->SV_SetupMoveEx(me, &rewTime)) {
-				MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, NULL, host);
-				WRITE_BYTE(TE_BOX);
+			vec3_t origPos = ent->v.origin;
+			vec3_t unlaggedPos;
+			bool unlagged = false;
 
-				WRITE_COORD(ent->v.origin[0] - 1.0f);
-				WRITE_COORD(ent->v.origin[1] - 1.0f);
-				WRITE_COORD(ent->v.origin[2] - 1.0f);
+			if (g_RehldsFuncs->SV_SetupMoveEx(me, &rewTime)) {
+				unlagged = true;
+				unlaggedPos = ent->v.origin;
+			}
+			g_RehldsFuncs->SV_RestoreMove(me);
 
-				WRITE_COORD(ent->v.origin[0] + 1.0f);
-				WRITE_COORD(ent->v.origin[1] + 1.0f);
-				WRITE_COORD(ent->v.origin[2] + 1.0f);
+			if (gmsgTracePlayerPos) {
+				MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, gmsgTracePlayerPos, NULL, host);
+				WRITE_BYTE(clientId);
+				WRITE_LONG(rewTime * 1000);
 
-				WRITE_SHORT(7);
-				WRITE_BYTE(255);
-				WRITE_BYTE(0);
-				WRITE_BYTE(0);
+				WriteHiresFloat(origPos[0]);
+				WriteHiresFloat(origPos[1]);
+				WriteHiresFloat(origPos[2]);
+
+				WRITE_BYTE(unlagged);
+				if (unlagged) {
+					WriteHiresFloat(unlaggedPos[0]);
+					WriteHiresFloat(unlaggedPos[1]);
+					WriteHiresFloat(unlaggedPos[2]);
+				}
 
 				MESSAGE_END();
-			//}
-
-			//g_RehldsFuncs->SV_RestoreMove(me);
+			}
 		}
 		
 	}

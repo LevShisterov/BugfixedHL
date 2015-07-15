@@ -13,6 +13,9 @@
 hitinfo_t g_HitInfo[16];
 int g_iHitInfo;
 
+player_pos_trace_point_t g_PlayerPosTraces[1024];
+int g_PlayePossTracesNum;
+
 struct color3f_t {
 	float r, g, b;
 };
@@ -63,7 +66,60 @@ void DrawHitBox(short traceId, int hbId, const hitbox_t& hb) {
 	}
 }
 
+void TracePlayerPos(Vector& pos, Vector &color, unsigned int delayMsec) {
+	player_pos_trace_point_t *trace = &g_PlayerPosTraces[g_PlayePossTracesNum++];
+	if (g_PlayePossTracesNum >= ARRAYSIZE(g_PlayerPosTraces)) {
+		g_PlayePossTracesNum = 0;
+	}
+
+	unsigned int curTime = GetTickCount();
+	trace->active = true;
+	trace->displayAfter = curTime + delayMsec;
+	trace->displayBefore = curTime + delayMsec + 700;
+	trace->p = pos;
+	trace->color = color;
+}
+
+void RenderPlayerTraces() {
+	unsigned int curTime = GetTickCount();
+	for (int i = 0; i < ARRAYSIZE(g_PlayerPosTraces); i++) {
+		player_pos_trace_point_t *trace = &g_PlayerPosTraces[i];
+		if (!trace->active || curTime < trace->displayAfter || curTime > trace->displayBefore)
+			continue;
+
+		glPointSize(2.0);
+		glColor3fv(trace->color);
+
+		float size = 2.0f;
+		glBegin(GL_POINTS);
+		glVertex3fv(trace->p + Vector(-size, -size, -size));
+		glVertex3fv(trace->p + Vector(-size, +size, -size));
+		glVertex3fv(trace->p + Vector(+size, -size, -size));
+		glVertex3fv(trace->p + Vector(+size, +size, -size));
+		glVertex3fv(trace->p + Vector(-size, -size, +size));
+		glVertex3fv(trace->p + Vector(-size, +size, +size));
+		glVertex3fv(trace->p + Vector(+size, -size, +size));
+		glVertex3fv(trace->p + Vector(+size, +size, +size));
+		glEnd();
+	}
+}
+
+void RegisterActualPlayerPositions() {
+	cl_entity_s* me = gEngfuncs.GetLocalPlayer();
+	for (int i = 0; i < 32; i++) {
+		cl_entity_s* ent = gEngfuncs.GetEntityByIndex(i + 1);
+		if (me == ent || !ent->player) {
+			continue;
+		}
+
+		Vector color(0.0f, 1.0f, 0.0f);
+		TracePlayerPos(ent->origin, color, 0);
+	}
+}
+
 void RenderHitboxes() {
+	RegisterActualPlayerPositions();
+
 	glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT | GL_COLOR_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_POLYGON_BIT);
 	
 	glDisable(GL_TEXTURE_2D);
@@ -122,6 +178,8 @@ void RenderHitboxes() {
 
 		glEnd();
 	}
+
+	RenderPlayerTraces();
 
 	glPopAttrib();
 }

@@ -195,6 +195,7 @@ int gmsgStatusIcon = 0;
 
 int gmsgHitInfo = 0;
 int gmsgHitbox = 0;
+int gmsgTracePlayerPos = 0;
 
 const char* const gCustomMessages[]  = {
 	"IconInfo",
@@ -260,6 +261,7 @@ void LinkUserMessages( void )
 
 	gmsgHitInfo = REG_USER_MSG("HitInfo2", -1);
 	gmsgHitbox = REG_USER_MSG("Hitbox3", -1);
+	gmsgTracePlayerPos = REG_USER_MSG("TracePlrPos", -1);
 
 	// Register messages from some custom mods to prevent "Host_Error: UserMsg: Not Present on Client"
 	for (int i = 0; gCustomMessages[i] != NULL; i++)
