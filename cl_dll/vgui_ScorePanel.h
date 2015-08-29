@@ -161,7 +161,7 @@ public:
 		strcpy(buf, text);
 
 		int len = strlen(buf);
-		while (len && isspace(buf[--len]))
+		for (int i = len - 1; i >= 0 && (unsigned char)buf[i] < (unsigned char)0x80 && isspace(buf[i]); i--)
 		{
 			buf[len] = 0;
 		}
