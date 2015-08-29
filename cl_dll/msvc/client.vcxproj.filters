@@ -396,5 +396,8 @@
     <ClInclude Include="..\wrect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\cl_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
