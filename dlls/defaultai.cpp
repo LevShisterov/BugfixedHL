@@ -1044,7 +1044,7 @@ Schedule_t *CBaseMonster :: ScheduleInList( const char *pName, Schedule_t **pLis
 			ALERT( at_console, "Unnamed schedule!\n" );
 			continue;
 		}
-		if ( stricmp( pName, pList[i]->pName ) == 0 )
+		if ( _stricmp( pName, pList[i]->pName ) == 0 )
 			return pList[i];
 	}
 	return NULL;

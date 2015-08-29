@@ -62,7 +62,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\debughl/hl.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Debug/hl.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -103,7 +103,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Releasehl/hl.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release/hl.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
