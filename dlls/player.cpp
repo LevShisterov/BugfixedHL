@@ -3963,28 +3963,29 @@ void CBasePlayer :: UpdateClientData( void )
 		gDisplayTitle = 0;
 	}
 
-	if (pev->health != m_iClientHealth)
+	float fHealth = pev->health;
+	int iHealth = fHealth <= 0.0 ? 0 : (fHealth <= 1.0 ? 1 : (fHealth > 255.0 ? 255 : (int)fHealth));
+	if (iHealth != m_iClientHealth)
 	{
-		int iHealth = max( pev->health, 0 );  // make sure that no negative health values are sent
-
 		// send "health" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgHealth, NULL, pev );
 			WRITE_BYTE( iHealth );
 		MESSAGE_END();
 
-		m_iClientHealth = pev->health;
+		m_iClientHealth = iHealth;
 	}
 
-
-	if (pev->armorvalue != m_iClientBattery)
+	float fArmor = pev->armorvalue;
+	int iArmor = fArmor <= 0.0 ? 0 : (fArmor <= 1.0 ? 1 : (fArmor > 32767.0 ? 32767 : (int)fArmor));
+	if (iArmor != m_iClientBattery)
 	{
-		m_iClientBattery = pev->armorvalue;
-
 		ASSERT( gmsgBattery > 0 );
-		// send "health" update message
+		// send "armor" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
-			WRITE_SHORT( (int)pev->armorvalue);
+			WRITE_SHORT( iArmor );
 		MESSAGE_END();
+
+		m_iClientBattery = iArmor;
 	}
 
 	if (pev->dmg_take || pev->dmg_save || m_bitsHUDDamage != m_bitsDamageType)
