@@ -378,10 +378,10 @@ int CHudMessage::Draw( float fTime )
 
 		pMessage = m_pMessages[i];
 
-		// Filter out MiniAG timer
+		// Filter out MiniAG timer that passed before we detected server AG version
 		if (gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_MINI && (
-			((pMessage->y - 0.01) < 0.0001 && (pMessage->x - 0.5) < 0.0001) ||	// Original MiniAG coordinates
-			((pMessage->y - 0.02) < 0.0001 && (pMessage->x + 1) < 0.0001)		// Russian Crossfire MiniAG coordinates
+			fabs(pMessage->y - 0.01) < 0.0002f && fabs(pMessage->x - 0.5) < 0.0002f ||	// Original MiniAG coordinates
+			fabs(pMessage->y - 0.01) < 0.0002f && fabs(pMessage->x + 1) < 0.0002f		// Russian Crossfire MiniAG coordinates
 			))
 		{
 			// TODO: Additional checks on text in the message...
@@ -492,9 +492,9 @@ void CHudMessage::MessageAdd( const char *pName, float time )
 			}
 
 			// get rid of any other messages in same location (only one displays at a time)
-			if ( fabs( tempMessage->y - m_pMessages[j]->y ) < 0.0001 )
+			if ( fabs( tempMessage->y - m_pMessages[j]->y ) < 0.0002 )
 			{
-				if ( fabs( tempMessage->x - m_pMessages[j]->x ) < 0.0001 )
+				if ( fabs( tempMessage->x - m_pMessages[j]->x ) < 0.0002 )
 				{
 					m_pMessages[j] = NULL;
 				}
