@@ -402,6 +402,9 @@
     <ClInclude Include="..\wrect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\cl_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\dlls\com_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
