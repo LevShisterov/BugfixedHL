@@ -156,7 +156,7 @@ void CHudTimer::SyncTimerLocal(float fTime)
 			if (timeleft > 0)
 			{
 				float endtime = timeleft + fTime;
-				if (abs(m_flEndtime - endtime) > 1.5)
+				if (fabs(m_flEndtime - endtime) > 1.5)
 					m_flEndtime = endtime;
 			}
 		}
@@ -306,7 +306,7 @@ void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTim
 		if (timeleft > 0)
 		{
 			float endtime = timeleft + (int)(fTime - latency + 0.5);
-			if (abs(m_flEndtime - endtime) > 1.5)
+			if (fabs(m_flEndtime - endtime) > 1.5)
 				m_flEndtime = endtime;
 		}
 	}
