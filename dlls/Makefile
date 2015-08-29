@@ -4,7 +4,7 @@
 # October 2002 by Leon Hartwig (hartwig@valvesoftware.com)
 #
 
-DLLNAME=mp
+DLLNAME=hl
 
 ARCH=i386
 
