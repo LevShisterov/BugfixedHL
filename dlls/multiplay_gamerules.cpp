@@ -1202,7 +1202,9 @@ int CHalfLifeMultiplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *p
 {
 	if ( !pPlayer || !pTarget || !pPlayer->IsPlayer() || !pTarget->IsPlayer() )
 		return GR_NOTTEAMMATE;
-	if (((CBasePlayer*)pPlayer)->IsObserver() && ((CBasePlayer*)pTarget)->IsObserver())
+	// Spectators are teammates, but not players in welcomecam mode
+	if (((CBasePlayer*)pPlayer)->IsObserver() && !((CBasePlayer*)pPlayer)->m_bInWelcomeCam &&
+		((CBasePlayer*)pTarget)->IsObserver() && !((CBasePlayer*)pTarget)->m_bInWelcomeCam)
 		return GR_TEAMMATE;
 	// half life deathmatch has only enemies and spectators
 	return GR_NOTTEAMMATE;
