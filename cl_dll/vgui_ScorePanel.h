@@ -261,7 +261,7 @@ private:
 	//         m_PlayerEntries 
 
 	CGrid			m_HeaderGrid;
-	CLabelHeader	m_HeaderLabels[NUM_COLUMNS];			// Labels above the 
+	CLabelHeader	m_HeaderLabels[NUM_COLUMNS];			// Labels above the grid
 	CLabelHeader	*m_pCurrentHighlightLabel;
 	int				m_iHighlightRow;
 	
