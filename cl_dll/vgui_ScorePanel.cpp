@@ -43,27 +43,31 @@ int EV_TFC_IsAllyTeam( int iTeam1, int iTeam2 );
 #define SBOARD_TITLE_SIZE_Y			YRES(22)
 
 #define X_BORDER					XRES(4)
+#define Y_BORDER					XRES(4)
 
 // Column sizes
 class SBColumnInfo
 {
 public:
-	char				*m_pTitle;		// If null, ignore, if starts with #, it's localized, otherwise use the string directly.
-	int					m_Width;		// Based on 640 width. Scaled to fit other resolutions.
-	Label::Alignment	m_Alignment;	
+	char				*m_pTitle;					// If null, ignore, if starts with #, it's localized, otherwise use the string directly.
+	char				*m_pTitleDeafult;			// Replacement for default localization and title when localization not found.
+	char				*m_pDeafultLocalization;	// Default localization that should be replaced.
+	int					m_Width;					// Based on 640 width. Will be scaled to fit other resolutions.
+	int					m_CalculatedWidth;			// Widht scaled to current resolution.
+	Label::Alignment	m_Alignment;
 };
 
-// grid size is marked out for 640x480 screen, total sum should be 404 (was 394 in initial HLSDK)
+// grid size is marked out for 640x480 screen, total sum should be 422 = 640 - SBOARD_INDENT_X * 2 - X_BORDER * 2 - 2 (last is a panel border)
 SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 {
-	{NULL,			20,			Label::a_east},		// tracker
-	{NULL,			144,		Label::a_east},		// name
-	{"SteamID",		68,			Label::a_west},		// SteamID
-	{"Score",		45,			Label::a_east},
-	{"Deaths",		45,			Label::a_east},
-	{"Ping/Loss",	50,			Label::a_east},
-	{"Voice",		30,			Label::a_east},
-	{NULL,			2,			Label::a_east},		// blank column to take up the slack
+	{NULL,				"",				"",			15,		0,	Label::a_west},		// tracker
+	{NULL,				"",				"",			152,	0,	Label::a_west},		// name
+	{"#STEAMID",		"SteamID",		"",			75,		0,	Label::a_west},		// SteamID
+	{"#SCORE",			"Score",		"SCORE",	45,		0,	Label::a_east},		// Score
+	{"#DEATHS",			"Deaths",		"DEATHS",	45,		0,	Label::a_east},		// Deaths
+	{"#PING",			"Ping",			"PING",		45,		0,	Label::a_east},		// Ping/Loss
+	{"#VOICE",			"Voice",		"VOICE",	30,		0,	Label::a_center},	// Voice
+	{NULL,				"",				"",			15,		0,	Label::a_east},		// blank column to take up the slack
 };
 
 #define DRAW_NEXTMAP	1 << 0
@@ -90,12 +94,59 @@ void ScorePanel::HitTestPanel::internalMousePressed(MouseCode code)
 	}
 }
 
+void SetTitleText(CLabelHeader* labelHeader, int col, int configuration)
+{
+	SBColumnInfo* columnInfo = &g_ColumnInfo[col];
 
+	if (!columnInfo->m_pTitle)
+	{
+		labelHeader->setText("");
+		return;
+	}
+
+	char *title;
+	if (col != COLUMN_LATENCY || col == COLUMN_LATENCY && !(configuration & DRAW_LOSS))
+	{
+		if (columnInfo->m_pTitle[0] == '#')
+		{
+			title = CHudTextMessage::BufferedLocaliseTextString(columnInfo->m_pTitle);
+			int len = strlen(title);
+			if (len > 0 && title[len - 1] == '\r')
+			{
+				title[len - 1] = 0;
+			}
+		}
+		else
+		{
+			title = columnInfo->m_pTitle;
+		}
+	}
+	else
+	{
+		title = CHudTextMessage::BufferedLocaliseTextString("#PING_LOSS");
+		int len = strlen(title);
+		if (len > 0 && title[len - 1] == '\r')
+		{
+			title[len - 1] = 0;
+		}
+		if (title[0] == '#')
+		{
+			strcpy(title, "Ping/Loss");
+		}
+	}
+
+	if (title[0] == '#' || strcmp(title, columnInfo->m_pDeafultLocalization) == 0)
+	{
+		title = columnInfo->m_pTitleDeafult;
+	}
+
+	labelHeader->setText(title);
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Create the ScoreBoard panel
 //-----------------------------------------------------------------------------
-ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
+ScorePanel::ScorePanel(int x, int y, int wide, int tall) : Panel(x, y, wide, tall)
 {
 	CSchemeManager *pSchemes = gViewPort->GetSchemeManager();
 	SchemeHandle_t hTitleScheme = pSchemes->getSchemeHandle("Scoreboard Title Text");
@@ -111,113 +162,123 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 	setBorder(border);
 	setPaintBorderEnabled(true);
 
-	int xpos = g_ColumnInfo[0].m_Width + 3;
-	if (ScreenWidth >= 640)
+	// Calculate absolute width for columns based on screen resolution
+	for (int i = 0; i < NUM_COLUMNS; i++)
 	{
-		// only expand column size for res greater than 640
-		xpos = XRES(xpos);
-	}
-
-	// Initialize the top title.
-	m_TitleLabel.setFont(tfont);
-	m_TitleLabel.setText("");
-	m_TitleLabel.setBgColor( 0, 0, 0, 255 );
-	m_TitleLabel.setFgColor( Scheme::sc_primary1 );
-	m_TitleLabel.setContentAlignment( vgui::Label::a_west );
-	m_TitleLabel.setBounds(xpos, 4, wide / 2 - xpos - 1, SBOARD_TITLE_SIZE_Y);
-	m_TitleLabel.setContentFitted(false);
-	m_TitleLabel.setParent(this);
-
-	// Initialize nextmap label.
-	m_NextmapLabel.setFont(tfont);
-	m_NextmapLabel.setText("");
-	m_NextmapLabel.setBgColor( 0, 0, 0, 255 );
-	m_NextmapLabel.setFgColor( Scheme::sc_primary1 );
-	m_NextmapLabel.setContentAlignment( vgui::Label::a_east );
-	m_NextmapLabel.setBounds(wide / 2 + 1, 4, wide / 2 - xpos - 1, SBOARD_TITLE_SIZE_Y);
-	m_NextmapLabel.setContentFitted(false);
-	m_NextmapLabel.setParent(this);
-
-	// Setup the header (labels like "name", "steamId", etc..).
-	m_HeaderGrid.SetDimensions(NUM_COLUMNS, 1);
-	m_HeaderGrid.SetSpacing(0, 0);
-	
-	for(int i=0; i < NUM_COLUMNS; i++)
-	{
-		if (g_ColumnInfo[i].m_pTitle && g_ColumnInfo[i].m_pTitle[0] == '#')
-			m_HeaderLabels[i].setText(CHudTextMessage::BufferedLocaliseTextString(g_ColumnInfo[i].m_pTitle));
-		else if(g_ColumnInfo[i].m_pTitle)
-			m_HeaderLabels[i].setText(g_ColumnInfo[i].m_pTitle);
-
 		int xwide = g_ColumnInfo[i].m_Width;
-		if (ScreenWidth >= 640)
+		if (ScreenWidth > 640)
 		{
 			xwide = XRES(xwide);
 		}
 		else if (ScreenWidth == 400)
 		{
 			// hack to make 400x300 resolution scoreboard fit
-			if (i == 1)
+			switch (i)
 			{
-				// reduces size of player name cell
-				xwide -= 28;
-			}
-			else if (i == 0)
-			{
-				xwide -= 8;
+			case 0:xwide -= 8; break;
+			case 1:xwide -= 28; break;	// reduces size of player name cell
 			}
 		}
-		
-		m_HeaderGrid.SetColumnWidth(i, xwide);
+		g_ColumnInfo[i].m_CalculatedWidth = xwide;
+	}
+
+	int xpos = X_BORDER + g_ColumnInfo[0].m_CalculatedWidth;
+
+	// Initialize the top title.
+	m_TitleLabel.setFont(tfont);
+	m_TitleLabel.setText("");
+	m_TitleLabel.setBgColor(0, 0, 0, 255);
+	m_TitleLabel.setFgColor(Scheme::sc_primary1);
+	m_TitleLabel.setContentAlignment(vgui::Label::a_west);
+	m_TitleLabel.setBounds(xpos, Y_BORDER, (wide - 2) / 2 - xpos - 1, SBOARD_TITLE_SIZE_Y);
+	m_TitleLabel.setContentFitted(false);
+	m_TitleLabel.setParent(this);
+
+	// Initialize nextmap label.
+	m_NextmapLabel.setFont(tfont);
+	m_NextmapLabel.setText("");
+	m_NextmapLabel.setBgColor(0, 0, 0, 255);
+	m_NextmapLabel.setFgColor(Scheme::sc_primary1);
+	m_NextmapLabel.setContentAlignment(vgui::Label::a_east);
+	m_NextmapLabel.setBounds((wide - 2) / 2 + 1, Y_BORDER, (wide - 2) / 2 - xpos - 1, SBOARD_TITLE_SIZE_Y);
+	m_NextmapLabel.setContentFitted(false);
+	m_NextmapLabel.setParent(this);
+
+	int yres = 12;
+	if (ScreenHeight > 480)
+	{
+		yres = YRES(yres);
+	}
+
+	// Setup the header (labels like "Name", "SteamId", etc..).
+	m_HeaderGrid.SetDimensions(NUM_COLUMNS, 1);
+	m_HeaderGrid.SetSpacing(0, 0);
+
+	m_iCurrentConfiguration = DRAW_STEAMID | DRAW_STEAMID;
+	for (int i = 0; i < NUM_COLUMNS; i++)
+	{
+		SetTitleText(&m_HeaderLabels[i], i, m_iCurrentConfiguration);
+
+		m_HeaderGrid.SetColumnWidth(i, g_ColumnInfo[i].m_CalculatedWidth);
 		m_HeaderGrid.SetEntry(i, 0, &m_HeaderLabels[i]);
 
-		m_HeaderLabels[i].setBgColor(0,0,0,255);
+		m_HeaderLabels[i].setBgColor(0, 0, 0, 255);
 		m_HeaderLabels[i].setFgColor(Scheme::sc_primary1);
 		m_HeaderLabels[i].setFont(smallfont);
+		m_HeaderLabels[i].setSize(g_ColumnInfo[i].m_CalculatedWidth, yres);
 		m_HeaderLabels[i].setContentAlignment(g_ColumnInfo[i].m_Alignment);
-
-		int yres = 12;
-		if (ScreenHeight >= 480)
-		{
-			yres = YRES(yres);
-		}
-		m_HeaderLabels[i].setSize(50, yres);
 	}
 
 	// Set the width of the last column to be the remaining space.
 	int ex, ey, ew, eh;
 	m_HeaderGrid.GetEntryBox(NUM_COLUMNS - 2, 0, ex, ey, ew, eh);
-	m_HeaderGrid.SetColumnWidth(NUM_COLUMNS - 1, (wide - X_BORDER) - (ex + ew));
+	m_HeaderGrid.SetColumnWidth(NUM_COLUMNS - 1, ((wide - 2) - X_BORDER * 2) - (ex + ew));
 
 	m_HeaderGrid.AutoSetRowHeights();
-	m_HeaderGrid.setBounds(X_BORDER, SBOARD_TITLE_SIZE_Y, wide - X_BORDER*2, m_HeaderGrid.GetRowHeight(0));
+	m_HeaderGrid.setBounds(X_BORDER, Y_BORDER + SBOARD_TITLE_SIZE_Y, (wide - 2) - X_BORDER * 2, m_HeaderGrid.GetRowHeight(0));
 	m_HeaderGrid.setParent(this);
-	m_HeaderGrid.setBgColor(0,0,0,255);
+	m_HeaderGrid.setBgColor(0, 0, 0, 255);
 
 
 	// Now setup the listbox with the actual player data in it.
 	int headerX, headerY, headerWidth, headerHeight;
 	m_HeaderGrid.getBounds(headerX, headerY, headerWidth, headerHeight);
-	m_PlayerList.setBounds(headerX, headerY+headerHeight, headerWidth, tall - headerY - headerHeight - 6);
-	m_PlayerList.setBgColor(0,0,0,255);
+	m_PlayerList.setBounds(headerX, headerY + headerHeight, headerWidth, (tall - 2) - headerY - headerHeight - Y_BORDER);
+	m_PlayerList.setBgColor(0, 0, 0, 255);
 	m_PlayerList.setParent(this);
 
-	for(int row=0; row < NUM_ROWS; row++)
+	for (int row = 0; row < NUM_ROWS; row++)
 	{
 		CGrid *pGridRow = &m_PlayerGrids[row];
 
 		pGridRow->SetDimensions(NUM_COLUMNS, 1);
-		
-		for(int col=0; col < NUM_COLUMNS; col++)
+
+		for (int col = 0; col < NUM_COLUMNS; col++)
 		{
 			m_PlayerEntries[col][row].setContentFitted(false);
 			m_PlayerEntries[col][row].setRow(row);
 			m_PlayerEntries[col][row].addInputSignal(this);
+
+			// Align
+			switch (col)
+			{
+			case COLUMN_NAME:
+			case COLUMN_STEAMID:
+				m_PlayerEntries[col][row].setContentAlignment(Label::a_west);
+				break;
+			case COLUMN_VOICE:
+			case COLUMN_TRACKER:
+				m_PlayerEntries[col][row].setContentAlignment(Label::a_center);
+				break;
+			default:
+				m_PlayerEntries[col][row].setContentAlignment(Label::a_east);
+				break;
+			}
+
 			pGridRow->SetEntry(col, 0, &m_PlayerEntries[col][row]);
 		}
 
-		pGridRow->setBgColor(0,0,0,255);
-//		pGridRow->SetSpacing(2, 0);
+		pGridRow->setBgColor(0, 0, 0, 255);
 		pGridRow->SetSpacing(0, 0);
 		pGridRow->CopyColumnWidths(&m_HeaderGrid);
 		pGridRow->AutoSetRowHeights();
@@ -229,21 +290,19 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 
 
 	// Add the hit test panel. It is invisible and traps mouse clicks so we can go into squelch mode.
-	m_HitTestPanel.setBgColor(0,0,0,255);
+	m_HitTestPanel.setBgColor(0, 0, 0, 255);
 	m_HitTestPanel.setParent(this);
 	m_HitTestPanel.setBounds(0, 0, wide, tall);
 	m_HitTestPanel.addInputSignal(this);
 
-	m_pCloseButton = new CommandButton( "x", wide-XRES(12 + 4), YRES(2), XRES( 12 ) , YRES( 12 ) );
-	m_pCloseButton->setParent( this );
-	m_pCloseButton->addActionSignal( new CMenuHandler_StringCommandWatch( "-showscores", true ) );
-	m_pCloseButton->setBgColor(0,0,0,255);
-	m_pCloseButton->setFgColor( 255, 255, 255, 0 );
+	m_pCloseButton = new CommandButton("x", (wide - 2) - XRES(11) - X_BORDER, Y_BORDER, XRES(11), YRES(11));
+	m_pCloseButton->setParent(this);
+	m_pCloseButton->addActionSignal(new CMenuHandler_StringCommandWatch("-showscores", true));
+	m_pCloseButton->setBgColor(0, 0, 0, 255);
+	m_pCloseButton->setFgColor(255, 255, 255, 0);
 	m_pCloseButton->setFont(tfont);
-	m_pCloseButton->setBoundKey( (char)255 );
+	m_pCloseButton->setBoundKey((char)255);
 	m_pCloseButton->setContentAlignment(Label::a_center);
-
-	m_iCurrentConfiguration = DRAW_LOSS | DRAW_STEAMID;
 
 	Initialize();
 }
@@ -265,38 +324,48 @@ void ScorePanel::Configure(void)
 		m_NextmapLabel.setVisible(drawNextmap);
 	}
 
+	bool changedSizes = false;
+
 	if ((m_iCurrentConfiguration & DRAW_LOSS) != (newConfiguration & DRAW_LOSS))
 	{
 		if (drawLoss)
 		{
-			m_HeaderLabels[COLUMN_LATENCY].setText(g_ColumnInfo[COLUMN_LATENCY].m_pTitle);
+			SetTitleText(&m_HeaderLabels[COLUMN_LATENCY], COLUMN_LATENCY, newConfiguration);
 			m_HeaderGrid.SetColumnWidth(COLUMN_NAME, m_HeaderGrid.GetColumnWidth(COLUMN_NAME) - 10);
 			m_HeaderGrid.SetColumnWidth(COLUMN_LATENCY, m_HeaderGrid.GetColumnWidth(COLUMN_LATENCY) + 10);
 		}
 		else
 		{
-			m_HeaderLabels[COLUMN_LATENCY].setText("Ping");
+			SetTitleText(&m_HeaderLabels[COLUMN_LATENCY], COLUMN_LATENCY, newConfiguration);
 			m_HeaderGrid.SetColumnWidth(COLUMN_NAME, m_HeaderGrid.GetColumnWidth(COLUMN_NAME) + 10);
 			m_HeaderGrid.SetColumnWidth(COLUMN_LATENCY, m_HeaderGrid.GetColumnWidth(COLUMN_LATENCY) - 10);
 		}
-		for(int row = 0; row < NUM_ROWS; row++)
-		{
-			CGrid *pGridRow = &m_PlayerGrids[row];
-			pGridRow->CopyColumnWidths(&m_HeaderGrid);
-			pGridRow->setSize(PanelWidth(pGridRow), pGridRow->CalcDrawHeight());
-			pGridRow->RepositionContents();
-		}
+		changedSizes = true;
 	}
 
 	if ((m_iCurrentConfiguration & DRAW_STEAMID) != (newConfiguration & DRAW_STEAMID))
 	{
 		if (drawSteamId)
 		{
-			m_HeaderLabels[COLUMN_STEAMID].setText(g_ColumnInfo[COLUMN_STEAMID].m_pTitle);
+			m_HeaderGrid.SetColumnWidth(COLUMN_NAME, g_ColumnInfo[COLUMN_NAME].m_CalculatedWidth);
+			m_HeaderGrid.SetColumnWidth(COLUMN_STEAMID, g_ColumnInfo[COLUMN_STEAMID].m_CalculatedWidth);
 		}
 		else
 		{
-			m_HeaderLabels[COLUMN_STEAMID].setText("");
+			m_HeaderGrid.SetColumnWidth(COLUMN_NAME, m_HeaderGrid.GetColumnWidth(COLUMN_NAME) + m_HeaderGrid.GetColumnWidth(COLUMN_STEAMID));
+			m_HeaderGrid.SetColumnWidth(COLUMN_STEAMID, 0);
+		}
+		changedSizes = true;
+	}
+
+	if (changedSizes)
+	{
+		for (int row = 0; row < NUM_ROWS; row++)
+		{
+			CGrid *pGridRow = &m_PlayerGrids[row];
+			pGridRow->CopyColumnWidths(&m_HeaderGrid);
+			pGridRow->setSize(PanelWidth(pGridRow), pGridRow->CalcDrawHeight());
+			pGridRow->RepositionContents();
 		}
 	}
 
@@ -684,9 +753,9 @@ void ScorePanel::FillGrid()
 		CGrid *pGridRow = &m_PlayerGrids[row];
 		pGridRow->SetRowUnderline(0, false, 0, 0, 0, 0, 0);
 
-		if(row >= m_iRows)
+		if (row >= m_iRows)
 		{
-			for(int col=0; col < NUM_COLUMNS; col++)
+			for(int col = 0; col < NUM_COLUMNS; col++)
 				m_PlayerEntries[col][row].setVisible(false);
 		
 			continue;
@@ -699,7 +768,7 @@ void ScorePanel::FillGrid()
 			bRowIsGap = true;
 		}
 
-		for(int col=0; col < NUM_COLUMNS; col++)
+		for (int col = 0; col < NUM_COLUMNS; col++)
 		{
 			CLabelHeader *pLabel = &m_PlayerEntries[col][row];
 
@@ -707,7 +776,10 @@ void ScorePanel::FillGrid()
 			pLabel->setText2("");
 			pLabel->setImage(NULL);
 			pLabel->setFont(sfont);
-			pLabel->setTextOffset(0, 0);
+			if (col == COLUMN_VOICE)
+				pLabel->setTextOffset(3, 0);
+			else
+				pLabel->setTextOffset(0, 0);
 
 			int rowheight = 13;
 			if (ScreenHeight > 480)
@@ -744,7 +816,7 @@ void ScorePanel::FillGrid()
 
 				// different height for team header rows
 				rowheight = 20;
-				if (ScreenHeight >= 480)
+				if (ScreenHeight > 480)
 				{
 					rowheight = YRES(rowheight);
 				}
@@ -766,7 +838,7 @@ void ScorePanel::FillGrid()
 
 				// different height for team header rows
 				rowheight = 20;
-				if (ScreenHeight >= 480)
+				if (ScreenHeight > 480)
 				{
 					rowheight = YRES(rowheight);
 				}
@@ -800,20 +872,6 @@ void ScorePanel::FillGrid()
 				{
 					m_iKillerRow = row;
 				}
-			}
-
-			// Align
-			if (col == COLUMN_NAME || col == COLUMN_STEAMID)
-			{
-				pLabel->setContentAlignment( vgui::Label::a_west );
-			}
-			else if (col == COLUMN_TRACKER)
-			{
-				pLabel->setContentAlignment( vgui::Label::a_center );
-			}
-			else
-			{
-				pLabel->setContentAlignment( vgui::Label::a_east );
 			}
 
 			// Fill out with the correct data
@@ -1123,6 +1181,9 @@ void CLabelHeader::paint()
 	{
 		setFgColor(255, 255, 255, 0);
 	}
+
+	if (_image)
+		_image = _image;
 
 	// draw text
 	int x, y, iwide, itall;
