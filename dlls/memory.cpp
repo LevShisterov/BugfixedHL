@@ -131,10 +131,19 @@ bool GetModuleAddress(const char *moduleName, size_t &moduleBase, size_t &module
 // Searches for engine address in memory
 void GetEngineModuleAddress(void)
 {
-	if (!GetModuleAddress("hw.dll", g_EngineModuleBase, g_EngineModuleEnd) &&	// Try Hardware engine
-		!GetModuleAddress("sw.dll", g_EngineModuleBase, g_EngineModuleEnd) &&	// Try Software engine
-		!GetModuleAddress("hl.exe", g_EngineModuleBase, g_EngineModuleEnd))		// Try Encrypted engine
+	if (GetModuleAddress("hw.dll", g_EngineModuleBase, g_EngineModuleEnd) ||	// Try Hardware engine
+		GetModuleAddress("sw.dll", g_EngineModuleBase, g_EngineModuleEnd) ||	// Try Software engine
+		GetModuleAddress("hl.exe", g_EngineModuleBase, g_EngineModuleEnd))		// Try Encrypted engine
 		return;
+	// Get process base module name in case it differs from hl.exe
+	char moduleName[256];
+	if (!GetModuleFileName(NULL, moduleName, ARRAYSIZE(moduleName)))
+		return;
+	char *baseName = strrchr(moduleName, '\\');
+	if (baseName == NULL)
+		return;
+	baseName++;
+	GetModuleAddress(baseName, g_EngineModuleBase, g_EngineModuleEnd);
 }
 void GetGameUiModuleAddress(void)
 {
@@ -683,18 +692,21 @@ void FindUserMessagesEntry(void)
 }
 void FindSnapshotAddresses(void)
 {
-	if (!g_pGlReadPixels)
+	if (g_EngineModuleBase)
 	{
-		// Find address of glReadPixels
-		const char data1[] = "6801140000 6807190000 52575051FF15";
-		const char mask1[] = "FFFFFFFFFF FFFFFFFFFF 00000000FFFF";
-		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
-		if (!addr1)
+		if (!g_pGlReadPixels)
 		{
-			strncat(g_szPatchErrors, "Engine patch: offset of glReadPixels not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-			return;
+			// Find address of glReadPixels
+			const char data1[] = "6801140000 6807190000 52575051FF15";
+			const char mask1[] = "FFFFFFFFFF FFFFFFFFFF 00000000FFFF";
+			size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
+			if (!addr1)
+			{
+				strncat(g_szPatchErrors, "Engine patch: offset of glReadPixels not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+				return;
+			}
+			g_pGlReadPixels = (int(__stdcall **)(int, int, int, int, DWORD, DWORD, void*))*(size_t *)(addr1 + 16);
 		}
-		g_pGlReadPixels = (int (__stdcall **)(int, int, int, int, DWORD, DWORD, void*))*(size_t *)(addr1 + 16);
 	}
 
 	if (g_pEngineSnapshotCommandHandler)
