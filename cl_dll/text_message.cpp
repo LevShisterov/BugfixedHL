@@ -181,9 +181,6 @@ int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf
 		StripEndNewlineFromString(szBuf[i]);
 	}
 
-	if ( gViewPort && gViewPort->AllowedToPrintText() == FALSE )
-		return 1;
-
 	char *dst = szBuf[0];
 
 	if (msg_dest == HUD_PRINTNOTIFY)
@@ -237,6 +234,8 @@ int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf
 		gHUD.m_SayText.SayTextPrint(szBuf[0], 128);
 		break;
 	case HUD_PRINTCENTER:
+		if (gViewPort && gViewPort->AllowedToPrintText() == FALSE)
+			return 1;
 		CenterPrint(szBuf[0]);
 		break;
 	}
