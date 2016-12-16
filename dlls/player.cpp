@@ -1353,7 +1353,7 @@ void CBasePlayer::PlayerDeathThink(void)
 			CopyToBodyQue(pev);
 		}
 		// respawn player
-		GetClassPtr( (CBasePlayer *)pev)->Spawn();
+		Spawn();
 	}
 	else
 	{	// restart the entire server
