@@ -70,6 +70,8 @@ SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 	{NULL,				"",				"",			15,		0,	Label::a_east},		// blank column to take up the slack
 };
 
+// By default controls will have this width and visibility, so set them, so changes gets correctly applied in Configure.
+#define DRAW_DEFAULT	(DRAW_NEXTMAP | DRAW_LOSS | DRAW_STEAMID)
 #define DRAW_NEXTMAP	1 << 0
 #define DRAW_LOSS		1 << 1
 #define DRAW_STEAMID	1 << 2
@@ -214,7 +216,7 @@ ScorePanel::ScorePanel(int x, int y, int wide, int tall) : Panel(x, y, wide, tal
 	m_HeaderGrid.SetDimensions(NUM_COLUMNS, 1);
 	m_HeaderGrid.SetSpacing(0, 0);
 
-	m_iCurrentConfiguration = DRAW_STEAMID | DRAW_STEAMID;
+	m_iCurrentConfiguration = DRAW_DEFAULT;
 	for (int i = 0; i < NUM_COLUMNS; i++)
 	{
 		SetTitleText(&m_HeaderLabels[i], i, m_iCurrentConfiguration);
