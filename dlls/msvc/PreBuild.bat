@@ -57,7 +57,7 @@ SET TMPFILE=%TMP%.\%TMPFILE%
 IF EXIST "%TMPFILE%" GOTO :GETTEMPNAME
 
 ::
-:: Get information from GIT
+:: Get information from GIT repository
 ::
 SET errlvl=0
 git.exe -C "%repodir%." describe --long --tags --dirty --always > "%TMPFILE%.tmp1"
@@ -99,10 +99,10 @@ IF NOT x%new_version%==x%git_version% (
 ::
 :: Process version string
 ::
+:: Remove "v" at start, change "-g" hash prefix into "+", "-" before patch into "."
 SET new_version=%new_version:~1%
-SET new_version=%new_version:-g=$%
+SET new_version=%new_version:-g=+%
 SET new_version=%new_version:-=.%
-SET new_version=%new_version:$=+%
 
 ::
 :: Check if version has changed
@@ -115,7 +115,7 @@ EXIT /B 0
 :: Update appversion.h
 ::
 :UPDATE
-FOR /F "tokens=1,2,3 delims=.+" %%a IN ("%new_version%") DO SET major=%%a & SET minor=%%b & SET patch=%%c
+FOR /F "tokens=1,2,3 delims=.+" %%a IN ("%new_version%") DO SET major=%%a&SET minor=%%b&SET patch=%%c
 
 ECHO Updating appversion.h, old version "%old_version%", new version "%new_version%".
 

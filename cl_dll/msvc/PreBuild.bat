@@ -115,7 +115,7 @@ EXIT /B 0
 :: Update appversion.h
 ::
 :UPDATE
-FOR /F "tokens=1,2,3 delims=.+" %%a IN ("%new_version%") DO SET major=%%a & SET minor=%%b & SET patch=%%c
+FOR /F "tokens=1,2,3 delims=.+" %%a IN ("%new_version%") DO SET major=%%a&SET minor=%%b&SET patch=%%c
 
 ECHO Updating appversion.h, old version "%old_version%", new version "%new_version%".
 
