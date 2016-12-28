@@ -1,22 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 
 	# Get old version information from appversion.h
 	if [ -e ./appversion.h ]; then
-		old_version=$(cat ./appversion.h | grep -i '#define APP_VERSION' | sed -e 's/#define APP_VERSION \(.*\)/\1/i')
+		#old_version=$(cat ./appversion.h | grep -i '#define APP_VERSION' | sed -e 's/#define APP_VERSION \(.*\)/\1/i')
 		if [ $? -ne 0 ]; then
 			old_version=""
 		fi
 	fi
 
 	# Get information from GIT repository
-	git_version=$(git.exe describe --long --tags --dirty --always)
-	git_date=$(git.exe log -1 --format=%ci)
+	git_version=$(git describe --long --tags --dirty --always)
+	git_date=$(git log -1 --format=%ci)
 
 	# Process version
-	new_version=$(git_version#v)
-	new_version=$(git_version/-dirty/+m)
-	new_version=$(git_version/-g/+)
-	new_version=$(git_version/-/.)
+	new_version=${git_version#v}
+	new_version=${new_version/-dirty/+m}
+	new_version=${new_version/-g/+}
+	new_version=${new_version/-/.}
+	echo $new_version
 
 	if [ "$new_version" != "$old_version" ]; then
 		echo Updating appversion.h, old version "$old_version", new version "$new_version".
