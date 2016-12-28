@@ -6,55 +6,47 @@
 SET srcdir=%~1
 SET repodir=%~2
 
-set old_version=
-set old_specialbuild=""
-set version_revision=0
-set version_specialbuild=
-set version_date=?
-set version_pdate=
-set version_pdate_1=
-set version_pdate_2=
-set version_major=
-set version_minor=
-set version_maintenance=
+SET old_version=""
+SET new_version="0.0.0"
+SET new_specialbuild=""
+SET git_version="v0.0-0"
+SET git_date="?"
 
 ::
-:: Check for SubWCRev.exe presence
+:: Check for git.exe presence
 ::
-SubWCRev.exe 2>NUL >NUL
-set errlvl="%ERRORLEVEL%"
+git.exe 2>NUL >NUL
+SET errlvl=%ERRORLEVEL%
 
 ::
 :: Read old appversion.h, if present
 ::
 IF EXIST "%srcdir%\appversion.h" (
-	FOR /F "usebackq tokens=1,2,3" %%i in ("%srcdir%\appversion.h") do (
+	FOR /F "usebackq tokens=1,2,3" %%i IN ("%srcdir%\appversion.h") DO (
 		IF %%i==#define (
-			IF %%j==APP_VERSION_C SET old_version=%%k
-			IF %%j==APP_VERSION_SPECIALBUILD SET old_specialbuild=%%k
+			IF %%j==APP_VERSION SET old_version=%%k
 		)
 	)
 )
+SET old_version=%old_version:~1,-1%
 
-IF NOT %errlvl% == "1" (
-	echo can't locate SubWCRev.exe - auto-versioning step won't be performed
+::
+:: Bail out if git.exe not found
+::
+IF NOT "%errlvl%" == "1" (
+	ECHO Can not locate git.exe. Auto-versioning step will not be performed.
 
-	:: if we haven't appversion.h, we need to create it
-	IF "%old_version%" == "" (
-		set version_revision=0
-		set version_date=?
-		goto _readVersionH
-	)
-	exit /B 0
+	:: If we doesn't have appversion.h, we need to create it
+	IF "%old_version%" == "" GOTO COMPARE
+	EXIT /B 0
 )
 
 ::
-:: Create template file for SubWCRev
+:: Generate temp file name
 ::
-
 :GETTEMPNAME
 :: Use current path, current time and random number to create unique file name
-SET TMPFILE=svn-%CD:~-15%-%RANDOM%-%TIME:~-5%-%RANDOM%
+SET TMPFILE=git-%CD:~-15%-%RANDOM%-%TIME:~-5%-%RANDOM%
 :: Remove bad characters
 SET TMPFILE=%TMPFILE:\=%
 SET TMPFILE=%TMPFILE:.=%
@@ -64,143 +56,100 @@ SET TMPFILE=%TMPFILE: =%
 SET TMPFILE=%TMP%.\%TMPFILE%
 IF EXIST "%TMPFILE%" GOTO :GETTEMPNAME
 
-echo #define SVNV_REVISION ^$WCREV^$ >"%TMPFILE%.templ"
-echo #define SVNV_DATE ^$WCDATE=^%%Y-^%%m-^%%d__^%%H-^%%M-^%%S^$ >>"%TMPFILE%.templ"
-echo #define SVNV_PDATE_1 ^$WCDATE=^%%Y-^%%m-^%%d^$ >>"%TMPFILE%.templ"
-echo #define SVNV_PDATE_2 ^$WCDATE=^%%H:^%%M:^%%S^$ >>"%TMPFILE%.templ"
-echo .  >>"%TMPFILE%.templ"
-
 ::
-:: Process template
+:: Get information from GIT repository
 ::
-SubWCRev.exe "%repodir%\." "%TMPFILE%.templ" "%TMPFILE%.h" >NUL
+SET errlvl=0
+git.exe -C "%repodir%." describe --long --tags --dirty --always > "%TMPFILE%.tmp1"
+IF NOT "%ERRORLEVEL%" == "0" THEN SET errlvl=1
+git.exe -C "%repodir%." log -1 --format^=%%ci >> "%TMPFILE%.tmp2"
+IF NOT "%ERRORLEVEL%" == "0" THEN SET errlvl=1
+IF NOT "%errlvl%" == "0" (
+	ECHO git.exe done with errors [%ERRORLEVEL%].
+	ECHO Check if you have correct GIT repository at '%repodir%'.
+	ECHO Auto-versioning step will not be performed.
 
-IF NOT "%ERRORLEVEL%" == "0" (
-	echo SubWCRev.exe done with errors [%ERRORLEVEL%].
-	echo Check if you have correct SVN repository at '%repodir%'
-	echo Auto-versioning step will not be performed.
+	DEL /F /Q "%TMPFILE%.tmp1" 2>NUL
+	DEL /F /Q "%TMPFILE%.tmp2" 2>NUL
 
-	DEL /F /Q "%TMPFILE%.templ" 2>NUL
-	DEL /F /Q "%TMPFILE%.h" 2>NUL
-
-	:: if we haven't appversion.h, we need to create it
-	IF "%old_version%" == "" (
-		set version_revision=0
-		set version_date=?
-		goto _readVersionH
-	)
-	exit /B 0
+	:: If we doesn't have appversion.h, we need to create it
+	IF "%old_version%" == "" GOTO COMPARE
+	EXIT /B 0
 )
 
-DEL /F /Q "%TMPFILE%.templ" 2>NUL
-
 ::
-:: Read revision and release date from it
+:: Read version and commit date from temp files
 ::
-FOR /F "usebackq tokens=1,2,3" %%i in ("%TMPFILE%.h") do (
-	IF %%i==#define (
-		IF %%j==SVNV_REVISION SET version_revision=%%k
-		IF %%j==SVNV_DATE SET version_date=%%k
-		IF %%j==SVNV_PDATE_1 SET version_pdate_1=%%k
-		IF %%j==SVNV_PDATE_2 SET version_pdate_2=%%k
-	)
-)
+SET /P git_version=<"%TMPFILE%.tmp1"
+SET /P git_date=<"%TMPFILE%.tmp2"
 
-DEL /F /Q "%TMPFILE%.h" 2>NUL
-SET version_pdate=%version_pdate_1% %version_pdate_2%
+DEL /F /Q "%TMPFILE%.tmp1" 2>NUL
+DEL /F /Q "%TMPFILE%.tmp2" 2>NUL
 
 ::
 :: Detect local modifications
 ::
-SubWCRev.exe "%repodir%\." -nm >NUL
-
-IF "%ERRORLEVEL%" == "7" (
-	set version_specialbuild=modified
+SET new_version=%git_version:-dirty=+m%
+IF NOT x%new_version%==x%git_version% (
+	SET new_specialbuild=modified
 ) ELSE (
-	set version_specialbuild=
-)
-
-:_readVersionH
-::
-:: Read major, minor and maintenance version components from Version.h
-::
-FOR /F "usebackq tokens=1,2,3" %%i in ("%srcdir%\version.h") do (
-	IF %%i==#define (
-		IF %%j==VERSION_MAJOR SET version_major=%%k
-		IF %%j==VERSION_MINOR SET version_minor=%%k
-		IF %%j==VERSION_MAINTENANCE SET version_maintenance=%%k
-	)
+	SET new_specialbuild=
 )
 
 ::
-:: Now form full version string like 1.0.0.1
+:: Process version string
 ::
-IF "%version_maintenance%" == "" (
-	set new_version=%version_major%,%version_minor%,0,%version_revision%
+:: Remove "v" at start, change "-g" hash prefix into "+", "-" before patch into "."
+SET new_version=%new_version:~1%
+SET new_version=%new_version:-g=+%
+SET new_version=%new_version:-=.%
+
+::
+:: Check if version has changed
+::
+:COMPARE
+IF NOT "%new_version%"=="%old_version%" GOTO UPDATE
+EXIT /B 0
+
+::
+:: Update appversion.h
+::
+:UPDATE
+FOR /F "tokens=1,2,3 delims=.+" %%a IN ("%new_version%") DO SET major=%%a & SET minor=%%b & SET patch=%%c
+
+ECHO Updating appversion.h, old version "%old_version%", new version "%new_version%".
+
+ECHO #ifndef __APPVERSION_H__>"%srcdir%\appversion.h"
+ECHO #define __APPVERSION_H__>>"%srcdir%\appversion.h"
+ECHO.>>"%srcdir%\appversion.h"
+ECHO // >>"%srcdir%\appversion.h"
+ECHO // This file is generated automatically.>>"%srcdir%\appversion.h"
+ECHO // Don't edit it.>>"%srcdir%\appversion.h"
+ECHO // >>"%srcdir%\appversion.h"
+ECHO.>>"%srcdir%\appversion.h"
+ECHO // Version defines>>"%srcdir%\appversion.h"
+
+ECHO #define APP_VERSION "%new_version%">>"%srcdir%\appversion.h"
+ECHO #define APP_VERSION_C %major%,%minor%,%patch%,^0>>"%srcdir%\appversion.h"
+
+ECHO.>>"%srcdir%\appversion.h"
+ECHO #define APP_VERSION_DATE "%git_date%">>"%srcdir%\appversion.h"
+
+ECHO.>>"%srcdir%\appversion.h"
+IF NOT "%new_specialbuild%" == "" (
+	ECHO #define APP_VERSION_FLAGS VS_FF_SPECIALBUILD>>"%srcdir%\appversion.h"
+	ECHO #define APP_VERSION_SPECIALBUILD "%new_specialbuild%">>"%srcdir%\appversion.h"
 ) ELSE (
-	set new_version=%version_major%,%version_minor%,%version_maintenance%,%version_revision%
+	ECHO #define APP_VERSION_FLAGS 0x0L>>"%srcdir%\appversion.h"
 )
 
-::
-:: Update appversion.h if version has changed or modifications/mixed revisions detected
-::
-IF NOT "%new_version%"=="%old_version%" goto _update
-IF NOT "%version_specialbuild%"==%old_specialbuild% goto _update
-goto _exit
-
-:_update
-echo Updating appversion.h, new version is "%new_version%", the old one was "%old_version%"
-echo new special build is "%version_specialbuild%", the old one was %old_specialbuild%
-
-echo #ifndef __APPVERSION_H__>"%srcdir%\appversion.h"
-echo #define __APPVERSION_H__>>"%srcdir%\appversion.h"
-echo.>>"%srcdir%\appversion.h"
-echo // >>"%srcdir%\appversion.h"
-echo // This file is generated automatically.>>"%srcdir%\appversion.h"
-echo // Don't edit it.>>"%srcdir%\appversion.h"
-echo // >>"%srcdir%\appversion.h"
-echo.>>"%srcdir%\appversion.h"
-echo // Version defines>>"%srcdir%\appversion.h"
-
-IF "%version_maintenance%" == "" (
-	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_revision% >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_revision%">>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_C %version_major%,%version_minor%,0,%version_revision% >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, 0, %version_revision%">>"%srcdir%\appversion.h"
-) ELSE (
-	echo #define APP_VERSION_D %version_major%.%version_minor%.%version_maintenance%.%version_revision% >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_STRD "%version_major%.%version_minor%.%version_maintenance%.%version_revision%">>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_C %version_major%,%version_minor%,%version_maintenance%,%version_revision% >>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_STRCS "%version_major%, %version_minor%, %version_maintenance%, %version_revision%">>"%srcdir%\appversion.h"
-)
-
-echo.>>"%srcdir%\appversion.h"
-echo #define APP_VERSION_DATE %version_date%>>"%srcdir%\appversion.h"
-echo #define APP_VERSION_DATE_STR "%version_date%">>"%srcdir%\appversion.h"
-echo.>>"%srcdir%\appversion.h"
-echo #define APP_VERSION_PDATE_STR "%version_pdate%">>"%srcdir%\appversion.h"
-echo.>>"%srcdir%\appversion.h"
-echo #define APP_VERSION_YMD_STR "%version_pdate_1%">>"%srcdir%\appversion.h"
-echo.>>"%srcdir%\appversion.h"
-
-IF NOT "%version_specialbuild%" == "" (
-	echo #define APP_VERSION_FLAGS VS_FF_SPECIALBUILD>>"%srcdir%\appversion.h"
-	echo #define APP_VERSION_SPECIALBUILD "%version_specialbuild%">>"%srcdir%\appversion.h"
-	echo #define APP_VERSION APP_VERSION_STRD " " APP_VERSION_SPECIALBUILD>>"%srcdir%\appversion.h"
-) ELSE (
-	echo #define APP_VERSION_FLAGS 0x0L>>"%srcdir%\appversion.h"
-	echo #define APP_VERSION APP_VERSION_STRD>>"%srcdir%\appversion.h"
-)
-echo.>>"%srcdir%\appversion.h"
-
-echo #endif //__APPVERSION_H__>>"%srcdir%\appversion.h"
-echo.>>"%srcdir%\appversion.h"
+ECHO.>>"%srcdir%\appversion.h"
+ECHO #endif //__APPVERSION_H__>>"%srcdir%\appversion.h"
 
 ::
 :: Update last modify time on files that use appversion.h header to force them to recompile
 ::
-copy /b "%srcdir%\msvc\client.rc"+,, "%srcdir%\msvc\client.rc"
-copy /b "%srcdir%\hud.cpp"+,, "%srcdir%\hud.cpp"
+COPY /B "%srcdir%\msvc\client.rc"+,, "%srcdir%\msvc\client.rc" >NUL
+COPY /B "%srcdir%\hud.cpp"+,, "%srcdir%\hud.cpp" >NUL
 
-:_exit
-exit /B 0
+EXIT /B 0
