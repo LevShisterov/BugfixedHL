@@ -22,7 +22,7 @@ Based on HLSDK version 2.3-p3 patched by metamod team.
 <ul>
 <li>Download latest release archive from http://aghl.ru/files/patches/BugfixedHL/
 <li>Copy all files from release archive "valve" folder to server/client "valve" folder replacing all.</li>
-<li>For steam copy to "<Steam Installation/Library Directory>\steamapps\common\Half-Life" folder.</li>
+<li>For steam copy to "&lt;Steam Installation/Library Directory&gt;\steamapps\common\Half-Life" folder.</li>
 </ul>
 
 ## Support forum URL
