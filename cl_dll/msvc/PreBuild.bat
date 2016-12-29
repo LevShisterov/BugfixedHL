@@ -105,6 +105,11 @@ SET new_version=%new_version:-g=+%
 SET new_version=%new_version:-=.%
 
 ::
+:: Export version
+::
+SET BUILD_NUMBER_VCS=%new_version%
+
+::
 :: Check if version has changed
 ::
 :COMPARE

@@ -105,6 +105,11 @@ SET new_version=%new_version:-g=+%
 SET new_version=%new_version:-=.%
 
 ::
+:: Export version
+::
+SET BUILD_NUMBER_VCS=%new_version%
+
+::
 :: Check if version has changed
 ::
 :COMPARE
@@ -149,7 +154,7 @@ ECHO #endif //__APPVERSION_H__>>"%srcdir%\appversion.h"
 ::
 :: Update last modify time on files that use appversion.h header to force them to recompile
 ::
-COPY /B "%srcdir%\msvc\client.rc"+,, "%srcdir%\msvc\client.rc" >NUL
-COPY /B "%srcdir%\hud.cpp"+,, "%srcdir%\hud.cpp" >NUL
+COPY /B "%srcdir%\msvc\hl.rc"+,, "%srcdir%\msvc\hl.rc" >NUL
+COPY /B "%srcdir%\game.cpp"+,, "%srcdir%\game.cpp" >NUL
 
 EXIT /B 0
