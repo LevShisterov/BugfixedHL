@@ -29,7 +29,7 @@
 enginefuncs_t g_engfuncs;
 globalvars_t  *gpGlobals;
 
-extern int g_iIsAg = 0;
+extern "C" int g_iIsAg;
 
 #ifdef _WIN32
 
