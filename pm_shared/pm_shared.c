@@ -153,6 +153,8 @@ int g_bBunnyHop = 1;
 extern int g_iOnGround;
 extern int g_iWaterlevel;
 
+extern int g_iIsAg;
+
 
 void PM_SwapTextures( int i, int j )
 {
@@ -2109,7 +2111,7 @@ void PM_LadderMove( physent_t *pLadder )
 		float climbSpeed = MAX_CLIMB_SPEED;
 		if (climbSpeed > pmove->maxspeed)
 			climbSpeed = pmove->maxspeed;
-		if (pmove->flags & FL_DUCKING)
+		if (!g_iIsAg && (pmove->flags & FL_DUCKING))
 			climbSpeed *= PLAYER_DUCKING_MULTIPLIER;
 
 		AngleVectors( pmove->angles, vpn, v_right, NULL );

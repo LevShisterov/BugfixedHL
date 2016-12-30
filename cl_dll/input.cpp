@@ -52,6 +52,8 @@ bool g_bBunnyhopJumped = false;
 extern "C" int g_iOnGround = 0;
 extern "C" int g_iWaterlevel = 0;
 
+extern "C" int g_iIsAg = 0;
+
 void IN_Init (void);
 void IN_Move ( float frametime, usercmd_t *cmd);
 void IN_Shutdown( void );
