@@ -29,8 +29,6 @@
 enginefuncs_t g_engfuncs;
 globalvars_t  *gpGlobals;
 
-extern "C" int g_iIsAg;
-
 #ifdef _WIN32
 
 // Required DLL entry point

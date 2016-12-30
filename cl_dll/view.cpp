@@ -34,7 +34,6 @@ extern "C"
 	float	vecNewViewOrigin[3];
 	int		iHasNewViewOrigin;
 	int		iIsSpectator;
-	extern	int g_iIsAg;
 }
 
 #ifndef M_PI

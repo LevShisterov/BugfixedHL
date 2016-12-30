@@ -50,8 +50,6 @@ TeamFortressViewport *gViewPort = NULL;
 PVOID hVehHandler = NULL;
 bool g_bDllDetaching = false;
 
-extern "C" int g_iIsAg;
-
 void InitInput (void);
 void ShutdownInput (void);
 void EV_HookEvents( void );

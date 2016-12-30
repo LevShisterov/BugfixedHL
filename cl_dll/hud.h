@@ -525,6 +525,8 @@ public:
 	void Think(void);
 	int Draw(float flTime);
 
+	static int MsgFunc_Timer(const char *pszName, int iSize, void *pbuf);
+
 	void DoResync(void);
 	void ReadDemoTimerBuffer(int type, const unsigned char *buffer);
 	void CustomTimerCommand(void);
