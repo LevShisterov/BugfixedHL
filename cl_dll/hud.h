@@ -641,6 +641,18 @@ struct CharWidths
 	}
 };
 
+#include "aghudglobal.h"
+#include "aghudcountdown.h"
+#include "aghudctf.h"
+#include "aghudlocation.h"
+#include "aghudlongjump.h"
+#include "aghudnextmap.h"
+#include "aghudplayerid.h"
+#include "aghudsettings.h"
+#include "aghudsuddendeath.h"
+#include "aghudtimeout.h"
+#include "aghudvote.h"
+
 class CHud
 {
 private:
@@ -734,6 +746,18 @@ public:
 	CHudTextMessage		m_TextMessage;
 	CHudStatusIcons		m_StatusIcons;
 	CHudTimer			m_Timer;
+
+	AgHudGlobal			m_Global;
+	AgHudCountdown		m_Countdown;
+	AgHudCTF			m_CTF;
+	AgHudLocation		m_Location;
+	AgHudLongjump		m_Longjump;
+	AgHudNextmap		m_Nextmap;
+	AgHudPlayerId		m_PlayerId;
+	AgHudSettings		m_Settings;
+	AgHudSuddenDeath	m_SuddenDeath;
+	AgHudTimeout		m_Timeout;
+	AgHudVote			m_Vote;
 
 	void Init( void );
 	void VidInit( void );
