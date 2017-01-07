@@ -102,6 +102,10 @@ void (*g_pEngineClConnectionlessPacketHandler)(void) = 0;
 size_t g_pEngineClConnectionlessPacketPlace = 0;
 uint32_t g_pEngineClConnectionlessPacketOffset = 0;
 
+/* CL_Parse_VoiceData patch variables */
+size_t g_CL_Parse_VoiceDataPlace = 0;
+uint8_t g_CL_Parse_VoiceDataPlaceBackup[5];
+
 /* GameUI fix variables */
 int g_iLinesCounter = 0;
 ThisCallIntInt g_pFunctionReplacedByCounter;
@@ -979,6 +983,48 @@ void PatchGameUiConsoleCopy(void)
 		g_pGet_VGUI_System009 = (size_t (*)(void))(HookDWord(addr2, offset2) + addr2 + 4);
 	}
 }
+void PatchCL_Parse_VoiceData(void)
+{
+	if (!g_CL_Parse_VoiceDataPlace)
+	{
+		// Find address of "CL_ParseVoiceData: Voice_AssignChannel failed for client %d!\n" string
+		const char data1[] = "434C5F5061727365566F696365446174613A20566F6963655F41737369676E4368616E6E656C206661696C656420666F7220636C69656E74202564210A00";
+		const char mask1[] = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
+		if (!addr1 || MemoryFindForward(addr1 + 1, g_EngineModuleEnd, data1, mask1))
+		{
+			strncat(g_szPatchErrors, "CL_Parse_VoiceData patch: offset of debug string not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		// Find a place where debug printing occurs
+		const char data2[] = "566834A89502 E89AD70000 83C408";
+		const char mask2[] = "FFFFFFFFFFFF FF00000000 FFFFFF";
+		unsigned char d2[MAX_PATTERN], m2[MAX_PATTERN];
+		size_t l2 = ConvertHexString(data2, d2, sizeof(d2));
+		ConvertHexString(mask2, m2, sizeof(m2));
+		*(size_t*)(d2 + 2) = addr1;
+		size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, d2, m2, l2);
+		if (!addr2 || MemoryFindForward(addr2 + 1, g_EngineModuleEnd, d2, m2, l2))
+		{
+			strncat(g_szPatchErrors, "CL_Parse_VoiceData patch: usage of debug string not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		g_CL_Parse_VoiceDataPlace = addr2 + 6;
+
+		// Remove Con_DPrintf call
+		const char data3[] = "9090909090";
+		ConvertHexString(data3, g_CL_Parse_VoiceDataPlaceBackup, sizeof(g_CL_Parse_VoiceDataPlaceBackup));
+		ExchangeMemoryBytes((size_t *)(g_CL_Parse_VoiceDataPlace), (size_t *)g_CL_Parse_VoiceDataPlaceBackup, 5);
+	}
+	else
+	{
+		// Restore Con_DPrintf call
+		ExchangeMemoryBytes((size_t *)(g_CL_Parse_VoiceDataPlace), (size_t *)g_CL_Parse_VoiceDataPlaceBackup, 5);
+		g_CL_Parse_VoiceDataPlace = 0;
+	}
+}
 
 void FindColorOffset(void)
 {
@@ -1044,6 +1090,7 @@ void PatchEngine(void)
 
 	PatchFpsBugPlace();
 	PatchConnectionlessPacketHandler();
+	PatchCL_Parse_VoiceData();
 }
 // Removes engine patches
 void UnPatchEngine(void)
@@ -1059,6 +1106,7 @@ void UnPatchEngine(void)
 		hSnapshotThread = NULL;
 	}
 
+	PatchCL_Parse_VoiceData();
 	PatchConnectionlessPacketHandler();
 	PatchFpsBugPlace();
 
