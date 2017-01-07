@@ -1042,6 +1042,9 @@ void PatchCL_Parse_VoiceData(void)
 
 void PatchClientCrcForAg(void)
 {
+	if (!g_iIsAg)
+		return;
+
 	if (!g_TfcFolderName)
 	{
 		// Find a place where FPS bug happens
