@@ -1047,7 +1047,7 @@ void PatchClientCrcForAg(void)
 
 	if (!g_TfcFolderName)
 	{
-		// Find a place where FPS bug happens
+		// Find "tfc" string that is used for CRC check
 		const char data1[] = "74666300 76616C766500";
 		const char mask1[] = "FFFFFFFF FFFFFFFFFFFF";
 		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
@@ -1066,7 +1066,7 @@ void PatchClientCrcForAg(void)
 	}
 	else
 	{
-		// Restore client CRC
+		// Restore "tfc" string
 		ExchangeMemoryBytes((size_t *)(g_TfcFolderName), (size_t *)g_TfcFolderNamePlaceBackup, 4);
 		g_TfcFolderName = 0;
 	}
