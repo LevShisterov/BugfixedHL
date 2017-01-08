@@ -1042,9 +1042,6 @@ void PatchCL_Parse_VoiceData(void)
 
 void PatchClientCrcForAg(void)
 {
-	if (!g_iIsAg)
-		return;
-
 	if (!g_TfcFolderName)
 	{
 		// Find "tfc" string that is used for CRC check
