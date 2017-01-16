@@ -117,6 +117,10 @@ size_t *g_pSystem = 0;
 CGameConsole003 **g_pGameConsole003 = 0;
 size_t g_PanelColorOffset = 0;
 
+/* Fullscreen toggle variables */
+HWND g_hWnd = NULL;
+bool g_bWindowed = true;
+
 #define ThreadQuerySetWin32StartAddress 9
 typedef NTSTATUS NTAPI NtQueryInformationThreadProto(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength, PULONG ReturnLength);
 
@@ -1072,6 +1076,113 @@ void FindColorOffset(void)
 	}
 }
 
+static BOOL CALLBACK EnumWindowsCallback(HWND hWnd, LPARAM lParam)
+{
+	DWORD windowPID;
+	GetWindowThreadProcessId(hWnd, &windowPID);
+	if (windowPID == (DWORD)lParam)
+	{
+		char className[32];
+		GetClassName(hWnd, className, sizeof(className));
+		if (strcmp(className, "Valve001") == 0)
+		{
+			g_hWnd = hWnd;
+		}
+	}
+	return TRUE;
+}
+void __CmdFunc_ToggleFullScreen(void)
+{
+	if (g_hWnd == NULL)
+	{
+		return;
+	}
+
+	int argi = -1;
+	int argc = gEngfuncs.Cmd_Argc();
+	if (argc > 1)
+	{
+		char *args = gEngfuncs.Cmd_Argv(1);
+		if (args && args[0])
+		{
+			argi = atoi(args);
+		}
+	}
+
+	//ConsolePrint("Toggling fullscreen mode...\n");
+
+	gHUD.m_scrinfo.iSize = sizeof(gHUD.m_scrinfo);
+	GetScreenInfo(&gHUD.m_scrinfo);
+	int width = ScreenWidth;
+	int height = ScreenHeight;
+
+	bool success;
+	if (argi == 1 || argi == 2 || argi == -1 && g_bWindowed)
+	{
+		g_bWindowed = false;
+
+		if (argi != 2)
+		{
+			// Change display mode to fullscreen
+			DEVMODE dm;
+			dm.dmSize = sizeof(DEVMODE);
+			dm.dmPelsWidth = width;
+			dm.dmPelsHeight = height;
+			dm.dmBitsPerPel = 32;
+			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
+			char *freq;
+			if (gEngfuncs.CheckParm("-freq", &freq))
+			{
+				dm.dmDisplayFrequency = atoi(freq);
+				dm.dmFields |= DM_DISPLAYFREQUENCY;
+			}
+			success = ChangeDisplaySettings(&dm, 0) == DISP_CHANGE_SUCCESSFUL;
+			if (!success)
+			{
+				dm.dmDisplayFrequency = 0;
+				dm.dmFields &= ~DM_DISPLAYFREQUENCY;
+				success = ChangeDisplaySettings(&dm, 0) == DISP_CHANGE_SUCCESSFUL;
+				if (!success)
+				{
+					ConsolePrint("Failed to change video mode to full screen.\n");
+					return;
+				}
+			}
+			// Normal fullscreen
+			SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS);
+		}
+		else
+		{
+			// Borderless fullscreen
+			SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | WS_MINIMIZEBOX);
+		}
+		MoveWindow(g_hWnd, 0, 0, width, height, TRUE);
+	}
+	else // argi == 0 || !g_bWindowed
+	{
+		g_bWindowed = true;
+
+		// Reset display mode to be windowed
+		success = ChangeDisplaySettings(0, 0) == DISP_CHANGE_SUCCESSFUL;
+		if (!success)
+		{
+			ConsolePrint("Failed to reset video mode.\n");
+			return;
+		}
+
+		RECT rect;
+		GetClientRect(GetDesktopWindow(), &rect);
+		rect.left = rect.right / 2 - width / 2;
+		rect.top = rect.bottom / 2 - height / 2;
+		rect.right = rect.left + width;
+		rect.bottom = rect.top + height;
+
+		SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | WS_MINIMIZEBOX);
+		AdjustWindowRect(&rect, WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+		MoveWindow(g_hWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+	}
+}
+
 
 // Applies engine patches
 void PatchEngine(void)
@@ -1091,6 +1202,20 @@ void PatchEngine(void)
 	PatchFpsBugPlace();
 	PatchConnectionlessPacketHandler();
 	PatchCL_Parse_VoiceData();
+
+	// Detect window mode
+	if (EnumWindows(&EnumWindowsCallback, GetCurrentProcessId()) == FALSE)
+	{
+		strncat(g_szPatchErrors, "Failed to get window handle.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+		return;
+	}
+	if (g_hWnd != NULL)
+	{
+		RECT rect1, rect2;
+		GetClientRect(GetDesktopWindow(), &rect1);
+		GetClientRect(g_hWnd, &rect2);
+		g_bWindowed = !(rect2.left == 0 && rect2.top == 0 && rect1.right == rect2.right && rect1.bottom == rect2.bottom);
+	}
 }
 // Removes engine patches
 void UnPatchEngine(void)
@@ -1125,6 +1250,9 @@ void UnPatchEngine(void)
 	g_EngineBufSize = 0;
 	g_EngineBuf = 0;
 	g_SvcMessagesTable = 0;
+
+	// Reset display mode
+	ChangeDisplaySettings(0, 0);
 }
 // Apply OnInit engine patches
 void PatchEngineInit(void)
@@ -1178,6 +1306,9 @@ void MemoryPatcherInit(void)
 	m_pCvarSnapshotJpeg = gEngfuncs.pfnRegisterVariable("snapshot_jpeg", "1", FCVAR_ARCHIVE);
 	m_pCvarSnapshotJpegQuality = gEngfuncs.pfnRegisterVariable("snapshot_jpeg_quality", "95", FCVAR_ARCHIVE);
 	m_pCvarSnapshotJpegPoolSize = gEngfuncs.pfnRegisterVariable("snapshot_jpeg_poolsize", "10", FCVAR_ARCHIVE);
+
+	HOOK_COMMAND("togglefullscreen", ToggleFullScreen);
+	HOOK_COMMAND("fs", ToggleFullScreen);	// shortcut
 
 	// Patch GameUI
 	PatchGameUi();
