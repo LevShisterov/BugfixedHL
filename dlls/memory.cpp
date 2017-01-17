@@ -118,8 +118,12 @@ CGameConsole003 **g_pGameConsole003 = 0;
 size_t g_PanelColorOffset = 0;
 
 /* Fullscreen toggle variables */
+bool g_bPatchedVideo = false;
 HWND g_hWnd = NULL;
-bool g_bWindowed = true;
+bool g_bWindowedOriginal = false;
+bool g_bWindowed = false;
+size_t g_pVideoAbstraction = NULL;
+bool g_bNewerBuild = false;
 
 #define ThreadQuerySetWin32StartAddress 9
 typedef NTSTATUS NTAPI NtQueryInformationThreadProto(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength, PULONG ReturnLength);
@@ -252,8 +256,8 @@ size_t MemoryFindForward(size_t start, size_t end, const char *pattern, const ch
 	unsigned char p[MAX_PATTERN];
 	unsigned char m[MAX_PATTERN];
 	size_t pl = ConvertHexString(pattern, p, sizeof(p));
-	size_t ml = ConvertHexString(mask, m, sizeof(m));
-	return MemoryFindForward(start, end, p, m, pl >= ml ? pl : ml);
+	size_t ml = mask != NULL ? ConvertHexString(mask, m, sizeof(m)) : 0;
+	return MemoryFindForward(start, end, p, mask != NULL ? m : NULL, pl >= ml ? pl : ml);
 }
 size_t MemoryFindBackward(size_t start, size_t end, const unsigned char *pattern, const unsigned char *mask, size_t pattern_len)
 {
@@ -313,8 +317,8 @@ size_t MemoryFindBackward(size_t start, size_t end, const char *pattern, const c
 	unsigned char p[MAX_PATTERN];
 	unsigned char m[MAX_PATTERN];
 	size_t pl = ConvertHexString(pattern, p, sizeof(p));
-	size_t ml = ConvertHexString(mask, m, sizeof(m));
-	return MemoryFindBackward(start, end, p, m, pl >= ml ? pl : ml);
+	size_t ml = mask != NULL ? ConvertHexString(mask, m, sizeof(m)) : 0;
+	return MemoryFindBackward(start, end, p, mask != NULL ? m : NULL, pl >= ml ? pl : ml);
 }
 
 // Replaces double word on specified address with new dword, returns old dword
@@ -797,9 +801,8 @@ void FindGameConsole003(void)
 	{
 		// Find address of "GameConsole003" string
 		const char data1[] = "47616D65436F6E736F6C6530303300";
-		const char mask1[] = "FFFFFF00FFFFFFFFFFFFFFFFFFFFFF";
-		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
-		if (!addr1 || MemoryFindForward(addr1 + 1, g_EngineModuleEnd, data1, mask1))
+		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, NULL);
+		if (!addr1 || MemoryFindForward(addr1 + 1, g_EngineModuleEnd, data1, NULL))
 		{
 			strncat(g_szPatchErrors, "Colored console patch: offset of \"GameConsole003\" string not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
@@ -812,11 +815,8 @@ void FindGameConsole003(void)
 		data2[2] = 0x68;
 		*(size_t*)(data2 + 3) = addr1;
 		data2[7] = 0xA3;
-		const char mask2[] = "FFFFFFFFFFFFFFFF";
-		unsigned char m[MAX_PATTERN];
-		ConvertHexString(mask2, m, sizeof(m));
-		size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data2, m, 8);
-		if (!addr2 || MemoryFindForward(addr2 + 1, g_EngineModuleEnd, data2, m, 8))
+		size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data2, NULL, 8);
+		if (!addr2 || MemoryFindForward(addr2 + 1, g_EngineModuleEnd, data2, NULL, 8))
 		{
 			strncat(g_szPatchErrors, "Colored console patch: offset of GameConsole003 interface not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
@@ -993,9 +993,8 @@ void PatchCL_Parse_VoiceData(void)
 	{
 		// Find address of "CL_ParseVoiceData: Voice_AssignChannel failed for client %d!\n" string
 		const char data1[] = "434C5F5061727365566F696365446174613A20566F6963655F41737369676E4368616E6E656C206661696C656420666F7220636C69656E74202564210A00";
-		const char mask1[] = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
-		if (!addr1 || MemoryFindForward(addr1 + 1, g_EngineModuleEnd, data1, mask1))
+		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, NULL);
+		if (!addr1 || MemoryFindForward(addr1 + 1, g_EngineModuleEnd, data1, NULL))
 		{
 			strncat(g_szPatchErrors, "CL_Parse_VoiceData patch: offset of debug string not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
@@ -1036,9 +1035,8 @@ void FindColorOffset(void)
 	{
 		// Find "console dumped to " string
 		const char data1[] = "636F6E736F6C652064756D70656420746F2000";
-		const char mask1[] = "FFFFFF00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-		size_t addr1 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data1, mask1);
-		if (!addr1 || MemoryFindForward(addr1 + 1, g_GameUiModuleEnd, data1, mask1))
+		size_t addr1 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data1, NULL);
+		if (!addr1 || MemoryFindForward(addr1 + 1, g_GameUiModuleEnd, data1, NULL))
 		{
 			strncat(g_szPatchErrors, "Colored console patch: offset of \"console dumped to\" string not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
@@ -1051,11 +1049,8 @@ void FindColorOffset(void)
 		data2[5] = 0x8B;
 		data2[6] = 0xCF;
 		data2[7] = 0xE8;
-		const char mask2[] = "FFFFFFFFFFFFFFFF";
-		unsigned char m[MAX_PATTERN];
-		ConvertHexString(mask2, m, sizeof(m));
-		size_t addr2 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data2, m, 8);
-		if (!addr2 || MemoryFindForward(addr2 + 1, g_GameUiModuleEnd, data2, m, 8))
+		size_t addr2 = MemoryFindForward(g_GameUiModuleBase, g_GameUiModuleEnd, data2, NULL, 8);
+		if (!addr2 || MemoryFindForward(addr2 + 1, g_GameUiModuleEnd, data2, NULL, 8))
 		{
 			strncat(g_szPatchErrors, "Colored console patch: offset of CGameConsole_AddText function not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
@@ -1076,7 +1071,7 @@ void FindColorOffset(void)
 	}
 }
 
-static BOOL CALLBACK EnumWindowsCallback(HWND hWnd, LPARAM lParam)
+BOOL __stdcall EnumWindowsCallback(HWND hWnd, LPARAM lParam)
 {
 	DWORD windowPID;
 	GetWindowThreadProcessId(hWnd, &windowPID);
@@ -1093,6 +1088,11 @@ static BOOL CALLBACK EnumWindowsCallback(HWND hWnd, LPARAM lParam)
 }
 void __CmdFunc_ToggleFullScreen(void)
 {
+	if (!g_bPatchedVideo)
+	{
+		gEngfuncs.Con_Printf("Toggle fullscreen feature works only in OpenGL mode.\n");
+		return;
+	}
 	if (g_hWnd == NULL)
 	{
 		return;
@@ -1120,6 +1120,7 @@ void __CmdFunc_ToggleFullScreen(void)
 	if (argi == 1 || argi == 2 || argi == -1 && g_bWindowed)
 	{
 		g_bWindowed = false;
+		*(bool *)(g_pVideoAbstraction + 440) = false;
 
 		if (argi != 2)
 		{
@@ -1162,6 +1163,8 @@ void __CmdFunc_ToggleFullScreen(void)
 	{
 		g_bWindowed = true;
 
+		*(bool *)(g_pVideoAbstraction + 440) = true;
+
 		// Reset display mode to be windowed
 		success = ChangeDisplaySettings(0, 0) == DISP_CHANGE_SUCCESSFUL;
 		if (!success)
@@ -1180,6 +1183,70 @@ void __CmdFunc_ToggleFullScreen(void)
 		SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | WS_MINIMIZEBOX);
 		AdjustWindowRect(&rect, WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 		MoveWindow(g_hWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+	}
+}
+void PatchVideoSettings(bool init)
+{
+	if (init && !g_bPatchedVideo)
+	{
+		// Detect window mode
+		if (EnumWindows(&EnumWindowsCallback, GetCurrentProcessId()) == FALSE || g_hWnd == NULL)
+		{
+			strncat(g_szPatchErrors, "Failed to get window handle.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+		RECT rect1, rect2;
+		GetClientRect(GetDesktopWindow(), &rect1);
+		GetClientRect(g_hWnd, &rect2);
+		g_bWindowedOriginal = g_bWindowed = !(rect2.left == 0 && rect2.top == 0 && rect1.right == rect2.right && rect1.bottom == rect2.bottom);
+
+		// Find engine video abstraction object
+		const char data2[] = "AVVideoMode_Direct3DWindowed";
+		size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, (unsigned char *)data2, NULL, sizeof(data2) - 1);
+		if (!addr2)
+		{
+			// Software engine
+			return;
+		}
+		const char data3[] = "No error";
+		const char data4[] = "Generic failure";
+		size_t addr3 = MemoryFindForward(addr2, addr2 + 64, (unsigned char *)data3, NULL, sizeof(data3));
+		if (!addr3)
+		{
+			addr3 = MemoryFindForward(addr2, addr2 + 64, (unsigned char *)data4, NULL, sizeof(data4));
+			if (!addr3)
+			{
+				strncat(g_szPatchErrors, "Video abstraction object not found: 2.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+				return;
+			}
+			g_bNewerBuild = true;
+			// TODO: Get SDL functions
+		}
+		size_t ptr1 = *(size_t *)(addr3 - 4) - 8;
+		if (ptr1 < g_EngineModuleBase || g_EngineModuleEnd < ptr1)
+		{
+			strncat(g_szPatchErrors, "Video abstraction object not found: 3.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+		g_pVideoAbstraction = *(size_t *)ptr1;
+		// Potentially unsafe, object is on heap
+		if (*(size_t *)g_pVideoAbstraction < g_EngineModuleBase || g_EngineModuleEnd < *(size_t *)g_pVideoAbstraction)
+		{
+			strncat(g_szPatchErrors, "Video abstraction object not found: 4.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+		char *name = (*(char*(**)(void)) (*(size_t *)g_pVideoAbstraction))();
+		if (strcmp(name, "gl") != 0)
+		{
+			// Will output info in command handler
+			return;
+		}
+
+		g_bPatchedVideo = true;
+	}
+	else if (!init && g_bPatchedVideo)
+	{
+		g_bPatchedVideo = false;
 	}
 }
 
@@ -1202,20 +1269,7 @@ void PatchEngine(void)
 	PatchFpsBugPlace();
 	PatchConnectionlessPacketHandler();
 	PatchCL_Parse_VoiceData();
-
-	// Detect window mode
-	if (EnumWindows(&EnumWindowsCallback, GetCurrentProcessId()) == FALSE)
-	{
-		strncat(g_szPatchErrors, "Failed to get window handle.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-		return;
-	}
-	if (g_hWnd != NULL)
-	{
-		RECT rect1, rect2;
-		GetClientRect(GetDesktopWindow(), &rect1);
-		GetClientRect(g_hWnd, &rect2);
-		g_bWindowed = !(rect2.left == 0 && rect2.top == 0 && rect1.right == rect2.right && rect1.bottom == rect2.bottom);
-	}
+	PatchVideoSettings(true);
 }
 // Removes engine patches
 void UnPatchEngine(void)
@@ -1231,6 +1285,7 @@ void UnPatchEngine(void)
 		hSnapshotThread = NULL;
 	}
 
+	PatchVideoSettings(false);
 	PatchCL_Parse_VoiceData();
 	PatchConnectionlessPacketHandler();
 	PatchFpsBugPlace();
@@ -1250,9 +1305,6 @@ void UnPatchEngine(void)
 	g_EngineBufSize = 0;
 	g_EngineBuf = 0;
 	g_SvcMessagesTable = 0;
-
-	// Reset display mode
-	ChangeDisplaySettings(0, 0);
 }
 // Apply OnInit engine patches
 void PatchEngineInit(void)
