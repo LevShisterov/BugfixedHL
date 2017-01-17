@@ -26,10 +26,10 @@ GAME_SHARED_OBJDIR=$(GAME_SHARED_SRCDIR)/obj
 BASE_CFLAGS=-D_stricmp=strcasecmp -D_strnicmp=strncasecmp -DCLIENT_WEAPONS
 
 #safe optimization
-CFLAGS=$(BASE_CFLAGS) -w -m486 -O1
+CFLAGS=$(BASE_CFLAGS) -w -m32 -O1
 
 #full optimization
-#CFLAGS=$(BASE_CFLAGS) -w -m486 -O1 -ffast-math -funroll-loops \
+#CFLAGS=$(BASE_CFLAGS) -w -m32 -O1 -ffast-math -funroll-loops \
 	-fomit-frame-pointer -fexpensive-optimizations \
 	-malign-loops=2 -malign-jumps=2 -malign-functions=2
 
