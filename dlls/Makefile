@@ -9,7 +9,7 @@ DLLNAME=hl
 ARCH=i386
 
 #make sure this is the correct compiler for your system
-CC=gcc-2.95
+CC=gcc
 
 DLL_SRCDIR=.
 ENGINE_SRCDIR=../engine
