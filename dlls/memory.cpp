@@ -130,6 +130,7 @@ size_t g_pVideoAbstraction = NULL;
 bool g_bNewerBuild = false;
 void **g_pSDL_Window = NULL;
 SDL_SetWindowFullscreen_t g_pSDL_SetWindowFullscreen = NULL;
+bool g_bLockedFullscreen = false;
 
 #define ThreadQuerySetWin32StartAddress 9
 typedef NTSTATUS NTAPI NtQueryInformationThreadProto(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength, PULONG ReturnLength);
@@ -1096,9 +1097,11 @@ void __CmdFunc_ToggleFullScreen(void)
 {
 	if (!g_bGotVideoModeData)
 	{
-		gEngfuncs.Con_Printf("Toggle fullscreen feature works only in OpenGL mode.\n");
+		gEngfuncs.Con_Printf("Toggle full screen feature works only in OpenGL or D3D mode.\n");
 		return;
 	}
+
+	bool *windowed = (bool *)(g_pVideoAbstraction + 440);
 
 	int argi = -1;
 	int argc = gEngfuncs.Cmd_Argc();
@@ -1107,8 +1110,55 @@ void __CmdFunc_ToggleFullScreen(void)
 		char *args = gEngfuncs.Cmd_Argv(1);
 		if (args && args[0])
 		{
+			if (_stricmp(args, "lock") == 0)
+			{
+				if (g_bNewerBuild)
+				{
+					gEngfuncs.Con_Printf("Lock full screen feature works only on old builds (non-SDL).\n");
+					return;
+				}
+				if (g_bLockedFullscreen)
+				{
+					// toggle style
+					*windowed = false;
+					g_bLockedFullscreen = false;
+					gEngfuncs.Con_Printf("Full screen mode unlocked.\n");
+					return;
+				}
+				if (*windowed)
+				{
+					gEngfuncs.Con_Printf("Can't lock, should be in full screen mode.\n");
+					return;
+				}
+				*windowed = true;
+				g_bLockedFullscreen = true;
+				gEngfuncs.Con_Printf("Full screen mode locked.\n");
+				return;
+			}
+			if (_stricmp(args, "unlock") == 0)
+			{
+				if (g_bNewerBuild)
+				{
+					gEngfuncs.Con_Printf("Lock full screen feature works only on old builds (non-SDL).\n");
+					return;
+				}
+				if (g_bLockedFullscreen)
+				{
+					*windowed = false;
+					g_bLockedFullscreen = false;
+					gEngfuncs.Con_Printf("Full screen mode unlocked.\n");
+				}
+				return;
+			}
 			argi = atoi(args);
 		}
+	}
+
+	if (g_bLockedFullscreen)
+	{
+		*windowed = false;
+		g_bLockedFullscreen = false;
+		gEngfuncs.Con_Printf("Full screen mode unlocked.\n");
 	}
 
 	gHUD.m_scrinfo.iSize = sizeof(gHUD.m_scrinfo);
@@ -1117,7 +1167,6 @@ void __CmdFunc_ToggleFullScreen(void)
 	int height = ScreenHeight;
 
 	bool success;
-	bool *windowed = (bool *)(g_pVideoAbstraction + 440);
 	if (argi == 1 || argi == 2 || argi == -1 && *windowed)
 	{
 		if (!g_bNewerBuild)
@@ -1188,7 +1237,7 @@ void __CmdFunc_ToggleFullScreen(void)
 
 		*windowed = false;
 	}
-	else // argi == 0 || !windowed
+	else // argi == 0 || !*windowed
 	{
 		if (!g_bNewerBuild)
 		{
@@ -1342,6 +1391,14 @@ void UnPatchEngine(void)
 		WaitForSingleObject(hSnapshotThread, 500);
 		CloseHandle(hSnapshotThread);
 		hSnapshotThread = NULL;
+	}
+
+	if (g_bLockedFullscreen)
+	{
+		bool *windowed = (bool *)(g_pVideoAbstraction + 440);
+		*windowed = false;
+		g_bLockedFullscreen = false;
+		gEngfuncs.Con_Printf("Full screen mode unlocked.\n");
 	}
 
 	PatchCL_Parse_VoiceData();
