@@ -118,12 +118,18 @@ CGameConsole003 **g_pGameConsole003 = 0;
 size_t g_PanelColorOffset = 0;
 
 /* Fullscreen toggle variables */
-bool g_bPatchedVideo = false;
+enum SDL_WindowFlags
+{
+	SDL_WINDOW_FULLSCREEN = 0x00000001,
+	SDL_WINDOW_FULLSCREEN_DESKTOP = (SDL_WINDOW_FULLSCREEN | 0x00001000),
+};
+typedef int(*SDL_SetWindowFullscreen_t)(void *window, uint32_t flags);
+bool g_bGotVideoModeData = false;
 HWND g_hWnd = NULL;
-bool g_bWindowedOriginal = false;
-bool g_bWindowed = false;
 size_t g_pVideoAbstraction = NULL;
 bool g_bNewerBuild = false;
+void **g_pSDL_Window = NULL;
+SDL_SetWindowFullscreen_t g_pSDL_SetWindowFullscreen = NULL;
 
 #define ThreadQuerySetWin32StartAddress 9
 typedef NTSTATUS NTAPI NtQueryInformationThreadProto(HANDLE ThreadHandle, THREADINFOCLASS ThreadInformationClass, PVOID ThreadInformation, ULONG ThreadInformationLength, PULONG ReturnLength);
@@ -1079,7 +1085,7 @@ BOOL __stdcall EnumWindowsCallback(HWND hWnd, LPARAM lParam)
 	{
 		char className[32];
 		GetClassName(hWnd, className, sizeof(className));
-		if (strcmp(className, "Valve001") == 0)
+		if (strcmp(className, "Valve001") == 0)//"SDL_app"
 		{
 			g_hWnd = hWnd;
 		}
@@ -1088,13 +1094,9 @@ BOOL __stdcall EnumWindowsCallback(HWND hWnd, LPARAM lParam)
 }
 void __CmdFunc_ToggleFullScreen(void)
 {
-	if (!g_bPatchedVideo)
+	if (!g_bGotVideoModeData)
 	{
 		gEngfuncs.Con_Printf("Toggle fullscreen feature works only in OpenGL mode.\n");
-		return;
-	}
-	if (g_hWnd == NULL)
-	{
 		return;
 	}
 
@@ -1109,145 +1111,201 @@ void __CmdFunc_ToggleFullScreen(void)
 		}
 	}
 
-	//ConsolePrint("Toggling fullscreen mode...\n");
-
 	gHUD.m_scrinfo.iSize = sizeof(gHUD.m_scrinfo);
 	GetScreenInfo(&gHUD.m_scrinfo);
 	int width = ScreenWidth;
 	int height = ScreenHeight;
 
 	bool success;
-	if (argi == 1 || argi == 2 || argi == -1 && g_bWindowed)
+	bool *windowed = (bool *)(g_pVideoAbstraction + 440);
+	if (argi == 1 || argi == 2 || argi == -1 && *windowed)
 	{
-		g_bWindowed = false;
-		*(bool *)(g_pVideoAbstraction + 440) = false;
-
-		if (argi != 2)
+		if (!g_bNewerBuild)
 		{
-			// Change display mode to fullscreen
-			DEVMODE dm;
-			dm.dmSize = sizeof(DEVMODE);
-			dm.dmPelsWidth = width;
-			dm.dmPelsHeight = height;
-			dm.dmBitsPerPel = 32;
-			dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
-			char *freq;
-			if (gEngfuncs.CheckParm("-freq", &freq))
+			if (argi != 2)
 			{
-				dm.dmDisplayFrequency = atoi(freq);
-				dm.dmFields |= DM_DISPLAYFREQUENCY;
-			}
-			success = ChangeDisplaySettings(&dm, 0) == DISP_CHANGE_SUCCESSFUL;
-			if (!success)
-			{
-				dm.dmDisplayFrequency = 0;
-				dm.dmFields &= ~DM_DISPLAYFREQUENCY;
+				// Change display mode to fullscreen
+				DEVMODE dm;
+				dm.dmSize = sizeof(DEVMODE);
+				dm.dmPelsWidth = width;
+				dm.dmPelsHeight = height;
+				dm.dmBitsPerPel = 32;
+				dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
+				char *freq;
+				if (gEngfuncs.CheckParm("-freq", &freq))
+				{
+					dm.dmDisplayFrequency = atoi(freq);
+					dm.dmFields |= DM_DISPLAYFREQUENCY;
+				}
 				success = ChangeDisplaySettings(&dm, 0) == DISP_CHANGE_SUCCESSFUL;
 				if (!success)
 				{
-					ConsolePrint("Failed to change video mode to full screen.\n");
-					return;
+					dm.dmDisplayFrequency = 0;
+					dm.dmFields &= ~DM_DISPLAYFREQUENCY;
+					success = ChangeDisplaySettings(&dm, 0) == DISP_CHANGE_SUCCESSFUL;
+					if (!success)
+					{
+						ConsolePrint("Failed to change video mode to full screen.\n");
+						return;
+					}
 				}
+				// Normal fullscreen
+				SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS);
+				MoveWindow(g_hWnd, 0, 0, width, height, TRUE);
 			}
-			// Normal fullscreen
-			SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS);
+			else
+			{
+				if (!*windowed)
+				{
+					// Reset display mode
+					success = ChangeDisplaySettings(0, 0) == DISP_CHANGE_SUCCESSFUL;
+					if (!success)
+					{
+						ConsolePrint("Failed to reset video mode.\n");
+						return;
+					}
+				}
+				// Borderless fullscreen
+				SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | WS_MINIMIZEBOX);
+				MoveWindow(g_hWnd, 0, 0, width, height, TRUE);
+			}
 		}
 		else
 		{
-			// Borderless fullscreen
-			SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | WS_MINIMIZEBOX);
+			if (argi != 2)
+			{
+				if (!*windowed)
+					g_pSDL_SetWindowFullscreen(*g_pSDL_Window, 0);
+				g_pSDL_SetWindowFullscreen(*g_pSDL_Window, SDL_WINDOW_FULLSCREEN);
+			}
+			else
+			{
+				if (!*windowed)
+					g_pSDL_SetWindowFullscreen(*g_pSDL_Window, 0);
+				g_pSDL_SetWindowFullscreen(*g_pSDL_Window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+			}
 		}
-		MoveWindow(g_hWnd, 0, 0, width, height, TRUE);
+
+		*windowed = false;
 	}
-	else // argi == 0 || !g_bWindowed
+	else // argi == 0 || !windowed
 	{
-		g_bWindowed = true;
-
-		*(bool *)(g_pVideoAbstraction + 440) = true;
-
-		// Reset display mode to be windowed
-		success = ChangeDisplaySettings(0, 0) == DISP_CHANGE_SUCCESSFUL;
-		if (!success)
+		if (!g_bNewerBuild)
 		{
-			ConsolePrint("Failed to reset video mode.\n");
-			return;
+			// Reset display mode
+			success = ChangeDisplaySettings(0, 0) == DISP_CHANGE_SUCCESSFUL;
+			if (!success)
+			{
+				ConsolePrint("Failed to reset video mode.\n");
+				return;
+			}
+
+			RECT rect;
+			GetClientRect(GetDesktopWindow(), &rect);
+			rect.left = rect.right / 2 - width / 2;
+			rect.top = rect.bottom / 2 - height / 2;
+			rect.right = rect.left + width;
+			rect.bottom = rect.top + height;
+
+			SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | WS_MINIMIZEBOX);
+			AdjustWindowRect(&rect, WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+			MoveWindow(g_hWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+		}
+		else
+		{
+			g_pSDL_SetWindowFullscreen(*g_pSDL_Window, 0);
 		}
 
-		RECT rect;
-		GetClientRect(GetDesktopWindow(), &rect);
-		rect.left = rect.right / 2 - width / 2;
-		rect.top = rect.bottom / 2 - height / 2;
-		rect.right = rect.left + width;
-		rect.bottom = rect.top + height;
-
-		SetWindowLongPtr(g_hWnd, GWL_STYLE, WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | WS_MINIMIZEBOX);
-		AdjustWindowRect(&rect, WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
-		MoveWindow(g_hWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+		*windowed = true;
 	}
 }
-void PatchVideoSettings(bool init)
+void FindVideoModeData()
 {
-	if (init && !g_bPatchedVideo)
+	// Find engine video abstraction object
+	const char data1[] = "AVVideoMode_Direct3DWindowed";
+	size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, (unsigned char *)data1, NULL, sizeof(data1) - 1);
+	if (!addr1)
 	{
-		// Detect window mode
+		// Software engine
+		return;
+	}
+	const char data2[] = "No error";
+	const char data3[] = "Generic failure";
+	size_t addr2 = MemoryFindForward(addr1, addr1 + 64, (unsigned char *)data2, NULL, sizeof(data2));
+	if (!addr2)
+	{
+		addr2 = MemoryFindForward(addr1, addr1 + 64, (unsigned char *)data3, NULL, sizeof(data3));
+		if (!addr2)
+		{
+			strncat(g_szPatchErrors, "Video abstraction object not found: 1.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+		g_bNewerBuild = true;
+	}
+	size_t ptr1 = *(size_t *)(addr2 - 4) - (g_bNewerBuild ? 4 : 8);
+	if (ptr1 < g_EngineModuleBase || g_EngineModuleEnd < ptr1)
+	{
+		strncat(g_szPatchErrors, "Video abstraction object not found: 2.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+		return;
+	}
+	g_pVideoAbstraction = *(size_t *)ptr1;
+	// Potentially unsafe, object is on heap
+	if (*(size_t *)g_pVideoAbstraction < g_EngineModuleBase || g_EngineModuleEnd < *(size_t *)g_pVideoAbstraction)
+	{
+		strncat(g_szPatchErrors, "Video abstraction object not found: 3.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+		return;
+	}
+	char *name = (*(char*(**)(void)) (*(size_t *)g_pVideoAbstraction))();
+	if (strcmp(name, "gl") != 0)
+	{
+		// Will output info in command handler
+		return;
+	}
+
+	if (!g_bNewerBuild)
+	{
+		// Get window handle
 		if (EnumWindows(&EnumWindowsCallback, GetCurrentProcessId()) == FALSE || g_hWnd == NULL)
 		{
 			strncat(g_szPatchErrors, "Failed to get window handle.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
 			return;
 		}
-		RECT rect1, rect2;
-		GetClientRect(GetDesktopWindow(), &rect1);
-		GetClientRect(g_hWnd, &rect2);
-		g_bWindowedOriginal = g_bWindowed = !(rect2.left == 0 && rect2.top == 0 && rect1.right == rect2.right && rect1.bottom == rect2.bottom);
-
-		// Find engine video abstraction object
-		const char data2[] = "AVVideoMode_Direct3DWindowed";
-		size_t addr2 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, (unsigned char *)data2, NULL, sizeof(data2) - 1);
-		if (!addr2)
-		{
-			// Software engine
-			return;
-		}
-		const char data3[] = "No error";
-		const char data4[] = "Generic failure";
-		size_t addr3 = MemoryFindForward(addr2, addr2 + 64, (unsigned char *)data3, NULL, sizeof(data3));
-		if (!addr3)
-		{
-			addr3 = MemoryFindForward(addr2, addr2 + 64, (unsigned char *)data4, NULL, sizeof(data4));
-			if (!addr3)
-			{
-				strncat(g_szPatchErrors, "Video abstraction object not found: 2.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-				return;
-			}
-			g_bNewerBuild = true;
-			// TODO: Get SDL functions
-		}
-		size_t ptr1 = *(size_t *)(addr3 - 4) - (g_bNewerBuild ? 4 : 8);
-		if (ptr1 < g_EngineModuleBase || g_EngineModuleEnd < ptr1)
-		{
-			strncat(g_szPatchErrors, "Video abstraction object not found: 3.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-			return;
-		}
-		g_pVideoAbstraction = *(size_t *)ptr1;
-		// Potentially unsafe, object is on heap
-		if (*(size_t *)g_pVideoAbstraction < g_EngineModuleBase || g_EngineModuleEnd < *(size_t *)g_pVideoAbstraction)
-		{
-			strncat(g_szPatchErrors, "Video abstraction object not found: 4.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-			return;
-		}
-		char *name = (*(char*(**)(void)) (*(size_t *)g_pVideoAbstraction))();
-		if (strcmp(name, "gl") != 0)
-		{
-			// Will output info in command handler
-			return;
-		}
-
-		g_bPatchedVideo = true;
 	}
-	else if (!init && g_bPatchedVideo)
+	else
 	{
-		g_bPatchedVideo = false;
+		// Get SDL functions
+		HMODULE hSdl2 = GetModuleHandle("SDL2.dll");
+		g_pSDL_SetWindowFullscreen = (SDL_SetWindowFullscreen_t)GetProcAddress(hSdl2, "SDL_SetWindowFullscreen");
+
+		// Find SDL_Window pointer
+		const char data4[] = "8B0D 5C053C02 8B4510 A3";
+		const char mask4[] = "FFFF FFFFFFFF FF0000 FF";
+		unsigned char d4[MAX_PATTERN], m4[MAX_PATTERN];
+		size_t l4 = ConvertHexString(data4, d4, sizeof(d4));
+		ConvertHexString(mask4, m4, sizeof(m4));
+		*(size_t*)(d4 + 2) = ptr1;
+		size_t addr4 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, d4, m4, l4);
+		if (!addr4 || MemoryFindForward(addr4 + 1, g_EngineModuleEnd, d4, m4, l4))
+		{
+			strncat(g_szPatchErrors, "SDL Window pointer not found: 1.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+		size_t ptr2 = *(size_t*)(addr4 + 10);
+		if (ptr2 < g_EngineModuleBase || g_EngineModuleEnd < ptr2)
+		{
+			strncat(g_szPatchErrors, "SDL Window pointer not found: 2.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		g_pSDL_Window = *(void***)ptr2;
+		if ((size_t)g_pSDL_Window < g_EngineModuleBase || g_EngineModuleEnd < (size_t)g_pSDL_Window)
+		{
+			strncat(g_szPatchErrors, "SDL Window pointer not found: 3.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
 	}
+
+	g_bGotVideoModeData = true;
 }
 
 
@@ -1269,7 +1327,8 @@ void PatchEngine(void)
 	PatchFpsBugPlace();
 	PatchConnectionlessPacketHandler();
 	PatchCL_Parse_VoiceData();
-	PatchVideoSettings(true);
+
+	FindVideoModeData();
 }
 // Removes engine patches
 void UnPatchEngine(void)
@@ -1285,7 +1344,6 @@ void UnPatchEngine(void)
 		hSnapshotThread = NULL;
 	}
 
-	PatchVideoSettings(false);
 	PatchCL_Parse_VoiceData();
 	PatchConnectionlessPacketHandler();
 	PatchFpsBugPlace();
