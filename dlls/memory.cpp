@@ -1222,7 +1222,7 @@ void PatchVideoSettings(bool init)
 			g_bNewerBuild = true;
 			// TODO: Get SDL functions
 		}
-		size_t ptr1 = *(size_t *)(addr3 - 4) - 8;
+		size_t ptr1 = *(size_t *)(addr3 - 4) - (g_bNewerBuild ? 4 : 8);
 		if (ptr1 < g_EngineModuleBase || g_EngineModuleEnd < ptr1)
 		{
 			strncat(g_szPatchErrors, "Video abstraction object not found: 3.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
