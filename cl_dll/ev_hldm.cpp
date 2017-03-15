@@ -462,12 +462,6 @@ void EV_FireGlock1( event_args_t *args )
 	vec3_t up, right, forward;
 	
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -513,12 +507,6 @@ void EV_FireGlock2( event_args_t *args )
 	vec3_t up, right, forward;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -573,12 +561,6 @@ void EV_FireShotGunDouble( event_args_t *args )
 	float flSpread = 0.01;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -633,12 +615,6 @@ void EV_FireShotGunSingle( event_args_t *args )
 	float flSpread = 0.01;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -696,12 +672,6 @@ void EV_FireMP5( event_args_t *args )
 	float flSpread = 0.01;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -754,12 +724,6 @@ void EV_FireMP52( event_args_t *args )
 	vec3_t origin;
 	
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 
 	if ( EV_IsLocal( idx ) )
@@ -798,12 +762,6 @@ void EV_FirePython( event_args_t *args )
 	float flSpread = 0.01;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -859,12 +817,6 @@ void EV_SpinGauss( event_args_t *args )
 	int pitch;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -916,12 +868,6 @@ void EV_FireGauss( event_args_t *args )
 	vec3_t up, right, forward;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	VectorCopy( args->velocity, velocity );
@@ -1207,12 +1153,6 @@ void EV_Crowbar( event_args_t *args )
 	vec3_t velocity;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	
 	//Play Swing sound
@@ -1278,12 +1218,6 @@ void EV_FireCrossbow2( event_args_t *args )
 	vec3_t velocity;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 
@@ -1366,12 +1300,6 @@ void EV_FireCrossbow( event_args_t *args )
 	vec3_t origin;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	
 	gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/xbow_fire1.wav", 1, ATTN_NORM, 0, 93 + gEngfuncs.pfnRandomLong(0,0xF) );
@@ -1414,12 +1342,6 @@ void EV_FireRpg( event_args_t *args )
 	vec3_t origin;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	
 	gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9, ATTN_NORM, 0, PITCH_NORM );
@@ -1478,12 +1400,6 @@ void EV_EgonFire( event_args_t *args )
 	vec3_t origin;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	iFireState = args->iparam1;
 	iFireMode = args->iparam2;
@@ -1567,12 +1483,6 @@ void EV_EgonStop( event_args_t *args )
 	vec3_t origin;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy ( args->origin, origin );
 
 	gEngfuncs.pEventAPI->EV_StopSound( idx, CHAN_STATIC, EGON_SOUND_RUN );
@@ -1618,12 +1528,6 @@ void EV_HornetGunFire( event_args_t *args )
 	vec3_t origin, angles, vecSrc, forward, right, up;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, origin );
 	VectorCopy( args->angles, angles );
 	iFireMode = args->iparam1;
@@ -1670,12 +1574,6 @@ void EV_TripmineFire( event_args_t *args )
 	pmtrace_t tr;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, vecSrc );
 	VectorCopy( args->angles, angles );
 
@@ -1729,12 +1627,6 @@ void EV_SnarkFire( event_args_t *args )
 	pmtrace_t tr;
 
 	idx = args->entindex;
-
-	if (!EV_IsPlayer(idx))
-	{
-		return;
-	}
-
 	VectorCopy( args->origin, vecSrc );
 	VectorCopy( args->angles, angles );
 
