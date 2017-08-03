@@ -16,6 +16,7 @@ Based on HLSDK version 2.3-p3 patched by metamod team.
 <li>Uncle Mike from hlfx.ru for his Xash3D engine which was very helpful in hard moments.</li>
 <li>KORD_12.7 for constant helping and nice suggestions.</li>
 <li>AGHL.RU community for bug reporting and suggestions.</li>
+<li>JetBrains company for free access to great developer tools.</li>
 </ul>
 
 ## Installation
