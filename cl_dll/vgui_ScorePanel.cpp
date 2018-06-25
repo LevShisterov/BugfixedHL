@@ -53,7 +53,7 @@ public:
 	char				*m_pTitleDeafult;			// Replacement for default localization and title when localization not found.
 	char				*m_pDeafultLocalization;	// Default localization that should be replaced.
 	int					m_Width;					// Based on 640 width. Will be scaled to fit other resolutions.
-	int					m_CalculatedWidth;			// Widht scaled to current resolution.
+	int					m_CalculatedWidth;			// Width scaled to current resolution.
 	Label::Alignment	m_Alignment;
 };
 
@@ -61,8 +61,9 @@ public:
 SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 {
 	{NULL,				"",				"",			15,		0,	Label::a_west},		// tracker
-	{NULL,				"",				"",			152,	0,	Label::a_west},		// name
+	{NULL,				"",				"",			137,	0,	Label::a_west},		// name
 	{"#STEAMID",		"SteamID",		"",			75,		0,	Label::a_west},		// SteamID
+	{"#KD",				"K/D",			"KD",		15,		0,	Label::a_east},		// Score
 	{"#SCORE",			"Score",		"SCORE",	45,		0,	Label::a_east},		// Score
 	{"#DEATHS",			"Deaths",		"DEATHS",	45,		0,	Label::a_east},		// Deaths
 	{"#PING",			"Ping",			"PING",		45,		0,	Label::a_east},		// Ping/Loss
@@ -71,10 +72,11 @@ SBColumnInfo g_ColumnInfo[NUM_COLUMNS] =
 };
 
 // By default controls will have this width and visibility, so set them, so changes gets correctly applied in Configure.
-#define DRAW_DEFAULT	(DRAW_NEXTMAP | DRAW_LOSS | DRAW_STEAMID)
+#define DRAW_DEFAULT	(DRAW_NEXTMAP | DRAW_LOSS | DRAW_STEAMID | DRAW_KD)
 #define DRAW_NEXTMAP	1 << 0
 #define DRAW_LOSS		1 << 1
 #define DRAW_STEAMID	1 << 2
+#define DRAW_KD			1 << 3
 
 #define TEAM_NO				0
 #define TEAM_YES			1
@@ -270,6 +272,7 @@ ScorePanel::ScorePanel(int x, int y, int wide, int tall) : Panel(x, y, wide, tal
 				break;
 			case COLUMN_VOICE:
 			case COLUMN_TRACKER:
+			case COLUMN_KD:
 				m_PlayerEntries[col][row].setContentAlignment(Label::a_center);
 				break;
 			default:
@@ -315,9 +318,11 @@ void ScorePanel::Configure(void)
 	bool drawNextmap = gHUD.m_pCvarShowNextmap->value ? true : false;
 	bool drawLoss = gHUD.m_pCvarShowLoss->value ? true : false;
 	bool drawSteamId = gHUD.m_pCvarShowSteamId->value ? true : false;
+	bool drawKd = gHUD.m_pCvarShowKd->value ? true : false;
 	if (drawNextmap) newConfiguration |= DRAW_NEXTMAP;
 	if (drawLoss) newConfiguration |= DRAW_LOSS;
 	if (drawSteamId) newConfiguration |= DRAW_STEAMID;
+	if (drawKd) newConfiguration |= DRAW_KD;
 
 	if (newConfiguration == m_iCurrentConfiguration) return;
 
@@ -356,6 +361,21 @@ void ScorePanel::Configure(void)
 		{
 			m_HeaderGrid.SetColumnWidth(COLUMN_NAME, m_HeaderGrid.GetColumnWidth(COLUMN_NAME) + m_HeaderGrid.GetColumnWidth(COLUMN_STEAMID));
 			m_HeaderGrid.SetColumnWidth(COLUMN_STEAMID, 0);
+		}
+		changedSizes = true;
+	}
+
+	if ((m_iCurrentConfiguration & DRAW_KD) != (newConfiguration & DRAW_KD))
+	{
+		if (drawKd)
+		{
+			m_HeaderGrid.SetColumnWidth(COLUMN_STEAMID, g_ColumnInfo[COLUMN_STEAMID].m_CalculatedWidth);
+			m_HeaderGrid.SetColumnWidth(COLUMN_KD, g_ColumnInfo[COLUMN_KD].m_CalculatedWidth);
+		}
+		else
+		{
+			m_HeaderGrid.SetColumnWidth(COLUMN_STEAMID, m_HeaderGrid.GetColumnWidth(COLUMN_KD) + m_HeaderGrid.GetColumnWidth(COLUMN_KD));
+			m_HeaderGrid.SetColumnWidth(COLUMN_KD, 0);
 		}
 		changedSizes = true;
 	}
@@ -912,6 +932,7 @@ void ScorePanel::FillGrid()
 					}
 					break;
 				case COLUMN_STEAMID:
+				case COLUMN_KD:
 					break;
 				case COLUMN_KILLS:
 					if ( m_iIsATeam[row] == TEAM_YES )
@@ -958,6 +979,17 @@ void ScorePanel::FillGrid()
 				case COLUMN_STEAMID:
 					if (gHUD.m_pCvarShowSteamId->value)
 						sprintf(sz, "%s", g_PlayerSteamId[m_iSortedRows[row]]);
+					break;
+				case COLUMN_KD:
+					if (gHUD.m_pCvarShowKd->value)
+					{
+						if (g_PlayerExtraInfo[m_iSortedRows[row]].deaths == 0) strcpy(sz, "-");
+						else
+						{
+							double kd = (float)g_PlayerExtraInfo[m_iSortedRows[row]].frags / (float)g_PlayerExtraInfo[m_iSortedRows[row]].deaths;
+							sprintf(sz, "%.2f", kd);
+						}
+					}
 					break;
 				case COLUMN_KILLS:
 					sprintf(sz, "%d", g_PlayerExtraInfo[ m_iSortedRows[row] ].frags);
