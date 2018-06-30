@@ -8,7 +8,7 @@
 #include "r_efx.h"
 #include "aglocation.h"
 
-AgLocation::AgLocation()
+AgLocation::AgLocation(): m_nextLocation(NULL)
 {
 	m_vPosition = Vector(0, 0, 0);
 }
@@ -19,6 +19,6 @@ AgLocation::~AgLocation()
 
 void AgLocation::Show()
 {
-	int iSpot = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/laserdot.spr");
-	gEngfuncs.pEfxAPI->R_TempSprite(m_vPosition, vec3_origin, 1, iSpot, kRenderTransAlpha, kRenderFxNoDissipation, 255.0, 10, FTENT_SPRCYCLE);
+	const int spot = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/laserdot.spr");
+	gEngfuncs.pEfxAPI->R_TempSprite(m_vPosition, vec3_origin, 1, spot, kRenderTransAlpha, kRenderFxNoDissipation, 255.0, 10, FTENT_SPRCYCLE);
 }
