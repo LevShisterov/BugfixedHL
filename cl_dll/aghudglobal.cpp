@@ -91,6 +91,17 @@ int AgHudGlobal::MsgFunc_Gametype(const char *pszName, int iSize, void *pbuf)
 
 int AgHudGlobal::MsgFunc_AuthID(const char *pszName, int iSize, void *pbuf)
 {
+	BEGIN_READ(pbuf, iSize);
+	const int slot = READ_BYTE();
+	char* steamid = READ_STRING();
+
+	if (!strncmp(steamid, "STEAM_", 6) ||
+		!strncmp(steamid, "VALVE_", 6))
+		strncpy(g_PlayerSteamId[slot], steamid + 6, MAX_STEAMID); // cutout "STEAM_" or "VALVE_" start of the string
+	else
+		strncpy(g_PlayerSteamId[slot], steamid, MAX_STEAMID);
+	g_PlayerSteamId[slot][MAX_STEAMID] = 0;
+
 	return 1;
 }
 
