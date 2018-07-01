@@ -69,6 +69,7 @@ int CHudTimer::VidInit(void)
 	m_flDemoSyncTime = 0;
 	m_bDemoSyncTimeValid = false;
 	m_flNextSyncTime = 0;
+	m_flSynced = false;
 	m_flEndtime = 0;
 	m_bDelayTimeleftReading = true;
 	memset(m_flCustomTimerStart, 0, sizeof(m_flCustomTimerStart));
@@ -93,9 +94,14 @@ int CHudTimer::VidInit(void)
 
 int CHudTimer::MsgFunc_Timer(const char *pszName, int iSize, void *pbuf)
 {
-	//BEGIN_READ(pbuf, iSize);
-	//int timelimit = READ_LONG();
+	BEGIN_READ(pbuf, iSize);
+	int timelimit = READ_LONG();
 	//int effectiveTime = READ_LONG();
+
+	if (!m_flSynced)
+	{
+		m_flEndtime = timelimit;
+	}
 
 	return 1;
 }
@@ -119,7 +125,7 @@ void CHudTimer::SyncTimer(float fTime)
 	{
 		if (status.remote_address.type == NA_IP)
 		{
-			SyncTimerRemote(*((unsigned int*)status.remote_address.ip), status.remote_address.port, fTime, status.latency);
+			SyncTimerRemote(*(unsigned int*)status.remote_address.ip, status.remote_address.port, fTime, status.latency);
 			if (g_eRulesRequestStatus == SOCKET_AWAITING_CODE || g_eRulesRequestStatus == SOCKET_AWAITING_ANSWER)
 				return;
 		}
@@ -299,6 +305,7 @@ void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTim
 		return;
 	}
 
+	m_flSynced = true;
 	g_eRulesRequestStatus = SOCKET_IDLE;
 	m_flNextSyncTime = fTime + 10;	// Don't sync offten, we get update notifications via svc_print
 

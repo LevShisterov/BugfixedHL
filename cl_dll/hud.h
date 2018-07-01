@@ -525,7 +525,7 @@ public:
 	void Think(void);
 	int Draw(float flTime);
 
-	static int MsgFunc_Timer(const char *pszName, int iSize, void *pbuf);
+	int MsgFunc_Timer(const char *pszName, int iSize, void *pbuf);
 
 	void DoResync(void);
 	void ReadDemoTimerBuffer(int type, const unsigned char *buffer);
@@ -555,6 +555,7 @@ private:
 	float	m_flDemoSyncTime;
 	bool	m_bDemoSyncTimeValid;
 	float	m_flNextSyncTime;
+	bool	m_flSynced;
 	float	m_flEndtime;
 	bool	m_bDelayTimeleftReading;
 	float	m_flCustomTimerStart[MAX_CUSTOM_TIMERS];
