@@ -319,6 +319,27 @@ void SvcPrint(void)
 
 	pEngineMessages.pfnSvcPrint();
 }
+void SvcTempEntity(void)
+{
+	if (g_EngineBuf && g_EngineBufSize && g_EngineReadPos)
+	{
+		BEGIN_READ(*g_EngineBuf, *g_EngineBufSize, *g_EngineReadPos);
+		const int type = READ_BYTE();
+		switch (type)
+		{
+		case TE_EXPLOSION:
+			if (gHUD.m_pCvarRDynamicEntLight->value == 0)
+			{
+				*(*(byte**)g_EngineBuf + *g_EngineReadPos + 1 + 6 + 2 + 2) |= TE_EXPLFLAG_NODLIGHTS;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	pEngineMessages.pfnSvcTempEntity();
+}
 void SvcNewUserMsg(void)
 {
 	if (g_EngineBuf && g_EngineBufSize && g_EngineReadPos)
@@ -436,6 +457,7 @@ void HookSvcMessages(void)
 {
 	memset(&pEngineMessages, 0, sizeof(cl_enginemessages_t));
 	pEngineMessages.pfnSvcPrint = SvcPrint;
+	pEngineMessages.pfnSvcTempEntity = SvcTempEntity;
 	pEngineMessages.pfnSvcNewUserMsg = SvcNewUserMsg;
 	pEngineMessages.pfnSvcStuffText = SvcStuffText;
 	pEngineMessages.pfnSvcSendCvarValue = SvcSendCvarValue;

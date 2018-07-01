@@ -93,6 +93,17 @@ structure, we need to copy them into the state structure at this point.
 */
 void DLLEXPORT HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client )
 {
+	// Ugly HL engine calls HUD_AddEntity after adding dynamic lights and other effect.
+	// So have to hack in here. Called once per packet.
+	if (gHUD.m_pCvarRDynamicEntLight->value == 0)
+	{
+		frame_t* frame = (frame_t*)((byte *)client - offsetof(frame_t, clientdata));
+		for (int i = 0; i < frame->packet_entities.num_entities; i++)
+		{
+			frame->packet_entities.entities[i].effects &= ~(EF_BRIGHTLIGHT | EF_DIMLIGHT | EF_LIGHT);
+		}
+	}
+
 	VectorCopy( client->origin, state->origin );
 
 	// Wider range health

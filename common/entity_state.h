@@ -192,4 +192,33 @@ typedef struct local_state_s
 	weapon_data_t  weapondata[ 32 ];
 } local_state_t;
 
+typedef struct packet_entities_s
+{
+	int num_entities;
+	unsigned __int8 flags[32];
+	entity_state_t* entities;
+} packet_entities_t;
+
+typedef struct frame_s
+{
+	double receivedtime;
+	double latency;
+	qboolean invalid;
+	qboolean choked;
+	entity_state_t playerstate[32];
+	double time;
+	clientdata_t clientdata;
+	weapon_data_t weapondata[64];
+	packet_entities_t packet_entities;
+	unsigned __int16 clientbytes;
+	unsigned __int16 playerinfobytes;
+	unsigned __int16 packetentitybytes;
+	unsigned __int16 tentitybytes;
+	unsigned __int16 soundbytes;
+	unsigned __int16 eventbytes;
+	unsigned __int16 usrbytes;
+	unsigned __int16 voicebytes;
+	unsigned __int16 msgbytes;
+} frame_t;
+
 #endif // !ENTITY_STATEH
