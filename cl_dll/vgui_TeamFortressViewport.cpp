@@ -297,7 +297,7 @@ bool CCommandMenu::RecalculateVisibles( int iYOffset, bool bHideAll )
 		}
 		else
 		{
- 			// If it's got a submenu, force it to check visibilities
+			// If it's got a submenu, force it to check visibilities
 			if ( m_aButtons[i]->GetSubMenu() != NULL )
 			{
 				if ( !(m_aButtons[i]->GetSubMenu())->RecalculateVisibles( 0 , false ) )

@@ -203,6 +203,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\hud.cpp" />
     <ClCompile Include="..\hud_msg.cpp" />
     <ClCompile Include="..\hud_redraw.cpp" />
+    <ClCompile Include="..\hud_scores.cpp" />
     <ClCompile Include="..\hud_servers.cpp" />
     <ClCompile Include="..\hud_spectator.cpp" />
     <ClCompile Include="..\hud_timer.cpp" />

@@ -432,6 +432,7 @@ void CHud :: Init( void )
 	m_TextMessage.Init();
 	m_StatusIcons.Init();
 	m_Timer.Init();
+	m_Scores.Init();
 
 	if (g_iIsAg)
 	{
@@ -590,6 +591,7 @@ void CHud :: VidInit( void )
 	m_TextMessage.VidInit();
 	m_StatusIcons.VidInit();
 	m_Timer.VidInit();
+	m_Scores.VidInit();
 
 	if (g_iIsAg)
 	{
@@ -855,7 +857,7 @@ void CHud::GetHudColor( int hudPart, int value, int &r, int &g, int &b )
 	if (hudPart == 0) { ParseColor(m_pCvarColor->string, m_hudColor); c = &m_hudColor; }
 	else if (value >= 90) { ParseColor(m_pCvarColor1->string, m_hudColor1); c = &m_hudColor1; }
 	else if (value >= 50 && value <= 90) { ParseColor(m_pCvarColor2->string, m_hudColor2); c = &m_hudColor2; }
-	else if (value > 25 && value < 50 || hudPart == 2) { ParseColor(m_pCvarColor3->string, m_hudColor3); c = &m_hudColor3; }
+	else if ((value > 25 && value < 50) || hudPart == 2) { ParseColor(m_pCvarColor3->string, m_hudColor3); c = &m_hudColor3; }
 	else { r = 255; g = 0; b = 0; return; }	// UnpackRGB(r, g, b, RGB_REDISH);
 	r = c->r;
 	g = c->g;
