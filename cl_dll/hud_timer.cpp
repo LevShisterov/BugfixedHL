@@ -42,8 +42,13 @@ enum RulesRequestStatus
 SOCKET g_timerSocket = NULL;	// We will declare socket here to not include winsocks in hud.h
 
 
+DECLARE_MESSAGE(m_Timer, Timer)
+
 int CHudTimer::Init(void)
 {
+	if (g_iIsAg)
+		HOOK_MESSAGE(Timer);
+
 	gHUD.AddHudElem(this);
 
 	m_iFlags |= HUD_ACTIVE;
@@ -85,6 +90,15 @@ int CHudTimer::VidInit(void)
 
 	return 1;
 };
+
+int CHudTimer::MsgFunc_Timer(const char *pszName, int iSize, void *pbuf)
+{
+	//BEGIN_READ(pbuf, iSize);
+	//int timelimit = READ_LONG();
+	//int effectiveTime = READ_LONG();
+
+	return 1;
+}
 
 void CHudTimer::DoResync(void)
 {

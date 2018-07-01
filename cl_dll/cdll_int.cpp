@@ -54,6 +54,7 @@ void InitInput (void);
 void ShutdownInput (void);
 void EV_HookEvents( void );
 void IN_Commands( void );
+int HUD_IsGame(const char *game);
 
 /*
 ========================== 
@@ -286,6 +287,8 @@ int DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 	gEngfuncs = *pEnginefuncs;
 
 	EV_HookEvents();
+
+	g_iIsAg = HUD_IsGame("ag");
 
 	return 1;
 }

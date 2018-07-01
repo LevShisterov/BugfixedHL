@@ -106,6 +106,10 @@ uint32_t g_pEngineClConnectionlessPacketOffset = 0;
 size_t g_CL_Parse_VoiceDataPlace = 0;
 uint8_t g_CL_Parse_VoiceDataPlaceBackup[5];
 
+/* Client CRC fix variables */
+size_t g_TfcFolderName = 0;
+uint8_t g_TfcFolderNamePlaceBackup[4];
+
 /* GameUI fix variables */
 int g_iLinesCounter = 0;
 ThisCallIntInt g_pFunctionReplacedByCounter;
@@ -207,7 +211,7 @@ size_t ConvertHexString(const char *srcHexString, unsigned char *outBuffer, size
 }
 size_t MemoryFindForward(size_t start, size_t end, const unsigned char *pattern, const unsigned char *mask, size_t pattern_len)
 {
-	// Ensure start is lower then the end
+	// Ensure start is lower than the end
 	if (start > end)
 	{
 		size_t reverse = end;
@@ -268,7 +272,7 @@ size_t MemoryFindForward(size_t start, size_t end, const char *pattern, const ch
 }
 size_t MemoryFindBackward(size_t start, size_t end, const unsigned char *pattern, const unsigned char *mask, size_t pattern_len)
 {
-	// Ensure start is higher then the end
+	// Ensure start is higher than the end
 	if (start < end)
 	{
 		size_t reverse = end;
@@ -1036,6 +1040,35 @@ void PatchCL_Parse_VoiceData(void)
 	}
 }
 
+void PatchClientCrcForAg(void)
+{
+	if (!g_TfcFolderName)
+	{
+		// Find "tfc" string that is used for CRC check
+		const char data1[] = "74666300 76616C766500";
+		const char mask1[] = "FFFFFFFF FFFFFFFFFFFF";
+		size_t addr1 = MemoryFindForward(g_EngineModuleBase, g_EngineModuleEnd, data1, mask1);
+		if (!addr1 || MemoryFindForward(addr1 + 1, g_EngineModuleEnd, data1, mask1))
+		{
+			strncat(g_szPatchErrors, "Engine patch: client CRC fix place not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			return;
+		}
+
+		g_TfcFolderName = addr1;
+
+		// Patch client CRC: place "ag" instead of "tfc"
+		const char data2[] = "61670000";
+		ConvertHexString(data2, g_TfcFolderNamePlaceBackup, sizeof(g_TfcFolderNamePlaceBackup));
+		ExchangeMemoryBytes((size_t *)(g_TfcFolderName), (size_t *)g_TfcFolderNamePlaceBackup, 4);
+	}
+	else
+	{
+		// Restore "tfc" string
+		ExchangeMemoryBytes((size_t *)(g_TfcFolderName), (size_t *)g_TfcFolderNamePlaceBackup, 4);
+		g_TfcFolderName = 0;
+	}
+}
+
 void FindColorOffset(void)
 {
 	if (!g_PanelColorOffset)
@@ -1376,6 +1409,7 @@ void PatchEngine(void)
 	PatchFpsBugPlace();
 	PatchConnectionlessPacketHandler();
 	PatchCL_Parse_VoiceData();
+	PatchClientCrcForAg();
 
 	FindVideoModeData();
 }
@@ -1402,6 +1436,7 @@ void UnPatchEngine(void)
 	}
 
 	PatchCL_Parse_VoiceData();
+	PatchClientCrcForAg();
 	PatchConnectionlessPacketHandler();
 	PatchFpsBugPlace();
 

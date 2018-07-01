@@ -29,7 +29,6 @@
 enginefuncs_t g_engfuncs;
 globalvars_t  *gpGlobals;
 
-
 #ifdef _WIN32
 
 // Required DLL entry point
@@ -51,6 +50,10 @@ void DLLEXPORT GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t
 {
 	memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
 	gpGlobals = pGlobals;
+
+	char gd[MAX_PATH];
+	GET_GAME_DIR(gd);
+	g_iIsAg = strcmp(gd, "ag") == 0 ? 1 : 0;
 }
 
 
@@ -62,6 +65,10 @@ void GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals
 {
 	memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
 	gpGlobals = pGlobals;
+
+	char gd[MAX_PATH];
+	GET_GAME_DIR(gd);
+	g_iIsAg = strcmp(gd, "ag") == 0 ? 1 : 0;
 }
 
 }

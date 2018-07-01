@@ -431,6 +431,22 @@ void CHud :: Init( void )
 	m_TextMessage.Init();
 	m_StatusIcons.Init();
 	m_Timer.Init();
+
+	if (g_iIsAg)
+	{
+		m_Global.Init();
+		m_Countdown.Init();
+		m_CTF.Init();
+		m_Location.Init();
+		m_Longjump.Init();
+		m_Nextmap.Init();
+		m_PlayerId.Init();
+		m_Settings.Init();
+		m_SuddenDeath.Init();
+		m_Timeout.Init();
+		m_Vote.Init();
+	}
+
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
@@ -573,6 +589,22 @@ void CHud :: VidInit( void )
 	m_TextMessage.VidInit();
 	m_StatusIcons.VidInit();
 	m_Timer.VidInit();
+
+	if (g_iIsAg)
+	{
+		m_Global.VidInit();
+		m_Countdown.VidInit();
+		m_CTF.VidInit();
+		m_Location.VidInit();
+		m_Longjump.VidInit();
+		m_Nextmap.VidInit();
+		m_PlayerId.VidInit();
+		m_Settings.VidInit();
+		m_SuddenDeath.VidInit();
+		m_Timeout.VidInit();
+		m_Vote.VidInit();
+	}
+
 	GetClientVoiceMgr()->VidInit();
 }
 

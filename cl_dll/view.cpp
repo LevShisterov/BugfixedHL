@@ -1478,8 +1478,8 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 			VectorCopy(velocity, pparams->simvel);
 		}
 
-		// predict missing client data and set weapon model ( in HLTV mode or inset in eye mode )
-		if ( gEngfuncs.IsSpectateOnly() )
+		// predict missing client data and set weapon model ( in HLTV mode, inset in eye mode or in AG )
+		if ( gEngfuncs.IsSpectateOnly() || g_iIsAg )
 		{
 			V_GetInEyePos( g_iUser2, pparams->simorg, pparams->cl_viewangles );
 
