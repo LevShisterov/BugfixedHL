@@ -20,6 +20,7 @@
 #include "path.h"
 #include "demo_api.h"
 #include "vgui_TeamFortressViewport.h"
+#include "memory.h"
 
 
 bool g_bFormatError = false;
@@ -503,20 +504,26 @@ void ResultsInit(void)
 	// Get mod directory
 	const char *gameDirectory = gEngfuncs.pfnGetGameDirectory();
 	strncpy(g_szModDirectory, gameDirectory, MAX_PATH - 1);
-	// Get language name from the registry
-	HKEY rKey;
-	char value[MAX_PATH];
-	DWORD valueSize = sizeof(value);
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_QUERY_VALUE, &rKey) == ERROR_SUCCESS)
+
+	const char *info = gEngfuncs.ServerInfo_ValueForKey("*gamedir");
+
+	if (!g_NewerBuild)
 	{
-		if (RegQueryValueEx(rKey, "language", NULL, NULL, (unsigned char *)value, &valueSize) == ERROR_SUCCESS &&
-			value[0] && strcmp(value, "english") != 0 &&
-			strlen(g_szModDirectory) + strlen(value) + 1 < MAX_PATH - 1)
+		// Get language name from the registry, because older engines write demos in languaged directory
+		HKEY rKey;
+		char value[MAX_PATH];
+		DWORD valueSize = sizeof(value);
+		if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_QUERY_VALUE, &rKey) == ERROR_SUCCESS)
 		{
-			strcat(g_szModDirectory, "_");
-			strcat(g_szModDirectory, value);
+			if (RegQueryValueEx(rKey, "language", NULL, NULL, (unsigned char *)value, &valueSize) == ERROR_SUCCESS &&
+				value[0] && strcmp(value, "english") != 0 &&
+				strlen(g_szModDirectory) + strlen(value) + 1 < MAX_PATH - 1)
+			{
+				strcat(g_szModDirectory, "_");
+				strcat(g_szModDirectory, value);
+			}
+			RegCloseKey(rKey);
 		}
-		RegCloseKey(rKey);
 	}
 
 	// Get full path to mod directory

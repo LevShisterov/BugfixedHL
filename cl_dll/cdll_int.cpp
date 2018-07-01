@@ -58,7 +58,7 @@ int HUD_IsGame(const char *game);
 
 /*
 ========================== 
-    Initialize
+	Initialize
 
 Called when the DLL is first loaded.
 ==========================

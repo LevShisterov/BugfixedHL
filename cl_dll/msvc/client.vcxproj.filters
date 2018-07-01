@@ -396,9 +396,6 @@
     <ClInclude Include="..\in_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\itrackeruser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\kbutton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -430,9 +427,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\StudioModelRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\util_vector.h">
@@ -511,9 +505,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\dlls\memory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">

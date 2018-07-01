@@ -64,6 +64,9 @@ size_t g_GameUiModuleBase = 0, g_GameUiModuleEnd = 0;
 /* ServerBrowser addresses */
 size_t g_ServerBrowserBase = 0, g_ServerBrowserEnd = 0;
 
+/* Engine build type */
+bool g_NewerBuild = false;
+
 /* Messages variables */
 size_t g_SvcMessagesTable = 0;
 void **g_EngineBuf = 0;
@@ -856,11 +859,13 @@ void PatchFpsBugPlace(void)
 			size_t offset = (size_t)FpsBugFix - (g_FpsBugPlace + 20 + 11);
 			*(size_t*)(&(g_FpsBugPlaceBackup[7])) = offset;
 			ExchangeMemoryBytes((size_t *)(g_FpsBugPlace + 20), (size_t *)g_FpsBugPlaceBackup, 12);
+			g_NewerBuild = false;
 		}
-		//else
-		//{
-		//	strncat(g_szPatchErrors, "Engine patch: offset of FPS bug place not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
-		//}
+		else
+		{
+			//strncat(g_szPatchErrors, "Engine patch: offset of FPS bug place not found.\n", sizeof(g_szPatchErrors) - strlen(g_szPatchErrors) - 1);
+			g_NewerBuild = true;
+		}
 	}
 	else
 	{

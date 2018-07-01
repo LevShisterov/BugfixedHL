@@ -248,7 +248,6 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ResourceCompile Include="client.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\common\itrackeruser.h" />
     <ClInclude Include="..\..\dlls\com_utils.h" />
     <ClInclude Include="..\..\dlls\memory.h" />
     <ClInclude Include="..\..\dlls\path.h" />
@@ -303,9 +302,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClInclude Include="..\StudioModelRenderer.h" />
     <ClInclude Include="..\studio_util.h" />
     <ClInclude Include="..\svc_messages.h" />
-    <ClInclude Include="..\util.h" />
     <ClInclude Include="..\util_vector.h" />
-    <ClInclude Include="..\version.h" />
     <ClInclude Include="..\vgui_ConsolePanel.h" />
     <ClInclude Include="..\vgui_ControlConfigPanel.h" />
     <ClInclude Include="..\vgui_int.h" />

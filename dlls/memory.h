@@ -137,5 +137,6 @@ extern void **g_EngineBuf;
 extern int *g_EngineBufSize;
 extern int *g_EngineReadPos;
 extern UserMessage **g_pUserMessages;
+extern bool g_NewerBuild;
 
 #endif MEMORY_H
