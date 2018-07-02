@@ -148,6 +148,54 @@ int GetColor(char cChar)
 		iColor = cChar - '0';
 	return iColor;
 }
+int AgDrawHudString(int xpos, int ypos, int iMaxX, const char *szIt, int r, int g, int b)
+{
+	// calc center
+	int iSizeX = 0;
+	char* pszIt = (char*)szIt;
+	for (; *pszIt != 0 && *pszIt != '\n'; pszIt++)
+		iSizeX += gHUD.m_scrinfo.charWidths[*pszIt]; // variable-width fonts look cool
+
+	int rx = r, gx = g, bx = b;
+
+	pszIt = (char*)szIt;
+	// draw the string until we hit the null character or a newline character
+	for (; *pszIt != 0 && *pszIt != '\n'; pszIt++)
+	{
+		if (*pszIt == '^')
+		{
+			pszIt++;
+			int iColor = GetColor(*pszIt);
+			if (iColor < iNumConsoleColors && iColor >= 0)
+			{
+				if (0 >= iColor)// || 0 == g_pcl_show_colors->value)
+				{
+					rx = r;
+					gx = g;
+					bx = b;
+				}
+				else
+				{
+					rx = arrConsoleColors[iColor][0];
+					gx = arrConsoleColors[iColor][1];
+					bx = arrConsoleColors[iColor][2];
+				}
+				pszIt++;
+				if (*pszIt == 0 || *pszIt == '\n')
+					break;
+			}
+			else
+				pszIt--;
+		}
+
+		int next = xpos + gHUD.m_scrinfo.charWidths[*pszIt]; // variable-width fonts look cool
+		if (next > iMaxX)
+			return xpos;
+		TextMessageDrawChar(xpos, ypos, *pszIt, rx, gx, bx);
+		xpos = next;
+	}
+	return xpos;
+}
 int AgDrawHudStringCentered(int xpos, int ypos, int iMaxX, const char *szIt, int r, int g, int b)
 {
 	// calc center

@@ -53,7 +53,7 @@ int AgHudVote::Draw(float fTime)
 	sprintf(szText, "Vote: %s %s", m_szVote, m_szValue);
 	gHUD.DrawHudString(ScreenWidth / 20, ScreenHeight / 8, szText, r, g, b);
 	sprintf(szText, "Called by: %s", m_szCalled);
-	gHUD.DrawHudString(ScreenWidth / 20, ScreenHeight / 8 + gHUD.m_scrinfo.iCharHeight, szText, r, g, b);
+	AgDrawHudString(ScreenWidth / 20, ScreenHeight / 8 + gHUD.m_scrinfo.iCharHeight, ScreenWidth, szText, r, g, b);
 	if (Called == m_iVoteStatus)
 	{
 		sprintf(szText, "For: %d", m_iFor);

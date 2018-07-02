@@ -29,6 +29,7 @@ inline int AgGametype()
 	return g_GameType;
 };
 
+int AgDrawHudString(int xpos, int ypos, int iMaxX, const char *szIt, int r, int g, int b);
 int AgDrawHudStringCentered(int xpos, int ypos, int iMaxX, const char *szIt, int r, int g, int b);
 
 #endif // __AGHUDGLOBAL_H__
