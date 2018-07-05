@@ -54,6 +54,7 @@ int CHudTimer::Init(void)
 	m_iFlags |= HUD_ACTIVE;
 
 	m_pCvarHudTimer = gEngfuncs.pfnRegisterVariable("hud_timer", "1", FCVAR_ARCHIVE);
+	m_pCvarHudTimerSync = gEngfuncs.pfnRegisterVariable("hud_timer_sync", "1", FCVAR_ARCHIVE);
 	m_pCvarHudNextmap = gEngfuncs.pfnRegisterVariable("hud_nextmap", "1", FCVAR_ARCHIVE);
 
 	return 1;
@@ -70,7 +71,8 @@ int CHudTimer::VidInit(void)
 	m_bDemoSyncTimeValid = false;
 	m_flNextSyncTime = 0;
 	m_flSynced = false;
-	m_flEndtime = 0;
+	m_flEndTime = 0;
+	m_flEffectiveTime = 0;
 	m_bDelayTimeleftReading = true;
 	memset(m_flCustomTimerStart, 0, sizeof(m_flCustomTimerStart));
 	memset(m_flCustomTimerEnd, 0, sizeof(m_flCustomTimerEnd));
@@ -96,11 +98,12 @@ int CHudTimer::MsgFunc_Timer(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
 	int timelimit = READ_LONG();
-	//int effectiveTime = READ_LONG();
+	int effectiveTime = READ_LONG();
 
 	if (!m_flSynced)
 	{
-		m_flEndtime = timelimit;
+		m_flEndTime = timelimit;
+		m_flEffectiveTime = effectiveTime;
 	}
 
 	return 1;
@@ -115,6 +118,12 @@ void CHudTimer::DoResync(void)
 void CHudTimer::SyncTimer(float fTime)
 {
 	if (gEngfuncs.pDemoAPI->IsPlayingback()) return;
+
+	if ((int)m_pCvarHudTimerSync->value == 0)
+	{
+		m_flSynced = false;
+		return;
+	}
 
 	// Make sure networking system has started.
 	NET_API->InitNetworking();
@@ -163,24 +172,24 @@ void CHudTimer::SyncTimer(float fTime)
 
 void CHudTimer::SyncTimerLocal(float fTime)
 {
-	float prevEndtime = m_flEndtime;
+	float prevEndtime = m_flEndTime;
 	int prevAgVersion = m_eAgVersion;
 
 	// Get timer settings directly from cvars
 	if (m_pCvarMpTimelimit && m_pCvarMpTimeleft)
 	{
-		m_flEndtime = m_pCvarMpTimelimit->value * 60;
+		m_flEndTime = m_pCvarMpTimelimit->value * 60;
 		if (!m_bDelayTimeleftReading)
 		{
 			float timeleft = m_pCvarMpTimeleft->value;
 			if (timeleft > 0)
 			{
 				float endtime = timeleft + fTime;
-				if (fabs(m_flEndtime - endtime) > 1.5)
-					m_flEndtime = endtime;
+				if (fabs(m_flEndTime - endtime) > 1.5)
+					m_flEndTime = endtime;
 			}
 		}
-		if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
+		if (m_flEndTime != prevEndtime) m_bNeedWriteTimer = true;
 	}
 
 	// Get AG version
@@ -219,7 +228,7 @@ void CHudTimer::SyncTimerLocal(float fTime)
 
 void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTime, double latency)
 {
-	float prevEndtime = m_flEndtime;
+	float prevEndtime = m_flEndTime;
 	int prevAgVersion = m_eAgVersion;
 	char buffer[2048];
 	int len = 0;
@@ -314,11 +323,11 @@ void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTim
 	char *value = NetGetRuleValueFromBuffer(m_szPacketBuffer, m_iReceivedSize, "mp_timelimit");
 	if (value && value[0])
 	{
-		m_flEndtime = atof(value) * 60;
+		m_flEndTime = atof(value) * 60;
 	}
 	else
 	{
-		m_flEndtime = 0;
+		m_flEndTime = 0;
 	}
 	value = NetGetRuleValueFromBuffer(m_szPacketBuffer, m_iReceivedSize, "mp_timeleft");
 	if (value && value[0] && !gHUD.m_iIntermission && !m_bDelayTimeleftReading)
@@ -327,11 +336,11 @@ void CHudTimer::SyncTimerRemote(unsigned int ip, unsigned short port, float fTim
 		if (timeleft > 0)
 		{
 			float endtime = timeleft + (int)(fTime - latency + 0.5);
-			if (fabs(m_flEndtime - endtime) > 1.5)
-				m_flEndtime = endtime;
+			if (fabs(m_flEndTime - endtime) > 1.5)
+				m_flEndTime = endtime;
 		}
 	}
-	if (m_flEndtime != prevEndtime) m_bNeedWriteTimer = true;
+	if (m_flEndTime != prevEndtime) m_bNeedWriteTimer = true;
 
 	// Get AG version
 	if (m_eAgVersion == SV_AG_UNKNOWN)
@@ -395,7 +404,7 @@ void CHudTimer::Think(void)
 		if (m_bNeedWriteTimer)
 		{
 			i = 0;
-			*(float *)&buffer[i] = m_flEndtime;
+			*(float *)&buffer[i] = m_flEndTime;
 			i += sizeof(float);
 			*(int *)&buffer[i] = m_eAgVersion;
 			i += sizeof(int);
@@ -441,7 +450,7 @@ void CHudTimer::ReadDemoTimerBuffer(int type, const unsigned char *buffer)
 		m_bDemoSyncTimeValid = true;
 		break;
 	case TYPE_TIMER:
-		m_flEndtime = *(float *)&buffer[i];
+		m_flEndTime = *(float *)&buffer[i];
 		i += sizeof(float);
 		m_eAgVersion = *(int *)&buffer[i];
 		i += sizeof(int);
@@ -530,7 +539,7 @@ int CHudTimer::Draw(float fTime)
 	ScaleColors(r, g, b, a);
 
 	// Draw timer
-	float timeleft = (int)(m_flEndtime - currentTime) + 1;
+	float timeleft = m_flSynced ? (int)(m_flEndTime - currentTime) + 1 : (int)(m_flEndTime - m_flEffectiveTime);
 	int hud_timer = (int)m_pCvarHudTimer->value;
 	int ypos = ScreenHeight * TIMER_Y;
 	switch(hud_timer)
@@ -557,13 +566,13 @@ int CHudTimer::Draw(float fTime)
 
 	// Draw next map
 	int hud_nextmap = (int)m_pCvarHudNextmap->value;
-	if (m_szNextmap[0] && timeleft < 60 && timeleft >= 0 && m_flEndtime > 0 &&
+	if (m_szNextmap[0] && timeleft < 60 && timeleft >= 0 && m_flEndTime > 0 &&
 		(hud_nextmap == 2 || (hud_nextmap == 1 && timeleft >= 37)))
 	{
 		sprintf(text, "Nextmap is %s", m_szNextmap);
 		ypos = ScreenHeight * (TIMER_Y + TIMER_Y_NEXT_OFFSET);
 		int width = TextMessageDrawString(ScreenWidth + 1, ypos, text, 0, 0, 0);
-		float a = (timeleft >= 40 || hud_nextmap > 1 ? 255.0 : 255.0 / 3 * ((m_flEndtime - currentTime) + 1 - 37)) * gHUD.GetHudTransparency();
+		float a = (timeleft >= 40 || hud_nextmap > 1 ? 255.0 : 255.0 / 3 * ((m_flEndTime - currentTime) + 1 - 37)) * gHUD.GetHudTransparency();
 		gHUD.GetHudColor(0, 0, r, g, b);
 		ScaleColors(r, g, b, a);
 		TextMessageDrawString((ScreenWidth - width) / 2, ypos, text, r, g, b);

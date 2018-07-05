@@ -28,6 +28,7 @@
 #include "wrect.h"
 #include "cl_dll.h"
 #include "ammo.h"
+#include <eiface.h>
 
 #define DHN_DRAWZERO	1
 #define DHN_2DIGITS		2
@@ -539,7 +540,13 @@ public:
 	};
 
 	int GetAgVersion(void) { return m_eAgVersion; }
+	float GetHudNextmap(void) { return m_pCvarHudNextmap->value; }
 	const char* GetNextmap(void) { return m_szNextmap; }
+	void SetNextmap(const char *nextmap)
+	{
+		strncpy(m_szNextmap, nextmap, HLARRAYSIZE(m_szNextmap) - 1);
+		m_szNextmap[HLARRAYSIZE(m_szNextmap) - 1] = 0;
+	}
 
 private:
 
@@ -556,7 +563,8 @@ private:
 	bool	m_bDemoSyncTimeValid;
 	float	m_flNextSyncTime;
 	bool	m_flSynced;
-	float	m_flEndtime;
+	float	m_flEndTime;
+	float	m_flEffectiveTime;
 	bool	m_bDelayTimeleftReading;
 	float	m_flCustomTimerStart[MAX_CUSTOM_TIMERS];
 	float	m_flCustomTimerEnd[MAX_CUSTOM_TIMERS];
@@ -568,6 +576,7 @@ private:
 	bool	m_bNeedWriteNextmap;
 
 	cvar_t *m_pCvarHudTimer;
+	cvar_t *m_pCvarHudTimerSync;
 	cvar_t *m_pCvarHudNextmap;
 	cvar_t *m_pCvarMpTimelimit;
 	cvar_t *m_pCvarMpTimeleft;

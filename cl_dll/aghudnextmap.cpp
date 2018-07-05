@@ -55,8 +55,14 @@ int AgHudNextmap::MsgFunc_Nextmap(const char *pszName, int iSize, void *pbuf)
 	BEGIN_READ(pbuf, iSize);
 	strcpy(m_szNextmap, READ_STRING());
 
-	m_flTurnoff = gHUD.m_flTime + 10; // Display for 10 seconds.
-	m_iFlags |= HUD_ACTIVE;
+	gHUD.m_Timer.SetNextmap(m_szNextmap);
+
+	const int hud_nextmap = (int)gHUD.m_Timer.GetHudNextmap();
+	if (hud_nextmap != 2 && hud_nextmap != 1)
+	{
+		m_flTurnoff = gHUD.m_flTime + 10; // Display for 10 seconds.
+		m_iFlags |= HUD_ACTIVE;
+	}
 
 	return 1;
 }
