@@ -96,17 +96,17 @@ int AgHudCountdown::MsgFunc_Countdown(const char *pszName, int iSize, void *pbuf
 			// Play countdown sound
 			switch (m_btCountdown)
 			{
-			case 0: gEngfuncs.pfnPlaySoundByName("barney/ba_bring.wav", 1); break;
-			case 1: gEngfuncs.pfnPlaySoundByName("barney/one.wav", 1); break;
-			case 2: gEngfuncs.pfnPlaySoundByName("barney/two.wav", 1); break;
-			case 3: gEngfuncs.pfnPlaySoundByName("barney/three.wav", 1); break;
-			case 4: gEngfuncs.pfnPlaySoundByName("barney/four.wav", 1); break;
-			case 5: gEngfuncs.pfnPlaySoundByName("barney/five.wav", 1); break;
-			case 6: gEngfuncs.pfnPlaySoundByName("barney/six.wav", 1); break;
-			case 7: gEngfuncs.pfnPlaySoundByName("barney/seven.wav", 1); break;
-			case 8: gEngfuncs.pfnPlaySoundByName("barney/eight.wav", 1); break;
-			case 9: gEngfuncs.pfnPlaySoundByName("barney/nine.wav", 1); break;
-			case 10: gEngfuncs.pfnPlaySoundByName("barney/ten.wav", 1); break;
+			case 0: PlaySound("barney/ba_bring.wav", 1); break;
+			case 1: PlaySound("fvox/one.wav", 1); break;
+			case 2: PlaySound("fvox/two.wav", 1); break;
+			case 3: PlaySound("fvox/three.wav", 1); break;
+			case 4: PlaySound("fvox/four.wav", 1); break;
+			case 5: PlaySound("fvox/five.wav", 1); break;
+			case 6: PlaySound("fvox/six.wav", 1); break;
+			case 7: PlaySound("fvox/seven.wav", 1); break;
+			case 8: PlaySound("fvox/eight.wav", 1); break;
+			case 9: PlaySound("fvox/nine.wav", 1); break;
+			case 10: PlaySound("fvox/ten.wav", 1); break;
 			default: break;
 			}
 		}
