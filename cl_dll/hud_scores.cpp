@@ -84,7 +84,7 @@ int CHudScores::Draw (float flTime)
 					if (pl_info->spectator && pl_info_extra->frags == 0)
 						continue;
 					HudScoresData* data = &m_ScoresData[m_iLines];
-					sprintf(data->szScore, "%-5i %s", pl_info_extra->frags, RemoveColorCodes(pl_info->name));
+					sprintf(data->szScore, "%-5i %s", pl_info_extra->frags, pl_info->name);
 
 					data->r = iTeamColors[pl_info_extra->teamnumber % iNumberOfTeamColors][0];
 					data->g = iTeamColors[pl_info_extra->teamnumber % iNumberOfTeamColors][1];
@@ -112,7 +112,7 @@ int CHudScores::Draw (float flTime)
 
 			ScaleColors(r, g, b, 135);
 
-			const int ixposnew = gHUD.DrawHudString(xpos, ypos, data->szScore, r, g, b);
+			const int ixposnew = AgDrawHudString(xpos, ypos, ScreenWidth, data->szScore, r, g, b);
 			m_iOverLay = max(ixposnew - xpos + 20, m_iOverLay);
 			ypos += gHUD.m_scrinfo.iCharHeight * 0.9;
 		}
