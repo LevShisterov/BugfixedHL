@@ -507,7 +507,7 @@ void ResultsInit(void)
 
 	const char *info = gEngfuncs.ServerInfo_ValueForKey("*gamedir");
 
-	if (!g_NewerBuild)
+	if (!g_bNewerBuild)
 	{
 		// Get language name from the registry, because older engines write demos in languaged directory
 		HKEY rKey;
