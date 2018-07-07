@@ -733,6 +733,7 @@ public:
 	cvar_t	*m_pCvarShowNextmap;
 	cvar_t	*m_pCvarShowLoss;
 	cvar_t	*m_pCvarShowSteamId;
+	cvar_t	*m_pCvarShowKd;
 	cvar_t	*m_pCvarColorText;
 	cvar_t	*m_pCvarRDynamicEntLight;
 
