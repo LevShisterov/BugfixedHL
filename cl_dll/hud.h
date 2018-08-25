@@ -249,7 +249,6 @@ public:
 	float GetHudTransparency();
 
 private:
-	//HUDLIST					*m_pHudList;
 	std::list<CHudBase *>	m_HudList;
 	HLHSPRITE				m_hsprLogo;
 	int						m_iLogo;
