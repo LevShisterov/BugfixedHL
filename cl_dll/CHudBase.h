@@ -61,7 +61,7 @@ public:
 	virtual void Think(void);
 	virtual void Reset(void);
 	virtual void InitHUDData(void);		// called every time a server is connected to
-
+	bool m_isDeletable = false;
 };
 
 #endif

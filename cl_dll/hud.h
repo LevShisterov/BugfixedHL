@@ -23,6 +23,7 @@
 #ifndef CHUD_H
 #define CHUD_H
 
+#include <list>
 #include "wrect.h"
 #include "cl_dll.h"
 #include "ammo.h"
@@ -136,8 +137,8 @@ struct CharWidths
 #include "aghudtimeout.h"
 #include "aghudvote.h"
 
-#define HUD_ELEM_INIT_FULL(type, var) var = new type(); var->Init();
-#define HUD_ELEM_INIT(x) m_##x = new CHud##x(); m_##x->Init();
+#define HUD_ELEM_INIT_FULL(type, var) var = new type(); var->m_isDeletable = true; var->Init();
+#define HUD_ELEM_INIT(x) m_##x = new CHud##x(); m_##x->m_isDeletable = true; m_##x->Init();
 class CHud
 {
 public:
@@ -194,10 +195,12 @@ public:
 	int Redraw(float flTime, int intermission);
 	int UpdateClientData(client_data_t *cdata, float time);
 
-	CHud() : m_iSpriteCount(0), m_pHudList(NULL) {}
+	CHud();
 	~CHud();			// destructor, frees allocated memory
 
-						// user messages
+	//-----------------------------------------------------
+	// User messages
+	//-----------------------------------------------------
 	int _cdecl MsgFunc_Damage(const char *pszName, int iSize, void *pbuf);
 	int _cdecl MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf);
 	int _cdecl MsgFunc_Logo(const char *pszName, int iSize, void *pbuf);
@@ -217,8 +220,7 @@ public:
 	// sprite indexes
 	int m_HUD_number_0;
 
-
-	void AddHudElem(CHudBase *p);
+	void AddHudElem(CHudBase *elem);
 
 	float GetSensitivity();
 
@@ -256,7 +258,8 @@ public:
 	float GetHudTransparency();
 
 private:
-	HUDLIST					*m_pHudList;
+	//HUDLIST					*m_pHudList;
+	std::list<CHudBase *>	m_HudList;
 	HLHSPRITE				m_hsprLogo;
 	int						m_iLogo;
 	client_sprite_t			*m_pSpriteList;

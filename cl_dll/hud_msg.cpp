@@ -34,14 +34,7 @@ int CHud :: MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf )
 	ASSERT( iSize == 0 );
 
 	// clear all hud data
-	HUDLIST *pList = m_pHudList;
-
-	while ( pList )
-	{
-		if ( pList->p )
-			pList->p->Reset();
-		pList = pList->pNext;
-	}
+	for (CHudBase *i : m_HudList) i->Reset();
 
 	// reset sensitivity
 	m_flMouseSensitivity = 0;
@@ -62,14 +55,7 @@ void CHud :: MsgFunc_ViewMode( const char *pszName, int iSize, void *pbuf )
 void CHud :: MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf )
 {
 	// prepare all hud data
-	HUDLIST *pList = m_pHudList;
-
-	while (pList)
-	{
-		if ( pList->p )
-			pList->p->InitHUDData();
-		pList = pList->pNext;
-	}
+	for (CHudBase *i : m_HudList) i->InitHUDData();
 
 	//Probably not a good place to put this.
 	pBeam = pBeam2 = NULL;

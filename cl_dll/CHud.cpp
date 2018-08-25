@@ -417,17 +417,8 @@ void CHud :: Init( void )
 	m_pSpriteList = NULL;
 
 	// Clear any old HUD list
-	if ( m_pHudList )
-	{
-		HUDLIST *pList;
-		while ( m_pHudList )
-		{
-			pList = m_pHudList;
-			m_pHudList = m_pHudList->pNext;
-			free( pList );
-		}
-		m_pHudList = NULL;
-	}
+	for (CHudBase *i : m_HudList) if (i->m_isDeletable) delete i;
+	m_HudList.clear();
 
 	// In case we get messages before the first update -- time will be valid
 	m_flTime = 1.0;
@@ -437,22 +428,6 @@ void CHud :: Init( void )
 	m_hudColor2.Set(255, 160, 0);
 	m_hudColor3.Set(255, 96, 0);
 
-	/*m_Ammo->Init();
-	m_Health->Init();
-	m_SayText->Init();
-	m_Spectator->Init();
-	m_Geiger->Init();
-	m_Train->Init();
-	m_Battery->Init();
-	m_Flash->Init();
-	m_Message->Init();
-	m_StatusBar->Init();
-	m_DeathNotice->Init();
-	m_AmmoSecondary->Init();
-	m_TextMessage->Init();
-	m_StatusIcons->Init();
-	m_Timer->Init();
-	m_Scores->Init();*/
 	HUD_ELEM_INIT(Ammo);
 	HUD_ELEM_INIT(Health);
 	HUD_ELEM_INIT(SayText);
@@ -491,6 +466,12 @@ void CHud :: Init( void )
 	MsgFunc_ResetHUD(0, 0, NULL );
 }
 
+// CHud constructor
+CHud::CHud() : m_iSpriteCount(0)
+{
+	
+}
+
 // CHud destructor
 // cleans up memory allocated for m_rg* arrays
 CHud :: ~CHud()
@@ -499,17 +480,8 @@ CHud :: ~CHud()
 	delete [] m_rgrcRects;
 	delete [] m_rgszSpriteNames;
 
-	if ( m_pHudList )
-	{
-		HUDLIST *pList;
-		while ( m_pHudList )
-		{
-			pList = m_pHudList;
-			m_pHudList = m_pHudList->pNext;
-			free( pList );
-		}
-		m_pHudList = NULL;
-	}
+	for (CHudBase *i : m_HudList) if (i->m_isDeletable) delete i;
+	m_HudList.clear();
 
 	CharWidths* cur = m_CharWidths.next;
 	CharWidths* next;
@@ -827,34 +799,10 @@ int CHud::MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf)
 }
 
 
-void CHud::AddHudElem(CHudBase *phudelem)
+void CHud::AddHudElem(CHudBase *elem)
 {
-	HUDLIST *pdl, *ptemp;
-
-//phudelem->Think();
-
-	if (!phudelem)
-		return;
-
-	pdl = (HUDLIST *)malloc(sizeof(HUDLIST));
-	if (!pdl)
-		return;
-
-	memset(pdl, 0, sizeof(HUDLIST));
-	pdl->p = phudelem;
-
-	if (!m_pHudList)
-	{
-		m_pHudList = pdl;
-		return;
-	}
-
-	ptemp = m_pHudList;
-
-	while (ptemp->pNext)
-		ptemp = ptemp->pNext;
-
-	ptemp->pNext = pdl;
+	if (!elem) return;
+	m_HudList.push_back(elem);
 }
 
 float CHud::GetSensitivity( void )

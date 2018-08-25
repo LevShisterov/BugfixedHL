@@ -44,15 +44,12 @@ extern cvar_t *sensitivity;
 void CHud::Think(void)
 {
 	int newfov;
-	HUDLIST *pList = m_pHudList;
 
 	ResultsThink();
 
-	while (pList)
+	for (CHudBase *i : m_HudList)
 	{
-		if (pList->p->m_iFlags & HUD_ACTIVE)
-			pList->p->Think();
-		pList = pList->pNext;
+		if (i->m_iFlags & HUD_ACTIVE) i->Think();
 	}
 
 	newfov = HUD_GetFOV();
@@ -149,22 +146,18 @@ int CHud :: Redraw( float flTime, int intermission )
 
 	if ( m_pCvarDraw->value )
 	{
-		HUDLIST *pList = m_pHudList;
-
-		while (pList)
+		for (CHudBase *i : m_HudList)
 		{
-			if ( !intermission )
+			if (!intermission)
 			{
-				if ( (pList->p->m_iFlags & HUD_ACTIVE) && !(m_iHideHUDDisplay & HIDEHUD_ALL) )
-					pList->p->Draw(flTime);
+				if ((i->m_iFlags & HUD_ACTIVE) && !(m_iHideHUDDisplay & HIDEHUD_ALL))
+					i->Draw(flTime);
 			}
 			else
 			{  // it's an intermission,  so only draw hud elements that are set to draw during intermissions
-				if ( pList->p->m_iFlags & HUD_INTERMISSION )
-					pList->p->Draw( flTime );
+				if (i->m_iFlags & HUD_INTERMISSION)
+					i->Draw(flTime);
 			}
-
-			pList = pList->pNext;
 		}
 	}
 

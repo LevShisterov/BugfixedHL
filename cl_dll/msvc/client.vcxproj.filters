@@ -43,9 +43,6 @@
     <ClCompile Include="..\GameStudioModelRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\hud.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\hud_msg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -350,6 +347,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\CHudSpectator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CHud.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -201,7 +201,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\hl\hl_events.cpp" />
     <ClCompile Include="..\hl\hl_objects.cpp" />
     <ClCompile Include="..\hl\hl_weapons.cpp" />
-    <ClCompile Include="..\hud.cpp" />
+    <ClCompile Include="..\CHud.cpp" />
     <ClCompile Include="..\hud_msg.cpp" />
     <ClCompile Include="..\hud_redraw.cpp" />
     <ClCompile Include="..\CHudScores.cpp" />
