@@ -32,22 +32,12 @@
 
 bool ParseColor( char *string, RGBA &rgba );
 
-//
-//-----------------------------------------------------
-// TODO: replace with an STL container
-struct HUDLIST {
-	CHudBase	*p;
-	HUDLIST		*pNext;
-};
-
-//
-//-----------------------------------------------------
-//
 #include "..\game_shared\voice_status.h"
 
 //-----------------------------------------------------
 // Forward declarations
 //-----------------------------------------------------
+class TeamFortressViewport;
 class CHudSpectator;
 class CHudAmmo;
 class CHudAmmoSecondary;
@@ -139,6 +129,7 @@ struct CharWidths
 
 #define HUD_ELEM_INIT_FULL(type, var) var = new type(); var->m_isDeletable = true; var->Init();
 #define HUD_ELEM_INIT(x) m_##x = new CHud##x(); m_##x->m_isDeletable = true; m_##x->Init();
+
 class CHud
 {
 public:
@@ -288,8 +279,6 @@ private:
 
 	struct cvar_s *default_fov;
 };
-
-class TeamFortressViewport;
 
 extern CHud gHUD;
 extern TeamFortressViewport *gViewPort;

@@ -76,12 +76,6 @@ void CHud::Think(void)
 		m_flMouseSensitivity = sensitivity->value * ((float)newfov / (float)default_fov->value) * CVAR_GET_FLOAT("zoom_sensitivity_ratio");
 	}
 
-	// think about default fov
-	if ( m_iFOV == 0 )
-	{  // only let players adjust up in fov,  and only if they are not overriden by something else
-		m_iFOV = max( default_fov->value, 90 );  
-	}
-
 	// Refresh bunnyhop
 	g_bBunnyHop = m_pCvarBunnyHop->value != 0.0;
 }
