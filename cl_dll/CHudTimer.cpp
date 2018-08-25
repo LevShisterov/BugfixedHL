@@ -4,7 +4,7 @@
 *
 ****/
 //
-// Hud_timer.cpp
+// CHudTimer.cpp
 //
 // implementation of CHudTimer class
 //
@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <time.h>
 
+#include "CHudTimer.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
@@ -37,12 +38,12 @@ enum RulesRequestStatus
 	SOCKET_IDLE = 1,
 	SOCKET_AWAITING_CODE = 2,
 	SOCKET_AWAITING_ANSWER = 3,
-} g_eRulesRequestStatus = SOCKET_NONE;
-
+};
+RulesRequestStatus g_eRulesRequestStatus = SOCKET_NONE;
 SOCKET g_timerSocket = NULL;	// We will declare socket here to not include winsocks in hud.h
 
 
-DECLARE_MESSAGE(m_Timer, Timer)
+DECLARE_MESSAGE_PTR(m_Timer, Timer)
 
 int CHudTimer::Init(void)
 {
@@ -509,6 +510,27 @@ void CHudTimer::CustomTimerCommand(void)
 	m_bCustomTimerNeedSound[number] = true;
 
 	m_bNeedWriteCustomTimer = true;
+}
+
+int CHudTimer::GetAgVersion()
+{
+	return m_eAgVersion;
+}
+
+float CHudTimer::GetHudNextmap()
+{
+	return m_pCvarHudNextmap->value;
+}
+
+const char *CHudTimer::GetNextmap()
+{
+	return m_szNextmap;
+}
+
+void CHudTimer::SetNextmap(const char *nextmap)
+{
+	strncpy(m_szNextmap, nextmap, HLARRAYSIZE(m_szNextmap) - 1);
+	m_szNextmap[HLARRAYSIZE(m_szNextmap) - 1] = 0;
 }
 
 int CHudTimer::Draw(float fTime)

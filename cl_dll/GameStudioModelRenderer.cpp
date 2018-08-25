@@ -26,6 +26,7 @@
 
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
+#include "CHudSpectator.h"
 
 //
 // Override the StudioModelRender virtual member functions here to implement custom bone
@@ -220,7 +221,7 @@ char *CGameStudioModelRenderer::GetNextEnemyModel(void)
 		int maxClients = gEngfuncs.GetMaxClients();
 		for (int i = 0; i < maxClients; i++)
 		{
-			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1)))
+			if (!gHUD.m_Spectator->IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1)))
 				continue;
 			if (!_stricmp(m_szEnemyModels[j], m_szPlayerRemapModel[i]))
 			{
@@ -314,7 +315,7 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 		for (int i = 0; i < maxClients; i++)
 		{
 			if (i == playerIndex ||
-				!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1)) ||
+				!gHUD.m_Spectator->IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1)) ||
 				_stricmp(m_szPlayerActualModel[i], actualModelName))
 				continue;
 			strcpy(m_szPlayerRemapModel[playerIndex], m_szPlayerRemapModel[i]);
@@ -473,7 +474,7 @@ void CGameStudioModelRenderer::ForceModelCommand(void)
 		{
 			if (i == m_iLocalPlayerIndex - 1) continue;
 			GetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
-			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
+			if (!gHUD.m_Spectator->IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
 			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME - 1);
 			plrName[MAX_PLAYER_NAME - 1] = 0;
 			_strlwr(plrName);
@@ -542,7 +543,7 @@ void CGameStudioModelRenderer::ForceColorsCommand(void)
 		{
 			if (i == m_iLocalPlayerIndex - 1) continue;
 			GetPlayerInfo(i + 1, &g_PlayerInfoList[i + 1]);
-			if (!gHUD.m_Spectator.IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
+			if (!gHUD.m_Spectator->IsActivePlayer(gEngfuncs.GetEntityByIndex(i + 1))) continue;
 			strncpy(plrName, g_PlayerInfoList[i + 1].name, MAX_PLAYER_NAME - 1);
 			plrName[MAX_PLAYER_NAME - 1] = 0;
 			_strlwr(plrName);

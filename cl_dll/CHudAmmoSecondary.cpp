@@ -18,14 +18,15 @@
 // implementation of CHudAmmoSecondary class
 //
 
+#include "CHudAmmoSecondary.h"
 #include "hud.h"
 #include "cl_util.h"
 #include <string.h>
 #include <stdio.h>
 #include "parsemsg.h"
 
-DECLARE_MESSAGE( m_AmmoSecondary, SecAmmoVal );
-DECLARE_MESSAGE( m_AmmoSecondary, SecAmmoIcon );
+DECLARE_MESSAGE_PTR( m_AmmoSecondary, SecAmmoVal );
+DECLARE_MESSAGE_PTR( m_AmmoSecondary, SecAmmoIcon );
 
 int CHudAmmoSecondary :: Init( void )
 {
@@ -70,7 +71,7 @@ int CHudAmmoSecondary :: Draw(float flTime)
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
 		if (m_fFade <= 0)
 			m_fFade = 0;
-		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_AMMO_FLASH;
+		a = MIN_ALPHA + (m_fFade/HUD_FADE_TIME) * ALPHA_AMMO_FLASH;
 	}
 	else
 		a = MIN_ALPHA;
@@ -164,7 +165,7 @@ int CHudAmmoSecondary :: MsgFunc_SecAmmoVal( const char *pszName, int iSize, voi
 	}
 
 	// make the icons light up
-	m_fFade = FADE_TIME;
+	m_fFade = HUD_FADE_TIME;
 
 	return 1;
 }

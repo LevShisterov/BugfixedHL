@@ -20,6 +20,7 @@
 #include "vgui_TeamFortressViewport.h"
 #include "vgui_ScorePanel.h"
 #include "pcre/pcre.h"
+#include "CHudTimer.h"
 
 #define MAX_CMD_LINE	1024
 
@@ -218,7 +219,7 @@ void SvcPrint(void)
 		if (!strncmp(str, "\"mp_timelimit\" changed to \"", 27) ||
 			!strncmp(str, "\"amx_nextmap\" changed to \"", 26))
 		{
-			gHUD.m_Timer.DoResync();
+			gHUD.m_Timer->DoResync();
 		}
 		else if (gViewPort && gViewPort->m_pScoreBoard && gViewPort->m_pScoreBoard->m_iStatusRequestState != STATUS_REQUEST_IDLE)
 		{

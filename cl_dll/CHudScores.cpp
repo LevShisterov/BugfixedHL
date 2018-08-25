@@ -18,6 +18,7 @@
 // implementation of CHudScores class
 //
 
+#include "CHudScores.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "vgui_TeamFortressViewport.h"

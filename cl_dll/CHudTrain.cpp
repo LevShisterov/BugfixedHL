@@ -15,16 +15,17 @@
 //
 // Train.cpp
 //
-// implementation of CHudAmmo class
+// implementation of CHudTrain class
 //
 
+#include <stdio.h>
+#include <string.h>
+#include "CHudTrain.h"
 #include "hud.h"
 #include "cl_util.h"
-#include <string.h>
-#include <stdio.h>
 #include "parsemsg.h"
 
-DECLARE_MESSAGE(m_Train, Train )
+DECLARE_MESSAGE_PTR(m_Train, Train )
 
 
 int CHudTrain::Init(void)

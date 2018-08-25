@@ -15,17 +15,18 @@
 //
 // status_icons.cpp
 //
+#include <stdio.h>
+#include <string.h>
+#include "CHudStatusIcons.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "const.h"
 #include "entity_state.h"
 #include "cl_entity.h"
-#include <string.h>
-#include <stdio.h>
 #include "parsemsg.h"
 #include "event_api.h"
 
-DECLARE_MESSAGE( m_StatusIcons, StatusIcon );
+DECLARE_MESSAGE_PTR( m_StatusIcons, StatusIcon );
 
 int CHudStatusIcons::Init( void )
 {

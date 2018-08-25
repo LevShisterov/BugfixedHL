@@ -18,14 +18,14 @@
 // implementation of CHudBattery class
 //
 
+#include <string.h>
+#include <stdio.h>
+#include "CHudBattery.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
 
-#include <string.h>
-#include <stdio.h>
-
-DECLARE_MESSAGE(m_Battery, Battery)
+DECLARE_MESSAGE_PTR(m_Battery, Battery)
 
 int CHudBattery::Init(void)
 {
@@ -63,7 +63,7 @@ int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 
 	if (battery != m_iBat)
 	{
-		m_fFade = FADE_TIME;
+		m_fFade = HUD_FADE_TIME;
 		m_iBat = battery;
 	}
 
@@ -93,7 +93,7 @@ int CHudBattery::Draw(float flTime)
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
 		if (m_fFade <= 0)
 			m_fFade = 0;
-		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_POINTS_FLASH;
+		a = MIN_ALPHA + (m_fFade/HUD_FADE_TIME) * ALPHA_POINTS_FLASH;
 	}
 	else
 		a = MIN_ALPHA;

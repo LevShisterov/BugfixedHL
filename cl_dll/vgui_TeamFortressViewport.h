@@ -28,6 +28,8 @@
 #include<VGUI_ScrollBar.h>
 #include<VGUI_Slider.h>
 
+#include "CHudHealth.h"
+
 // custom scheme handling
 #include "vgui_SchemeManager.h"
 
@@ -1684,23 +1686,23 @@ public:
 
 		if (gHUD.m_pCvarDim->value == 0)
 			a = MIN_ALPHA + ALPHA_POINTS_MAX;
-		else if (gHUD.m_Health.m_fFade > 0)
+		else if (gHUD.m_Health->m_fFade > 0)
 		{
 			// Fade the health number back to dim
-			gHUD.m_Health.m_fFade -= (gHUD.m_flTimeDelta * 20);
-			if (gHUD.m_Health.m_fFade <= 0)
-				gHUD.m_Health.m_fFade = 0;
-			a = MIN_ALPHA + (gHUD.m_Health.m_fFade/FADE_TIME) * ALPHA_POINTS_FLASH;
+			gHUD.m_Health->m_fFade -= (gHUD.m_flTimeDelta * 20);
+			if (gHUD.m_Health->m_fFade <= 0)
+				gHUD.m_Health->m_fFade = 0;
+			a = MIN_ALPHA + (gHUD.m_Health->m_fFade/HUD_FADE_TIME) * ALPHA_POINTS_FLASH;
 		}
 		else
 			a = MIN_ALPHA;
 
 		// If health is getting low, make it bright red
-		if (gHUD.m_Health.m_iHealth <= 15)
+		if (gHUD.m_Health->m_iHealth <= 15)
 			a = 255;
 
 		a *= gHUD.GetHudTransparency();
-		gHUD.GetHudColor(1, gHUD.m_Health.m_iHealth, r, g, b);
+		gHUD.GetHudColor(1, gHUD.m_Health->m_iHealth, r, g, b);
 		ScaleColors(r, g, b, a );
 
 		int iXSize,iYSize, iXPos, iYPos;
@@ -1708,7 +1710,7 @@ public:
 		m_pHealthTGA->getPos(iXPos, iYPos);
 
 		// Paint the player's health
-		int x = gHUD.DrawHudNumber( iXPos + iXSize + 5, iYPos + 5, DHN_3DIGITS | DHN_DRAWZERO, gHUD.m_Health.m_iHealth, r, g, b);
+		int x = gHUD.DrawHudNumber( iXPos + iXSize + 5, iYPos + 5, DHN_3DIGITS | DHN_DRAWZERO, gHUD.m_Health->m_iHealth, r, g, b);
 
 		// Draw the vertical line
 		int HealthWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;

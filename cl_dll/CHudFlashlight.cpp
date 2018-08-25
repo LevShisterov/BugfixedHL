@@ -18,17 +18,15 @@
 // implementation of CHudFlashlight class
 //
 
+#include <stdio.h>
+#include <string.h>
+#include "CHudFlashlight.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
 
-#include <string.h>
-#include <stdio.h>
-
-
-
-DECLARE_MESSAGE(m_Flash, FlashBat)
-DECLARE_MESSAGE(m_Flash, Flashlight)
+DECLARE_MESSAGE_PTR(m_Flash, FlashBat)
+DECLARE_MESSAGE_PTR(m_Flash, Flashlight)
 
 #define BAT_NAME "sprites/%d_Flashlight.spr"
 

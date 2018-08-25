@@ -5,13 +5,11 @@
 // $NoKeywords: $
 //=============================================================================
 
-#ifndef SPECTATOR_H
-#define SPECTATOR_H
-#pragma once
+#ifndef CHUDSPECTATOR_H
+#define CHUDSPECTATOR_H
 
+#include "CHudBase.h"
 #include "cl_entity.h"
-
-
 
 #define INSET_OFF				0
 #define	INSET_CHASE_FREE		1

@@ -14,19 +14,19 @@
     <ProjectGuid>{BE1A2217-86F6-4A6F-8AE9-86B4796C80A5}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>client</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -180,22 +180,23 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\aghudtimeout.cpp" />
     <ClCompile Include="..\aghudvote.cpp" />
     <ClCompile Include="..\aglocation.cpp" />
-    <ClCompile Include="..\ammo.cpp" />
+    <ClCompile Include="..\CHudAmmo.cpp" />
     <ClCompile Include="..\ammohistory.cpp" />
-    <ClCompile Include="..\ammo_secondary.cpp" />
-    <ClCompile Include="..\battery.cpp" />
+    <ClCompile Include="..\CHudAmmoSecondary.cpp" />
+    <ClCompile Include="..\CHudBattery.cpp" />
     <ClCompile Include="..\cdll_int.cpp" />
+    <ClCompile Include="..\CHudBase.cpp" />
     <ClCompile Include="..\com_weapons.cpp" />
-    <ClCompile Include="..\death.cpp" />
+    <ClCompile Include="..\CHudDeathNotice.cpp" />
     <ClCompile Include="..\demo.cpp" />
     <ClCompile Include="..\entity.cpp" />
     <ClCompile Include="..\events.cpp" />
     <ClCompile Include="..\ev_common.cpp" />
     <ClCompile Include="..\ev_hldm.cpp" />
-    <ClCompile Include="..\flashlight.cpp" />
+    <ClCompile Include="..\CHudFlashlight.cpp" />
     <ClCompile Include="..\GameStudioModelRenderer.cpp" />
-    <ClCompile Include="..\geiger.cpp" />
-    <ClCompile Include="..\health.cpp" />
+    <ClCompile Include="..\CHudGeiger.cpp" />
+    <ClCompile Include="..\CHudHealth.cpp" />
     <ClCompile Include="..\hl\hl_baseentity.cpp" />
     <ClCompile Include="..\hl\hl_events.cpp" />
     <ClCompile Include="..\hl\hl_objects.cpp" />
@@ -203,17 +204,17 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\hud.cpp" />
     <ClCompile Include="..\hud_msg.cpp" />
     <ClCompile Include="..\hud_redraw.cpp" />
-    <ClCompile Include="..\hud_scores.cpp" />
+    <ClCompile Include="..\CHudScores.cpp" />
     <ClCompile Include="..\hud_servers.cpp" />
-    <ClCompile Include="..\hud_spectator.cpp" />
-    <ClCompile Include="..\hud_timer.cpp" />
+    <ClCompile Include="..\CHudSpectator.cpp" />
+    <ClCompile Include="..\CHudTimer.cpp" />
     <ClCompile Include="..\hud_update.cpp" />
     <ClCompile Include="..\input.cpp" />
     <ClCompile Include="..\inputw32.cpp" />
     <ClCompile Include="..\in_camera.cpp" />
     <ClCompile Include="..\jpeg\jpge.cpp" />
-    <ClCompile Include="..\menu.cpp" />
-    <ClCompile Include="..\message.cpp" />
+    <ClCompile Include="..\CHudMenu.cpp" />
+    <ClCompile Include="..\CHudMessage.cpp" />
     <ClCompile Include="..\net.cpp" />
     <ClCompile Include="..\overview.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -221,14 +222,14 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     </ClCompile>
     <ClCompile Include="..\parsemsg.cpp" />
     <ClCompile Include="..\results.cpp" />
-    <ClCompile Include="..\saytext.cpp" />
-    <ClCompile Include="..\statusbar.cpp" />
-    <ClCompile Include="..\status_icons.cpp" />
+    <ClCompile Include="..\CHudSayText.cpp" />
+    <ClCompile Include="..\CHudStatusBar.cpp" />
+    <ClCompile Include="..\CHudStatusIcons.cpp" />
     <ClCompile Include="..\StudioModelRenderer.cpp" />
     <ClCompile Include="..\studio_util.cpp" />
     <ClCompile Include="..\svc_messages.cpp" />
-    <ClCompile Include="..\text_message.cpp" />
-    <ClCompile Include="..\train.cpp" />
+    <ClCompile Include="..\CHudTextMessage.cpp" />
+    <ClCompile Include="..\CHudTrain.cpp" />
     <ClCompile Include="..\tri.cpp" />
     <ClCompile Include="..\util.cpp" />
     <ClCompile Include="..\vgui_ClassMenu.cpp" />
@@ -280,6 +281,22 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClInclude Include="..\ammo.h" />
     <ClInclude Include="..\ammohistory.h" />
     <ClInclude Include="..\camera.h" />
+    <ClInclude Include="..\CHudAmmo.h" />
+    <ClInclude Include="..\CHudAmmoSecondary.h" />
+    <ClInclude Include="..\CHudBase.h" />
+    <ClInclude Include="..\CHudBattery.h" />
+    <ClInclude Include="..\CHudDeathNotice.h" />
+    <ClInclude Include="..\CHudFlashlight.h" />
+    <ClInclude Include="..\CHudGeiger.h" />
+    <ClInclude Include="..\CHudMenu.h" />
+    <ClInclude Include="..\CHudMessage.h" />
+    <ClInclude Include="..\CHudSayText.h" />
+    <ClInclude Include="..\CHudScores.h" />
+    <ClInclude Include="..\CHudStatusBar.h" />
+    <ClInclude Include="..\CHudStatusIcons.h" />
+    <ClInclude Include="..\CHudTextMessage.h" />
+    <ClInclude Include="..\CHudTimer.h" />
+    <ClInclude Include="..\CHudTrain.h" />
     <ClInclude Include="..\cl_dll.h" />
     <ClInclude Include="..\cl_util.h" />
     <ClInclude Include="..\com_weapons.h" />
@@ -287,12 +304,12 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClInclude Include="..\eventscripts.h" />
     <ClInclude Include="..\ev_hldm.h" />
     <ClInclude Include="..\GameStudioModelRenderer.h" />
-    <ClInclude Include="..\health.h" />
+    <ClInclude Include="..\CHudHealth.h" />
     <ClInclude Include="..\hud.h" />
     <ClInclude Include="..\hud_iface.h" />
     <ClInclude Include="..\hud_servers.h" />
     <ClInclude Include="..\hud_servers_priv.h" />
-    <ClInclude Include="..\hud_spectator.h" />
+    <ClInclude Include="..\CHudSpectator.h" />
     <ClInclude Include="..\in_defs.h" />
     <ClInclude Include="..\jpeg\jpge.h" />
     <ClInclude Include="..\kbutton.h" />

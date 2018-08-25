@@ -20,6 +20,7 @@
 #include "cl_util.h"
 #include "parsemsg.h"
 #include "r_efx.h"
+#include "CHudStatusIcons.h"
 
 #define MAX_CLIENTS 32
 
@@ -118,9 +119,9 @@ int CHud :: MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf )
 		float a = 255 * gHUD.GetHudTransparency();
 		gHUD.GetHudColor(0, 0, r, g, b);
 		ScaleColors(r, g, b, a);
-		this->m_StatusIcons.EnableIcon("dmg_concuss", r, g, b);
+		this->m_StatusIcons->EnableIcon("dmg_concuss", r, g, b);
 	}
 	else
-		this->m_StatusIcons.DisableIcon("dmg_concuss");
+		this->m_StatusIcons->DisableIcon("dmg_concuss");
 	return 1;
 }

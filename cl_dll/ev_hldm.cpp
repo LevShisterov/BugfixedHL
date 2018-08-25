@@ -35,13 +35,14 @@
 #include "r_studioint.h"
 #include "com_model.h"
 #include "eiface.h"
+#include "CHudSpectator.h"
 
 extern "C"
 {
 #include "pm_shared.h"
 }
 
-#define IS_FIRSTPERSON_SPEC ( g_iUser1 == OBS_IN_EYE || (g_iUser1 && (gHUD.m_Spectator.m_pip->value == INSET_IN_EYE)) )
+#define IS_FIRSTPERSON_SPEC ( g_iUser1 == OBS_IN_EYE || (g_iUser1 && (gHUD.m_Spectator->m_pip->value == INSET_IN_EYE)) )
 
 extern engine_studio_api_t IEngineStudio;
 
@@ -1355,7 +1356,7 @@ void EV_FireRpg( event_args_t *args )
 //======================
 
 //======================
-//	    EGON END 
+//	    EGON START 
 //======================
 enum egon_e {
 	EGON_IDLE1 = 0,

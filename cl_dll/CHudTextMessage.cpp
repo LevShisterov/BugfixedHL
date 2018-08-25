@@ -22,13 +22,14 @@
 
 #include <string.h>
 #include <stdio.h>
-
+#include "CHudTextMessage.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
 #include "vgui_TeamFortressViewport.h"
+#include "CHudSayText.h"
 
-DECLARE_MESSAGE( m_TextMessage, TextMsg );
+DECLARE_MESSAGE_PTR( m_TextMessage, TextMsg );
 
 int CHudTextMessage::Init(void)
 {
@@ -231,7 +232,7 @@ int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf
 		ConsolePrint(szBuf[0]);
 		break;
 	case HUD_PRINTTALK:
-		gHUD.m_SayText.SayTextPrint(szBuf[0], 128);
+		gHUD.m_SayText->SayTextPrint(szBuf[0], 128);
 		break;
 	case HUD_PRINTCENTER:
 		if (gViewPort && gViewPort->AllowedToPrintText() == FALSE)

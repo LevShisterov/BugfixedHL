@@ -23,6 +23,7 @@
 #include <time.h>
 #include <windows.h>
 
+#include "CHudSayText.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
@@ -45,7 +46,7 @@ static float flScrollTime = 0;  // the time at which the lines next scroll up
 static int Y_START = 0;
 static int line_height = 0;
 
-DECLARE_MESSAGE( m_SayText, SayText );
+DECLARE_MESSAGE_PTR( m_SayText, SayText );
 
 int CHudSayText :: Init( void )
 {

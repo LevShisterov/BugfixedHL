@@ -24,6 +24,7 @@
 #include "hud.h"
 #include "cl_util.h"
 #include "vgui_TeamFortressViewport.h"
+#include "CHudTextMessage.h"
 
 // Team Menu Dimensions
 #define TEAMMENU_TITLE_X				XRES(40)
@@ -69,7 +70,7 @@ CTeamMenuPanel::CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,i
 	pSchemes->getBgColor( hTitleScheme, r, g, b, a );
 	pLabel->setBgColor( r, g, b, a );
 	pLabel->setContentAlignment( vgui::Label::a_west );
-	pLabel->setText(gHUD.m_TextMessage.BufferedLocaliseTextString("Select Your Team"));
+	pLabel->setText(gHUD.m_TextMessage->BufferedLocaliseTextString("Select Your Team"));
 
 	// Create the Info Window
 	m_pTeamWindow  = new CTransparentPanel( 255, TEAMMENU_WINDOW_X, TEAMMENU_WINDOW_Y, TEAMMENU_WINDOW_SIZE_X, TEAMMENU_WINDOW_SIZE_Y );
@@ -100,7 +101,7 @@ CTeamMenuPanel::CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,i
 	pSchemes->getBgColor( hTeamWindowText, r, g, b, a );
 	m_pBriefing->setBgColor( r, g, b, a );
 
-	m_pBriefing->setText( gHUD.m_TextMessage.BufferedLocaliseTextString("#Map_Description_not_available") );
+	m_pBriefing->setText( gHUD.m_TextMessage->BufferedLocaliseTextString("#Map_Description_not_available") );
 
 	// Team Menu buttons
 	for (int i = 1; i <= MAX_TEAMS_IN_MENU + 1; i++)
@@ -122,7 +123,7 @@ CTeamMenuPanel::CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,i
 				m_pButtons[i]->setBoundKey( '0' + i );
 			else
 				m_pButtons[i]->setBoundKey( '0' );
-			m_pButtons[i]->setText( gHUD.m_TextMessage.BufferedLocaliseTextString("Auto Assign") );
+			m_pButtons[i]->setText( gHUD.m_TextMessage->BufferedLocaliseTextString("Auto Assign") );
 			m_pButtons[i]->setVisible( true );
 		}
 

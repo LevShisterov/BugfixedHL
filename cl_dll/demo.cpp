@@ -17,6 +17,7 @@
 #include "demo.h"
 #include "demo_api.h"
 #include <memory.h>
+#include "CHudTimer.h"
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -100,7 +101,7 @@ void DLLEXPORT Demo_ReadBuffer( int size, unsigned char *buffer )
 	case TYPE_TIMER:
 	case TYPE_CUSTOM_TIMER:
 	case TYPE_NEXTMAP:
-		gHUD.m_Timer.ReadDemoTimerBuffer(type, buffer + i);
+		gHUD.m_Timer->ReadDemoTimerBuffer(type, buffer + i);
 		break;
 	default:
 		gEngfuncs.Con_DPrintf( "Unknown demo buffer type, skipping.\n" );

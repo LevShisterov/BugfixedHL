@@ -28,6 +28,7 @@
 #include "netadr.h"
 #include "vgui_schememanager.h"
 #include "GameStudioModelRenderer.h"
+#include "CHudSpectator.h"
 
 extern "C"
 {
@@ -438,7 +439,7 @@ Called when a director event message was received
 
 void DLLEXPORT HUD_DirectorMessage( int iSize, void *pbuf )
 {
-	 gHUD.m_Spectator.DirectorMessage( iSize, pbuf );
+	 gHUD.m_Spectator->DirectorMessage( iSize, pbuf );
 }
 
 

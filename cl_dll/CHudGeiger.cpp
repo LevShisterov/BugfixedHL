@@ -17,16 +17,15 @@
 //
 // implementation of CHudAmmo class
 //
-
-#include "hud.h"
-#include "cl_util.h"
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <stdio.h>
-
+#include "CHudGeiger.h"
+#include "hud.h"
+#include "cl_util.h"
 #include "parsemsg.h"
 
-DECLARE_MESSAGE(m_Geiger, Geiger )
+DECLARE_MESSAGE_PTR(m_Geiger, Geiger )
 
 int CHudGeiger::Init(void)
 {

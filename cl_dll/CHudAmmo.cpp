@@ -18,6 +18,7 @@
 // implementation of CHudAmmo class
 //
 
+#include "CHudAmmo.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
@@ -28,6 +29,7 @@
 
 #include "ammohistory.h"
 #include "vgui_TeamFortressViewport.h"
+#include "CHudMenu.h"
 
 WEAPON *gpActiveSel;	// NULL means off, 1 means just the menu bar, otherwise
 						// this points to the active weapon menu item
@@ -238,27 +240,27 @@ int giBucketHeight, giBucketWidth, giABHeight, giABWidth; // Ammo Bar width and 
 
 HLHSPRITE ghsprBuckets;					// Sprite for top row of weapons menu
 
-DECLARE_MESSAGE(m_Ammo, CurWeapon );	// Current weapon and clip
-DECLARE_MESSAGE(m_Ammo, WeaponList);	// new weapon type
-DECLARE_MESSAGE(m_Ammo, AmmoX);			// update known ammo type's count
-DECLARE_MESSAGE(m_Ammo, AmmoPickup);	// flashes an ammo pickup record
-DECLARE_MESSAGE(m_Ammo, WeapPickup);	// flashes a weapon pickup record
-DECLARE_MESSAGE(m_Ammo, HideWeapon);	// hides the weapon, ammo, and crosshair displays temporarily
-DECLARE_MESSAGE(m_Ammo, ItemPickup);
+DECLARE_MESSAGE_PTR(m_Ammo, CurWeapon );	// Current weapon and clip
+DECLARE_MESSAGE_PTR(m_Ammo, WeaponList);	// new weapon type
+DECLARE_MESSAGE_PTR(m_Ammo, AmmoX);			// update known ammo type's count
+DECLARE_MESSAGE_PTR(m_Ammo, AmmoPickup);	// flashes an ammo pickup record
+DECLARE_MESSAGE_PTR(m_Ammo, WeapPickup);	// flashes a weapon pickup record
+DECLARE_MESSAGE_PTR(m_Ammo, HideWeapon);	// hides the weapon, ammo, and crosshair displays temporarily
+DECLARE_MESSAGE_PTR(m_Ammo, ItemPickup);
 
-DECLARE_COMMAND(m_Ammo, Slot1);
-DECLARE_COMMAND(m_Ammo, Slot2);
-DECLARE_COMMAND(m_Ammo, Slot3);
-DECLARE_COMMAND(m_Ammo, Slot4);
-DECLARE_COMMAND(m_Ammo, Slot5);
-DECLARE_COMMAND(m_Ammo, Slot6);
-DECLARE_COMMAND(m_Ammo, Slot7);
-DECLARE_COMMAND(m_Ammo, Slot8);
-DECLARE_COMMAND(m_Ammo, Slot9);
-DECLARE_COMMAND(m_Ammo, Slot10);
-DECLARE_COMMAND(m_Ammo, Close);
-DECLARE_COMMAND(m_Ammo, NextWeapon);
-DECLARE_COMMAND(m_Ammo, PrevWeapon);
+DECLARE_COMMAND_PTR(m_Ammo, Slot1);
+DECLARE_COMMAND_PTR(m_Ammo, Slot2);
+DECLARE_COMMAND_PTR(m_Ammo, Slot3);
+DECLARE_COMMAND_PTR(m_Ammo, Slot4);
+DECLARE_COMMAND_PTR(m_Ammo, Slot5);
+DECLARE_COMMAND_PTR(m_Ammo, Slot6);
+DECLARE_COMMAND_PTR(m_Ammo, Slot7);
+DECLARE_COMMAND_PTR(m_Ammo, Slot8);
+DECLARE_COMMAND_PTR(m_Ammo, Slot9);
+DECLARE_COMMAND_PTR(m_Ammo, Slot10);
+DECLARE_COMMAND_PTR(m_Ammo, Close);
+DECLARE_COMMAND_PTR(m_Ammo, NextWeapon);
+DECLARE_COMMAND_PTR(m_Ammo, PrevWeapon);
 
 // width of ammo fonts
 #define AMMO_SMALL_WIDTH 10
@@ -429,13 +431,13 @@ HLHSPRITE* WeaponsResource :: GetAmmoPicFromWeapon( int iAmmoId, wrect_t& rect )
 
 void WeaponsResource :: SelectSlot( int iSlot, int fAdvance, int iDirection )
 {
-	if ( gHUD.m_Menu.m_fMenuDisplayed && (fAdvance == FALSE) && (iDirection == 1) )
+	if ( gHUD.m_Menu->m_fMenuDisplayed && (fAdvance == FALSE) && (iDirection == 1) )
 	{ // menu is overriding slot use commands
-		gHUD.m_Menu.SelectMenuItem( iSlot + 1 );  // slots are one off the key numbers
+		gHUD.m_Menu->SelectMenuItem( iSlot + 1 );  // slots are one off the key numbers
 		return;
 	}
 
-	if ( iSlot > gHUD.m_Ammo.GetMaxSlot() )
+	if ( iSlot > gHUD.m_Ammo->GetMaxSlot() )
 		return;
 
 	if ( gHUD.m_fPlayerDead || gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL ) )
@@ -625,7 +627,7 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 
 	UpdateCrosshair();
 
-	m_fFade = FADE_TIME;
+	m_fFade = HUD_FADE_TIME;
 	m_iFlags |= HUD_ACTIVE;
 
 	return 1;
@@ -886,7 +888,7 @@ int CHudAmmo::Draw(float flTime)
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
 		if (m_fFade <= 0)
 			m_fFade = 0;
-		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_AMMO_FLASH;
+		a = MIN_ALPHA + (m_fFade/HUD_FADE_TIME) * ALPHA_AMMO_FLASH;
 	}
 	else
 		a = MIN_ALPHA;

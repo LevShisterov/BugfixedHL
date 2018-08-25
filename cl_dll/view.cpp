@@ -25,6 +25,7 @@
 #include "screenfade.h"
 #include "shake.h"
 #include "hltv.h"
+#include "CHudSpectator.h"
 
 // Spectator Mode
 extern "C" 
@@ -461,8 +462,8 @@ void V_CalcIntermissionRefdef ( struct ref_params_s *pparams )
 	if ( gEngfuncs.IsSpectateOnly() )
 	{
 		// in HLTV we must go to 'intermission' position by ourself
-		VectorCopy( gHUD.m_Spectator.m_cameraOrigin, pparams->vieworg );
-		VectorCopy( gHUD.m_Spectator.m_cameraAngles, pparams->viewangles );
+		VectorCopy( gHUD.m_Spectator->m_cameraOrigin, pparams->vieworg );
+		VectorCopy( gHUD.m_Spectator->m_cameraAngles, pparams->viewangles );
 	}
 
 	v_idlescale = old;
@@ -1005,7 +1006,7 @@ void V_GetSingleTargetCam(cl_entity_t * ent1, float * angle, float * origin)
 {
 	float newAngle[3]; float newOrigin[3]; 
 	
-	int flags 	   = gHUD.m_Spectator.m_iObserverFlags;
+	int flags 	   = gHUD.m_Spectator->m_iObserverFlags;
 
 	// see is target is a dead player
 	qboolean deadPlayer = ent1->player && (ent1->curstate.solid == SOLID_NOT);
@@ -1098,7 +1099,7 @@ void V_GetDoubleTargetsCam(cl_entity_t	 * ent1, cl_entity_t * ent2,float * angle
 {
 	float newAngle[3]; float newOrigin[3]; float tempVec[3];
 
-	int flags 	   = gHUD.m_Spectator.m_iObserverFlags;
+	int flags 	   = gHUD.m_Spectator->m_iObserverFlags;
 
 	float dfactor   = ( flags & DRC_FLAG_DRAMATIC )? -1.0f : 1.0f;
 
@@ -1207,7 +1208,7 @@ void V_GetDirectedChasePosition(cl_entity_t	 * ent1, cl_entity_t * ent2,float * 
 		// keep last good viewangle
 		float newOrigin[3];
 
-		int flags 	   = gHUD.m_Spectator.m_iObserverFlags;
+		int flags 	   = gHUD.m_Spectator->m_iObserverFlags;
 
 		float dfactor   = ( flags & DRC_FLAG_DRAMATIC )? -1.0f : 1.0f;
 
@@ -1255,7 +1256,7 @@ void V_GetChasePos(int target, float * cl_angles, float * origin, float * angles
 	
 	
 	
-	if ( gHUD.m_Spectator.m_autoDirector->value )
+	if ( gHUD.m_Spectator->m_autoDirector->value )
 	{
 		if ( g_iUser3 )
 			V_GetDirectedChasePosition( ent, gEngfuncs.GetEntityByIndex( g_iUser3 ),
@@ -1335,16 +1336,16 @@ void V_GetMapFreePosition( float * cl_angles, float * origin, float * angles )
 	// modify angles since we don't wanna see map's bottom
 	angles[0] = 51.25f + 38.75f*(angles[0]/90.0f);
 
-	zScaledTarget[0] = gHUD.m_Spectator.m_mapOrigin[0];
-	zScaledTarget[1] = gHUD.m_Spectator.m_mapOrigin[1];
-	zScaledTarget[2] = gHUD.m_Spectator.m_mapOrigin[2] * (( 90.0f - angles[0] ) / 90.0f );
+	zScaledTarget[0] = gHUD.m_Spectator->m_mapOrigin[0];
+	zScaledTarget[1] = gHUD.m_Spectator->m_mapOrigin[1];
+	zScaledTarget[2] = gHUD.m_Spectator->m_mapOrigin[2] * (( 90.0f - angles[0] ) / 90.0f );
 	
 
 	AngleVectors(angles, forward, NULL, NULL);
 
 	VectorNormalize(forward);
 
-	VectorMA(zScaledTarget, -( 4096.0f / gHUD.m_Spectator.m_mapZoom ), forward , origin);
+	VectorMA(zScaledTarget, -( 4096.0f / gHUD.m_Spectator->m_mapZoom ), forward , origin);
 }
 
 void V_GetMapChasePosition(int target, float * cl_angles, float * origin, float * angles)
@@ -1355,7 +1356,7 @@ void V_GetMapChasePosition(int target, float * cl_angles, float * origin, float 
 	{
 		cl_entity_t	 *	ent = gEngfuncs.GetEntityByIndex( target );
 
-		if ( gHUD.m_Spectator.m_autoDirector->value )
+		if ( gHUD.m_Spectator->m_autoDirector->value )
 		{
 			// this is done to get the angles made by director mode
 			V_GetChasePos(target, cl_angles, origin, angles);
@@ -1460,7 +1461,7 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 	VectorCopy ( pparams->viewangles, v_angles );
 	VectorCopy ( pparams->vieworg, v_origin );
 
-	if (  ( g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator.m_pip->value == INSET_IN_EYE ) && ent )
+	if (  ( g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator->m_pip->value == INSET_IN_EYE ) && ent )
 	{
 		// calculate player velocity
 		float timeDiff = ent->curstate.msg_time - ent->prevstate.msg_time;
@@ -1556,24 +1557,24 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 									break;
 		}
 
-		if ( gHUD.m_Spectator.m_pip->value )
+		if ( gHUD.m_Spectator->m_pip->value )
 			pparams->nextView = 1;	// force a second renderer view
 
-		gHUD.m_Spectator.m_iDrawCycle = 0;
+		gHUD.m_Spectator->m_iDrawCycle = 0;
 	}
 	else
 	{
 		// second renderer cycle, inset window
 
 		// set inset parameters
-		pparams->viewport[0] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowX);	// change viewport to inset window
-		pparams->viewport[1] = YRES(gHUD.m_Spectator.m_OverviewData.insetWindowY);
-		pparams->viewport[2] = XRES(gHUD.m_Spectator.m_OverviewData.insetWindowWidth);
-		pparams->viewport[3] = YRES(gHUD.m_Spectator.m_OverviewData.insetWindowHeight);
+		pparams->viewport[0] = XRES(gHUD.m_Spectator->m_OverviewData.insetWindowX);	// change viewport to inset window
+		pparams->viewport[1] = YRES(gHUD.m_Spectator->m_OverviewData.insetWindowY);
+		pparams->viewport[2] = XRES(gHUD.m_Spectator->m_OverviewData.insetWindowWidth);
+		pparams->viewport[3] = YRES(gHUD.m_Spectator->m_OverviewData.insetWindowHeight);
 		pparams->nextView	 = 0;	// on further view
 
 		// override some settings in certain modes
-		switch ( (int)gHUD.m_Spectator.m_pip->value )
+		switch ( (int)gHUD.m_Spectator->m_pip->value )
 		{
 			case INSET_CHASE_FREE : V_GetChasePos( g_iUser2, v_cl_angles, v_origin, v_angles );
 									break;	
@@ -1595,7 +1596,7 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 									break;
 		}
 
-		gHUD.m_Spectator.m_iDrawCycle = 1;
+		gHUD.m_Spectator->m_iDrawCycle = 1;
 	}
 
 	// write back new values into pparams

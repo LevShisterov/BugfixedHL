@@ -15,16 +15,17 @@
 //
 // death notice
 //
+
+#include <stdio.h>
+#include <string.h>
+#include "CHudDeathNotice.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
-
-#include <string.h>
-#include <stdio.h>
-
 #include "vgui_TeamFortressViewport.h"
+#include "CHudSpectator.h"
 
-DECLARE_MESSAGE( m_DeathNotice, DeathMsg );
+DECLARE_MESSAGE_PTR( m_DeathNotice, DeathMsg );
 
 struct DeathNoticeItem {
 	char szKiller[MAX_PLAYER_NAME];
@@ -148,7 +149,7 @@ int CHudDeathNotice :: MsgFunc_DeathMsg( const char *pszName, int iSize, void *p
 	if (gViewPort)
 		gViewPort->DeathMsg( killer, victim );
 
-	gHUD.m_Spectator.DeathMessage(victim);
+	gHUD.m_Spectator->DeathMessage(victim);
 
 	int i;
 	for ( i = 0; i < MAX_DEATHNOTICES; i++ )

@@ -18,6 +18,8 @@
 #include "vgui_TeamFortressViewport.h"
 #include "vgui_SpectatorPanel.h"
 #include "vgui_scorepanel.h"
+#include "CHudSpectator.h"
+#include "CHudTextMessage.h"
 
 #define PANEL_HEIGHT 32
 
@@ -51,10 +53,10 @@ void SpectatorPanel::ActionSignal(int cmd)
 		case SPECTATOR_PANEL_CMD_OPTIONS :		gViewPort->ShowCommandMenu( gViewPort->m_SpectatorOptionsMenu );
 												break;
 
-		case SPECTATOR_PANEL_CMD_NEXTPLAYER :	gHUD.m_Spectator.FindNextPlayer(true);
+		case SPECTATOR_PANEL_CMD_NEXTPLAYER :	gHUD.m_Spectator->FindNextPlayer(true);
 												break;
 
-		case SPECTATOR_PANEL_CMD_PREVPLAYER :	gHUD.m_Spectator.FindNextPlayer(false);
+		case SPECTATOR_PANEL_CMD_PREVPLAYER :	gHUD.m_Spectator->FindNextPlayer(false);
 												break;
 
 		case SPECTATOR_PANEL_CMD_HIDEMENU	:	ShowMenu(false); 
@@ -63,8 +65,8 @@ void SpectatorPanel::ActionSignal(int cmd)
 		case SPECTATOR_PANEL_CMD_CAMERA :		gViewPort->ShowCommandMenu( gViewPort->m_SpectatorCameraMenu );
 												break;
 
-		case SPECTATOR_PANEL_CMD_TOGGLE_INSET : gHUD.m_Spectator.SetModes( -1, 
-													gHUD.m_Spectator.ToggleInset(false) );
+		case SPECTATOR_PANEL_CMD_TOGGLE_INSET : gHUD.m_Spectator->SetModes( -1, 
+													gHUD.m_Spectator->ToggleInset(false) );
 												break;
 
 		default : 	gEngfuncs.Con_DPrintf("Unknown SpectatorPanel ActionSingal %i.\n",cmd); break;
@@ -235,7 +237,7 @@ void SpectatorPanel::ShowMenu(bool isVisible)
 			_snprintf( string, sizeof( string ) - 1, "%c%s", HUD_PRINTCENTER, CHudTextMessage::BufferedLocaliseTextString( "#Spec_Duck" ) );
 			string[ sizeof( string ) - 1 ] = '\0';
 
-			gHUD.m_TextMessage.MsgFunc_TextMsg( NULL, strlen( string ) + 1, string );
+			gHUD.m_TextMessage->MsgFunc_TextMsg( NULL, strlen( string ) + 1, string );
 		}
 	}
 
@@ -277,10 +279,10 @@ const char *GetSpectatorLabel ( int iMode )
 
 void SpectatorPanel::EnableInsetView(bool isEnabled)
 {
-	int x = gHUD.m_Spectator.m_OverviewData.insetWindowX;
-	int y = gHUD.m_Spectator.m_OverviewData.insetWindowY;
-	int wide = gHUD.m_Spectator.m_OverviewData.insetWindowWidth;
-	int tall = gHUD.m_Spectator.m_OverviewData.insetWindowHeight;
+	int x = gHUD.m_Spectator->m_OverviewData.insetWindowX;
+	int y = gHUD.m_Spectator->m_OverviewData.insetWindowY;
+	int wide = gHUD.m_Spectator->m_OverviewData.insetWindowWidth;
+	int tall = gHUD.m_Spectator->m_OverviewData.insetWindowHeight;
 	int offset = x + wide + 2;
 	
 	if ( isEnabled )
@@ -331,11 +333,11 @@ void SpectatorPanel::Update()
 	//int offset,j;
 
 	//if ( m_insetVisible )
-	//	offset = gHUD.m_Spectator.m_OverviewData.insetWindowX + gHUD.m_Spectator.m_OverviewData.insetWindowWidth + 2;
+	//	offset = gHUD.m_Spectator->m_OverviewData.insetWindowX + gHUD.m_Spectator->m_OverviewData.insetWindowWidth + 2;
 	//else
 	//	offset = 0;
 
-	//bool visible = gHUD.m_Spectator.m_drawstatus->value != 0;
+	//bool visible = gHUD.m_Spectator->m_drawstatus->value != 0;
 
 	//m_ExtraInfo->setVisible( visible );
 	//m_TimerImage->setVisible( visible );

@@ -29,7 +29,7 @@ extern "C" {
 #include "const.h"
 #include "archtypes.h"
 #include "Sequence.h"
-
+#include "wrect.h"
 
 // this file is included by both the engine and the client-dll,
 // so make sure engine declarations aren't done twice

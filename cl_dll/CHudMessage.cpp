@@ -17,16 +17,17 @@
 //
 // implementation of CHudMessage class
 //
-
+#include <stdio.h>
+#include <string.h>
+#include <windows.h>
+#include "CHudMessage.h"
 #include "hud.h"
 #include "cl_util.h"
-#include <string.h>
-#include <stdio.h>
-#include <windows.h>
 #include "parsemsg.h"
+#include "CHudTimer.h"
 
-DECLARE_MESSAGE( m_Message, HudText )
-DECLARE_MESSAGE( m_Message, GameTitle )
+DECLARE_MESSAGE_PTR( m_Message, HudText )
+DECLARE_MESSAGE_PTR( m_Message, GameTitle )
 
 // 1 Global client_textmessage_t for custom messages that aren't in the titles.txt
 #define MAX_MESSAGE_TEXT_LENGTH	1024
@@ -379,7 +380,7 @@ int CHudMessage::Draw( float fTime )
 		pMessage = m_pMessages[i];
 
 		// Filter out MiniAG timer that passed before we detected server AG version
-		if (gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_MINI && (
+		if (gHUD.m_Timer->GetAgVersion() == CHudTimer::SV_AG_MINI && (
 			fabs(pMessage->y - 0.01) < 0.0002f && fabs(pMessage->x - 0.5) < 0.0002f ||	// Original MiniAG coordinates
 			fabs(pMessage->y - 0.01) < 0.0002f && fabs(pMessage->x + 1) < 0.0002f		// Russian Crossfire MiniAG coordinates
 			))
@@ -469,7 +470,7 @@ void CHudMessage::MessageAdd( const char *pName, float time )
 		}
 
 		// Filter out MiniAG timer
-		if (gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_MINI && (
+		if (gHUD.m_Timer->GetAgVersion() == CHudTimer::SV_AG_MINI && (
 			fabs(tempMessage->y - 0.01) < 0.0002f && fabs(tempMessage->x - 0.5) < 0.0002f ||	// Original MiniAG coordinates
 			fabs(tempMessage->y - 0.01) < 0.0002f && fabs(tempMessage->x + 1) < 0.0002f			// Russian Crossfire MiniAG coordinates
 			))

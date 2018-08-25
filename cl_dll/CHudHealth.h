@@ -12,6 +12,10 @@
 *   without written permission from Valve LLC.
 *
 ****/
+#ifndef CHUDHEALTH_H
+#define CHUDHEALTH_H
+
+#include "CHudBase.h"
 
 #define DMG_IMAGE_LIFE		2	// seconds that image is up
 
@@ -72,9 +76,8 @@
 #define DMG_IGNOREARMOR		(1 << 27)	// Damage ignores target's armor
 #define DMG_AIMED			(1 << 28)   // Does Hit location damage
 #define DMG_WALLPIERCING	(1 << 29)	// Blast Damages ents through walls
-
-#define DMG_CALTROP				(1<<30)
-#define DMG_HALLUC				(1<<31)
+#define DMG_CALTROP			(1 << 30)
+#define DMG_HALLUC			(1 << 31)
 
 // TF Healing Additions for TakeHealth
 #define DMG_IGNORE_MAXHEALTH	DMG_IGNITE
@@ -125,3 +128,5 @@ private:
 	void CalcDamageDirection(vec3_t vecFrom);
 	void UpdateTiles(float fTime, long bits);
 };	
+
+#endif

@@ -28,6 +28,7 @@ extern "C"
 #include <ctype.h>
 
 #include "vgui_TeamFortressViewport.h"
+#include "CHudSpectator.h"
 
 
 extern "C" 
@@ -415,25 +416,25 @@ void IN_RightUp(void) {KeyUp(&in_right);}
 void IN_ForwardDown(void)
 {
 	KeyDown(&in_forward);
-	gHUD.m_Spectator.HandleButtonsDown( IN_FORWARD );
+	gHUD.m_Spectator->HandleButtonsDown( IN_FORWARD );
 }
 
 void IN_ForwardUp(void)
 {
 	KeyUp(&in_forward);
-	gHUD.m_Spectator.HandleButtonsUp( IN_FORWARD );
+	gHUD.m_Spectator->HandleButtonsUp( IN_FORWARD );
 }
 
 void IN_BackDown(void)
 {
 	KeyDown(&in_back);
-	gHUD.m_Spectator.HandleButtonsDown( IN_BACK );
+	gHUD.m_Spectator->HandleButtonsDown( IN_BACK );
 }
 
 void IN_BackUp(void)
 {
 	KeyUp(&in_back);
-	gHUD.m_Spectator.HandleButtonsUp( IN_BACK );
+	gHUD.m_Spectator->HandleButtonsUp( IN_BACK );
 }
 void IN_LookupDown(void) {KeyDown(&in_lookup);}
 void IN_LookupUp(void) {KeyUp(&in_lookup);}
@@ -442,25 +443,25 @@ void IN_LookdownUp(void) {KeyUp(&in_lookdown);}
 void IN_MoveleftDown(void)
 {
 	KeyDown(&in_moveleft);
-	gHUD.m_Spectator.HandleButtonsDown( IN_MOVELEFT );
+	gHUD.m_Spectator->HandleButtonsDown( IN_MOVELEFT );
 }
 
 void IN_MoveleftUp(void)
 {
 	KeyUp(&in_moveleft);
-	gHUD.m_Spectator.HandleButtonsUp( IN_MOVELEFT );
+	gHUD.m_Spectator->HandleButtonsUp( IN_MOVELEFT );
 }
 
 void IN_MoverightDown(void)
 {
 	KeyDown(&in_moveright);
-	gHUD.m_Spectator.HandleButtonsDown( IN_MOVERIGHT );
+	gHUD.m_Spectator->HandleButtonsDown( IN_MOVERIGHT );
 }
 
 void IN_MoverightUp(void)
 {
 	KeyUp(&in_moveright);
-	gHUD.m_Spectator.HandleButtonsUp( IN_MOVERIGHT );
+	gHUD.m_Spectator->HandleButtonsUp( IN_MOVERIGHT );
 }
 void IN_SpeedDown(void) {KeyDown(&in_speed);}
 void IN_SpeedUp(void) {KeyUp(&in_speed);}
@@ -473,20 +474,20 @@ extern void __CmdFunc_InputPlayerSpecial(void);
 void IN_Attack2Down(void) 
 {
 	KeyDown(&in_attack2);
-	gHUD.m_Spectator.HandleButtonsDown( IN_ATTACK2 );
+	gHUD.m_Spectator->HandleButtonsDown( IN_ATTACK2 );
 }
 
 void IN_Attack2Up(void) {KeyUp(&in_attack2);}
 void IN_UseDown (void)
 {
 	KeyDown(&in_use);
-	gHUD.m_Spectator.HandleButtonsDown( IN_USE );
+	gHUD.m_Spectator->HandleButtonsDown( IN_USE );
 }
 void IN_UseUp (void) {KeyUp(&in_use);}
 void IN_JumpDown (void)
 {
 	KeyDown(&in_jump);
-	gHUD.m_Spectator.HandleButtonsDown( IN_JUMP );
+	gHUD.m_Spectator->HandleButtonsDown( IN_JUMP );
 }
 void IN_JumpUp (void) {KeyUp(&in_jump);}
 void IN_LongJumpDown(void) { KeyDown(&in_longjump); }
@@ -496,7 +497,7 @@ void IN_BunnyHopUp(void) { KeyUp(&in_bunnyhop); }
 void IN_DuckDown(void)
 {
 	KeyDown(&in_duck);
-	gHUD.m_Spectator.HandleButtonsDown( IN_DUCK );
+	gHUD.m_Spectator->HandleButtonsDown( IN_DUCK );
 }
 void IN_DuckUp(void) {KeyUp(&in_duck);}
 void IN_ReloadDown(void) {KeyDown(&in_reload);}
@@ -509,7 +510,7 @@ void IN_GraphUp(void) {KeyUp(&in_graph);}
 void IN_AttackDown(void)
 {
 	KeyDown( &in_attack );
-	gHUD.m_Spectator.HandleButtonsDown( IN_ATTACK );
+	gHUD.m_Spectator->HandleButtonsDown( IN_ATTACK );
 }
 
 void IN_AttackUp(void)
@@ -797,7 +798,7 @@ Returns 1 if health is <= 0
 */
 int CL_IsDead( void )
 {
-	return ( gHUD.m_Health.m_iHealth <= 0 ) ? 1 : 0;
+	return ( gHUD.m_Health->m_iHealth <= 0 ) ? 1 : 0;
 }
 
 /*

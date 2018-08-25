@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================
 
+#include "CHudSpectator.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "cl_entity.h"
@@ -27,7 +28,11 @@
 #include "screenfade.h"
 
 #include "svc_messages.h"
-
+#include "CHudTextMessage.h"
+#include "CHudSayText.h"
+#include "CHudMessage.h"
+#include "CHudTimer.h"
+#include "CHudAmmo.h"
 
 #pragma warning(disable: 4244)
 
@@ -57,9 +62,9 @@ void SpectatorMode(void)
 
 	// SetModes() will decide if command is executed on server or local
 	if ( gEngfuncs.Cmd_Argc() == 2 )
-		gHUD.m_Spectator.SetModes( atoi( gEngfuncs.Cmd_Argv(1) ), -1 );
+		gHUD.m_Spectator->SetModes( atoi( gEngfuncs.Cmd_Argv(1) ), -1 );
 	else if ( gEngfuncs.Cmd_Argc() == 3 )
-		gHUD.m_Spectator.SetModes( atoi( gEngfuncs.Cmd_Argv(1) ), atoi( gEngfuncs.Cmd_Argv(2) )  );	
+		gHUD.m_Spectator->SetModes( atoi( gEngfuncs.Cmd_Argv(1) ), atoi( gEngfuncs.Cmd_Argv(2) )  );	
 }
 
 void SpectatorSpray(void)
@@ -141,7 +146,7 @@ int CHudSpectator::Init()
 	m_flNextObserverInput = 0.0f;
 	m_zoomDelta	= 0.0f;
 	m_moveDelta = 0.0f;
-	m_chatEnabled = (gHUD.m_SayText.m_HUD_saytext->value!=0);
+	m_chatEnabled = (gHUD.m_SayText->m_HUD_saytext->value!=0);
 	iJumpSpectator	= 0;
 
 	memset( &m_OverviewData, 0, sizeof(m_OverviewData));
@@ -540,7 +545,7 @@ void CHudSpectator::DirectorMessage( int iSize, void *pbuf )
 								msg->pMessage = m_HUDMessageText[m_lastHudMessage];
 								msg->pName	  = "HUD_MESSAGE";
 
-								gHUD.m_Message.MessageAdd( msg );
+								gHUD.m_Message->MessageAdd( msg );
 
 								m_lastHudMessage++;
 								m_lastHudMessage %= MAX_SPEC_HUD_MESSAGES;
@@ -805,7 +810,7 @@ void CHudSpectator::SetModes(int iNewMainMode, int iNewInsetMode)
 		{
 			char cmdstring[32];
 			// forward command to server
-			if (gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_MINI || gHUD.m_Timer.GetAgVersion() == CHudTimer::SV_AG_FULL)
+			if (gHUD.m_Timer->GetAgVersion() == CHudTimer::SV_AG_MINI || gHUD.m_Timer->GetAgVersion() == CHudTimer::SV_AG_FULL)
 				sprintf(cmdstring,"spec_mode %i", iNewMainMode);
 			else
 				sprintf(cmdstring,"specmode %i", iNewMainMode);
@@ -876,7 +881,7 @@ void CHudSpectator::SetModes(int iNewMainMode, int iNewInsetMode)
 		char string[128];
 		sprintf(string, "#Spec_Mode%d", g_iUser1 );
 		sprintf(string, "%c%s", HUD_PRINTCENTER, CHudTextMessage::BufferedLocaliseTextString( string ));
-		gHUD.m_TextMessage.MsgFunc_TextMsg(NULL, strlen(string)+1, string );
+		gHUD.m_TextMessage->MsgFunc_TextMsg(NULL, strlen(string)+1, string );
 	}
 
 	gViewPort->UpdateSpectatorPanel();
@@ -1508,10 +1513,10 @@ void CHudSpectator::CheckSettings()
 		m_pip->value = INSET_OFF;
 
 	// check chat mode
-	if ( m_chatEnabled != (gHUD.m_SayText.m_HUD_saytext->value!=0) )
+	if ( m_chatEnabled != (gHUD.m_SayText->m_HUD_saytext->value!=0) )
 	{
 		// hud_saytext changed
-		m_chatEnabled = (gHUD.m_SayText.m_HUD_saytext->value!=0);
+		m_chatEnabled = (gHUD.m_SayText->m_HUD_saytext->value!=0);
 
 		if ( gEngfuncs.IsSpectateOnly() )
 		{
@@ -1544,7 +1549,7 @@ void CHudSpectator::CheckSettings()
 		// Show crosshair only for First Person mode
 		if (g_iUser1 == OBS_IN_EYE)
 		{
-			gHUD.m_Ammo.UpdateCrosshair();
+			gHUD.m_Ammo->UpdateCrosshair();
 		}
 		else
 		{

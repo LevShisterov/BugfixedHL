@@ -19,6 +19,7 @@
 #include "pm_defs.h"
 #include "pmtrace.h"	
 #include "pm_shared.h"
+#include "CHudSpectator.h"
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -71,9 +72,9 @@ int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *mode
 
 	if ( g_iUser1 )
 	{
-		gHUD.m_Spectator.AddOverviewEntity( type, ent, modelname );
+		gHUD.m_Spectator->AddOverviewEntity( type, ent, modelname );
 
-		if ( ( g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator.m_pip->value == INSET_IN_EYE ) &&
+		if ( ( g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator->m_pip->value == INSET_IN_EYE ) &&
 				ent->index == g_iUser2 )
 			return 0;	// don't draw the player we are following in eye
 

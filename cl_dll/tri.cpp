@@ -16,6 +16,7 @@
 #include "entity_state.h"
 #include "cl_entity.h"
 #include "triangleapi.h"
+#include "CHudSpectator.h"
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -101,7 +102,7 @@ Non-transparent triangles-- add them here
 void DLLEXPORT HUD_DrawNormalTriangles( void )
 {
 
-	gHUD.m_Spectator.DrawOverview();
+	gHUD.m_Spectator->DrawOverview();
 	
 #if defined( TEST_IT )
 //	Draw_Triangles();

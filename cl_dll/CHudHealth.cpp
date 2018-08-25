@@ -18,18 +18,19 @@
 // implementation of CHudHealth class
 //
 
-#include "STDIO.H"
-#include "STDLIB.H"
-#include "MATH.H"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
 
+#include "CHudHealth.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
-#include <string.h>
 
 
-DECLARE_MESSAGE(m_Health, Health )
-DECLARE_MESSAGE(m_Health, Damage )
+DECLARE_MESSAGE_PTR(m_Health, Health )
+DECLARE_MESSAGE_PTR(m_Health, Damage )
 
 #define PAIN_NAME "sprites/%d_pain.spr"
 #define DAMAGE_NAME "sprites/%d_dmg.spr"
@@ -40,9 +41,9 @@ int giDmgFlags[NUM_DMG_TYPES] =
 {
 	DMG_POISON,
 	DMG_ACID,
-	DMG_FREEZE|DMG_SLOWFREEZE,
+	DMG_FREEZE | DMG_SLOWFREEZE,
 	DMG_DROWN,
-	DMG_BURN|DMG_SLOWBURN,
+	DMG_BURN | DMG_SLOWBURN,
 	DMG_NERVEGAS, 
 	DMG_RADIATION,
 	DMG_SHOCK,
@@ -110,7 +111,7 @@ int CHudHealth:: MsgFunc_Health(const char *pszName,  int iSize, void *pbuf )
 	// Only update the fade if we've changed health
 	if (x != m_iHealth)
 	{
-		m_fFade = FADE_TIME;
+		m_fFade = HUD_FADE_TIME;
 		m_iHealth = x;
 	}
 
@@ -190,7 +191,7 @@ int CHudHealth::Draw(float flTime)
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
 		if (m_fFade <= 0)
 			m_fFade = 0;
-		a = MIN_ALPHA + (m_fFade/FADE_TIME) * ALPHA_POINTS_FLASH;
+		a = MIN_ALPHA + (m_fFade/HUD_FADE_TIME) * ALPHA_POINTS_FLASH;
 	}
 	else
 		a = MIN_ALPHA;
@@ -201,7 +202,7 @@ int CHudHealth::Draw(float flTime)
 	health = clamp(health, 0, 999);
 	if (m_iHealth != health && health > 255)
 	{
-		m_fFade = FADE_TIME;
+		m_fFade = HUD_FADE_TIME;
 		m_iHealth = health;
 	}
 

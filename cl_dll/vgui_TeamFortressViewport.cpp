@@ -55,6 +55,9 @@
 #include "vgui_ScorePanel.h"
 #include "vgui_SpectatorPanel.h"
 
+#include "CHudTextMessage.h"
+#include "CHudSpectator.h"
+
 extern int g_iVisibleMouse;
 class CCommandMenu;
 int g_iPlayerClass;
@@ -678,9 +681,9 @@ try
 	// First, read in the localisation strings
 
 	// Detpack strings
-	gHUD.m_TextMessage.LocaliseTextString( "#DetpackSet_For5Seconds",   m_sDetpackStrings[0], MAX_BUTTON_SIZE );
-	gHUD.m_TextMessage.LocaliseTextString( "#DetpackSet_For20Seconds",   m_sDetpackStrings[1], MAX_BUTTON_SIZE );
-	gHUD.m_TextMessage.LocaliseTextString( "#DetpackSet_For50Seconds",   m_sDetpackStrings[2], MAX_BUTTON_SIZE );
+	gHUD.m_TextMessage->LocaliseTextString( "#DetpackSet_For5Seconds",   m_sDetpackStrings[0], MAX_BUTTON_SIZE );
+	gHUD.m_TextMessage->LocaliseTextString( "#DetpackSet_For20Seconds",   m_sDetpackStrings[1], MAX_BUTTON_SIZE );
+	gHUD.m_TextMessage->LocaliseTextString( "#DetpackSet_For50Seconds",   m_sDetpackStrings[2], MAX_BUTTON_SIZE );
 
 	// Now start parsing the menu structure
 	m_pCurrentCommandMenu = m_pCommandMenus[newIndex];
@@ -958,7 +961,7 @@ CommandButton *TeamFortressViewport::CreateCustomButton( char *pButtonText, char
 
 		// Auto Assign button
 		sprintf(sz, "jointeam %d", MAX_TEAMS_IN_MENU + 1);
-		m_pTeamButtons[MAX_TEAMS_IN_MENU] = new TeamButton(MAX_TEAMS_IN_MENU + 1, gHUD.m_TextMessage.BufferedLocaliseTextString( "Auto Assign" ), 0, BUTTON_SIZE_Y, CMENU_SIZE_X, BUTTON_SIZE_Y);
+		m_pTeamButtons[MAX_TEAMS_IN_MENU] = new TeamButton(MAX_TEAMS_IN_MENU + 1, gHUD.m_TextMessage->BufferedLocaliseTextString( "Auto Assign" ), 0, BUTTON_SIZE_Y, CMENU_SIZE_X, BUTTON_SIZE_Y);
 		m_pTeamButtons[MAX_TEAMS_IN_MENU]->addActionSignal(new CMenuHandler_StringCommand( sz ));
 		pMenu->AddButton( m_pTeamButtons[MAX_TEAMS_IN_MENU] );
 
@@ -1399,7 +1402,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		int player = 0;
 
 		// check if spectator combinations are still valid
-		gHUD.m_Spectator.CheckSettings();
+		gHUD.m_Spectator->CheckSettings();
 
 		if ( !m_pSpectatorPanel->isVisible() )
 		{
@@ -1409,7 +1412,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 			_snprintf( tempString, sizeof( tempString ) - 1, "%c%s", HUD_PRINTCENTER, CHudTextMessage::BufferedLocaliseTextString( "#Spec_Duck" ) );
 			tempString[ sizeof( tempString ) - 1 ] = '\0';
 
-			gHUD.m_TextMessage.MsgFunc_TextMsg( NULL, strlen( tempString ) + 1, tempString );
+			gHUD.m_TextMessage->MsgFunc_TextMsg( NULL, strlen( tempString ) + 1, tempString );
 		}
 
 		sprintf(bottomText, "#Spec_Mode%d", g_iUser1 );
@@ -1425,7 +1428,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		}
 
 		// special case in free map and inset off, don't show names
-		if ((g_iUser1 != OBS_MAP_FREE && g_iUser1 != OBS_ROAMING || gHUD.m_Spectator.m_pip->value) && player && g_PlayerInfoList[player].name)
+		if ((g_iUser1 != OBS_MAP_FREE && g_iUser1 != OBS_ROAMING || gHUD.m_Spectator->m_pip->value) && player && g_PlayerInfoList[player].name)
 		{
 			if (gHUD.m_pCvarColorText->value == 0)
 				strncpy(bottomText, g_PlayerInfoList[player].name, sizeof(bottomText) - 1);
@@ -1452,7 +1455,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		m_pSpectatorPanel->m_BottomMainLabel->setFgColor(r, g, b, 0);
 
 		// add sting auto if we are in auto directed mode
-		if ( gHUD.m_Spectator.m_autoDirector->value )
+		if ( gHUD.m_Spectator->m_autoDirector->value )
 		{
 			char tempString[128];
 			sprintf(tempString, "#Spec_Auto %s", helpString2);
@@ -1468,7 +1471,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		if ( gEngfuncs.IsSpectateOnly() )
 		{
 			// in HLTV mode show number of spectators
-			_snprintf( szText, 63, "%s: %d", CHudTextMessage::BufferedLocaliseTextString( "#Spectators" ), gHUD.m_Spectator.m_iSpectatorNumber );
+			_snprintf( szText, 63, "%s: %d", CHudTextMessage::BufferedLocaliseTextString( "#Spectators" ), gHUD.m_Spectator->m_iSpectatorNumber );
 		}
 		else
 		{
@@ -2169,7 +2172,7 @@ int TeamFortressViewport::MsgFunc_TeamNames(const char *pszName, int iSize, void
 
 		int teamNum = i + 1;
 
-		gHUD.m_TextMessage.LocaliseTextString( READ_STRING(), m_sTeamNames[teamNum], MAX_TEAM_NAME );
+		gHUD.m_TextMessage->LocaliseTextString( READ_STRING(), m_sTeamNames[teamNum], MAX_TEAM_NAME );
 
 		// Parse the model and remove any %'s
 		for (char *c = m_sTeamNames[teamNum]; *c != 0; c++)

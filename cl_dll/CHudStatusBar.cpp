@@ -19,15 +19,16 @@
 // runs across bottom of screen
 //
 
+#include <stdio.h>
+#include <string.h>
+#include "CHudStatusBar.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
+#include "CHudTextMessage.h"
 
-#include <string.h>
-#include <stdio.h>
-
-DECLARE_MESSAGE( m_StatusBar, StatusText );
-DECLARE_MESSAGE( m_StatusBar, StatusValue );
+DECLARE_MESSAGE_PTR( m_StatusBar, StatusText );
+DECLARE_MESSAGE_PTR( m_StatusBar, StatusValue );
 
 #define STATUSBAR_ID_LINE		1
 
@@ -74,7 +75,7 @@ void CHudStatusBar :: ParseStatusString( int line_num )
 	// localise string first
 	char szBuffer[MAX_STATUSTEXT_LENGTH];
 	memset( szBuffer, 0, sizeof szBuffer );
-	gHUD.m_TextMessage.LocaliseTextString( m_szStatusText[line_num], szBuffer, MAX_STATUSTEXT_LENGTH );
+	gHUD.m_TextMessage->LocaliseTextString( m_szStatusText[line_num], szBuffer, MAX_STATUSTEXT_LENGTH );
 
 	// parse m_szStatusText & m_iStatusValues into m_szStatusBar
 	memset( m_szStatusBar[line_num], 0, MAX_STATUSTEXT_LENGTH );
