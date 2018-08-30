@@ -24,6 +24,7 @@
 #define CHUD_H
 
 #include <list>
+#include <memory>
 #include "wrect.h"
 #include "cl_dll.h"
 #include "ammo.h"
@@ -127,8 +128,8 @@ struct CharWidths
 #include "aghudtimeout.h"
 #include "aghudvote.h"
 
-#define HUD_ELEM_INIT_FULL(type, var) var = new type(); var->m_isDeletable = true; var->Init();
-#define HUD_ELEM_INIT(x) m_##x = new CHud##x(); m_##x->m_isDeletable = true; m_##x->Init();
+#define HUD_ELEM_INIT_FULL(type, var) var = std::unique_ptr<type>(new type()); var->m_isDeletable = true; var->Init();
+#define HUD_ELEM_INIT(x) HUD_ELEM_INIT_FULL(CHud##x, m_##x)
 
 class CHud
 {
@@ -147,23 +148,23 @@ public:
 	//-----------------------------------------------------
 	// HUD elements
 	//-----------------------------------------------------
-	CHudAmmo			*m_Ammo	= nullptr;
-	CHudHealth			*m_Health = nullptr;
-	CHudSpectator		*m_Spectator = nullptr;
-	CHudGeiger			*m_Geiger = nullptr;
-	CHudBattery			*m_Battery = nullptr;
-	CHudTrain			*m_Train = nullptr;
-	CHudFlashlight		*m_Flash = nullptr;
-	CHudMessage			*m_Message = nullptr;
-	CHudStatusBar		*m_StatusBar = nullptr;
-	CHudDeathNotice		*m_DeathNotice = nullptr;
-	CHudSayText			*m_SayText = nullptr;
-	CHudMenu			*m_Menu = nullptr;
-	CHudAmmoSecondary	*m_AmmoSecondary = nullptr;
-	CHudTextMessage		*m_TextMessage = nullptr;
-	CHudStatusIcons		*m_StatusIcons = nullptr;
-	CHudTimer			*m_Timer = nullptr;
-	CHudScores			*m_Scores = nullptr;
+	std::unique_ptr<CHudAmmo>			m_Ammo	= nullptr;
+	std::unique_ptr<CHudHealth>			m_Health = nullptr;
+	std::unique_ptr<CHudSpectator>		m_Spectator = nullptr;
+	std::unique_ptr<CHudGeiger>			m_Geiger = nullptr;
+	std::unique_ptr<CHudBattery>		m_Battery = nullptr;
+	std::unique_ptr<CHudTrain>			m_Train = nullptr;
+	std::unique_ptr<CHudFlashlight>		m_Flash = nullptr;
+	std::unique_ptr<CHudMessage>		m_Message = nullptr;
+	std::unique_ptr<CHudStatusBar>		m_StatusBar = nullptr;
+	std::unique_ptr<CHudDeathNotice>	m_DeathNotice = nullptr;
+	std::unique_ptr<CHudSayText>		m_SayText = nullptr;
+	std::unique_ptr<CHudMenu>			m_Menu = nullptr;
+	std::unique_ptr<CHudAmmoSecondary>	m_AmmoSecondary = nullptr;
+	std::unique_ptr<CHudTextMessage>	m_TextMessage = nullptr;
+	std::unique_ptr<CHudStatusIcons>	m_StatusIcons = nullptr;
+	std::unique_ptr<CHudTimer>			m_Timer = nullptr;
+	std::unique_ptr<CHudScores>			m_Scores = nullptr;
 
 	//-----------------------------------------------------
 	// AG HUD elements

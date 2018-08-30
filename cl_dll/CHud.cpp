@@ -473,15 +473,12 @@ CHud::CHud() : m_iSpriteCount(0)
 }
 
 // CHud destructor
-// cleans up memory allocated for m_rg* arrays
+// frees allocated dynamic memory
 CHud :: ~CHud()
 {
 	delete [] m_rghSprites;
 	delete [] m_rgrcRects;
 	delete [] m_rgszSpriteNames;
-
-	for (CHudBase *i : m_HudList) if (i->m_isDeletable) delete i;
-	m_HudList.clear();
 
 	CharWidths* cur = m_CharWidths.next;
 	CharWidths* next;
