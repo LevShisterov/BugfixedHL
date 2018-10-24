@@ -671,6 +671,8 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 		pPlayer->GiveAmmo( 68, "9mm", _9MM_MAX_CARRY );// 4 full reloads
 	}
 
+	FireTargets("game_playerspawn", pPlayer, pPlayer, USE_TOGGLE, 0);
+
 	pPlayer->m_iAutoWeaponSwitch = aws;
 }
 
