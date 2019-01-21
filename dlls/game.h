@@ -45,6 +45,23 @@ extern cvar_t	allowmonsters;
 extern cvar_t	mp_notify_player_status;
 extern cvar_t	mp_welcomecam;
 
+extern cvar_t	mp_dmg_crowbar;
+extern cvar_t	mp_dmg_glock;
+extern cvar_t	mp_dmg_357;
+extern cvar_t	mp_dmg_mp5;
+extern cvar_t	mp_dmg_shotgun;
+extern cvar_t	mp_dmg_xbow_scope;
+extern cvar_t	mp_dmg_xbow_noscope;
+extern cvar_t	mp_dmg_rpg;
+extern cvar_t	mp_dmg_gauss_primary;
+extern cvar_t	mp_dmg_gauss_secondary;
+extern cvar_t	mp_dmg_egon;
+extern cvar_t	mp_dmg_hornet;
+extern cvar_t	mp_dmg_hgrenade;
+extern cvar_t	mp_dmg_satchel;
+extern cvar_t	mp_dmg_tripmine;
+extern cvar_t	mp_dmg_m203;
+
 // Engine Cvars
 extern cvar_t	*g_psv_gravity;
 extern cvar_t	*g_psv_aim;

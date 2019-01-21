@@ -314,11 +314,11 @@ void CGauss::StartFire( void )
 	
 	if ( gpGlobals->time - m_pPlayer->m_flStartCharge > GetFullChargeTime() )
 	{
-		flDamage = 200;
+		flDamage = gSkillData.plrDmgGaussSecondary;
 	}
 	else
 	{
-		flDamage = 200 * (( gpGlobals->time - m_pPlayer->m_flStartCharge) / GetFullChargeTime() );
+		flDamage = gSkillData.plrDmgGaussSecondary * (( gpGlobals->time - m_pPlayer->m_flStartCharge) / GetFullChargeTime() );
 	}
 
 	if ( m_fPrimaryFire )
