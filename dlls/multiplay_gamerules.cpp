@@ -144,44 +144,48 @@ void CHalfLifeMultiplay::RefreshSkillData( void )
 	gSkillData.suitchargerCapacity = 30;
 
 	// Crowbar whack
-	gSkillData.plrDmgCrowbar = 25;
+	gSkillData.plrDmgCrowbar = mp_dmg_crowbar.value;
 
 	// Glock Round
-	gSkillData.plrDmg9MM = 12;
+	gSkillData.plrDmg9MM = mp_dmg_glock.value;
 
 	// 357 Round
-	gSkillData.plrDmg357 = 40;
+	gSkillData.plrDmg357 = mp_dmg_357.value;
 
 	// MP5 Round
-	gSkillData.plrDmgMP5 = 12;
+	gSkillData.plrDmgMP5 = mp_dmg_mp5.value;
 
 	// M203 grenade
-	gSkillData.plrDmgM203Grenade = 100;
+	gSkillData.plrDmgM203Grenade = mp_dmg_m203.value;
 
 	// Shotgun buckshot
-	gSkillData.plrDmgBuckshot = 20;// fewer pellets in deathmatch
+	gSkillData.plrDmgBuckshot = mp_dmg_shotgun.value;
 
 	// Crossbow
-	gSkillData.plrDmgCrossbowClient = 20;
+	gSkillData.plrDmgCrossbowScope = mp_dmg_xbow_scope.value;
+	gSkillData.plrDmgCrossbowNoScope = mp_dmg_xbow_noscope.value;
 
 	// RPG
-	gSkillData.plrDmgRPG = 120;
+	gSkillData.plrDmgRPG = mp_dmg_rpg.value;
 
 	// Egon
-	gSkillData.plrDmgEgonWide = 20;
-	gSkillData.plrDmgEgonNarrow = 10;
+	gSkillData.plrDmgEgonWide = mp_dmg_egon.value;
 
-	// Hand Grendade
-	gSkillData.plrDmgHandGrenade = 100;
+	// Hand Grenade
+	gSkillData.plrDmgHandGrenade = mp_dmg_hgrenade.value;
 
 	// Satchel Charge
-	gSkillData.plrDmgSatchel = 120;
+	gSkillData.plrDmgSatchel = mp_dmg_satchel.value;
 
 	// Tripmine
-	gSkillData.plrDmgTripmine = 150;
+	gSkillData.plrDmgTripmine = mp_dmg_tripmine.value;
 
 	// hornet
-	gSkillData.plrDmgHornet = 10;
+	gSkillData.plrDmgHornet = mp_dmg_hornet.value;
+
+	// gauss
+	gSkillData.plrDmgGauss = mp_dmg_gauss_primary.value;
+	gSkillData.plrDmgGaussSecondary = mp_dmg_gauss_secondary.value;
 }
 
 // longest the intermission can last, in seconds

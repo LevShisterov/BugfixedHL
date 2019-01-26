@@ -183,7 +183,7 @@ void CCrossbowBolt::ExplodeThink( void )
 	int iContents = UTIL_PointContents ( pev->origin );
 	int iScale;
 	
-	pev->dmg = 40;
+	pev->dmg = gSkillData.plrDmgCrossbowNoScope;
 	iScale = 10;
 
 	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
@@ -368,7 +368,7 @@ void CCrossbow::FireSniperBolt()
 	if ( tr.pHit->v.takedamage )
 	{
 		ClearMultiDamage( );
-		CBaseEntity::Instance(tr.pHit)->TraceAttack(m_pPlayer->pev, 120, vecDir, &tr, DMG_BULLET | DMG_NEVERGIB ); 
+		CBaseEntity::Instance(tr.pHit)->TraceAttack(m_pPlayer->pev, gSkillData.plrDmgCrossbowScope, vecDir, &tr, DMG_BULLET | DMG_NEVERGIB ); 
 		ApplyMultiDamage( pev, m_pPlayer->pev );
 	}
 #endif
