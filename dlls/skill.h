@@ -108,10 +108,9 @@ struct skilldata_t
 	float plrDmgHandGrenade;
 	float plrDmgSatchel;
 	float plrDmgTripmine;
-// NEW: added some missing weapons dmg cvars (xbow cvars are only used in multiplayer)
 	float plrDmgGaussSecondary;
-	float plrDmgCrossbowScope;		// normal bolt
-	float plrDmgCrossbowNoScope;	// explosive bolt
+	float plrDmgCrossbowScope;	// normal bolt (used only in multiplayer)
+	float plrDmgCrossbowNoScope;	// explosive bolt (used only in multiplayer)
 
 // weapons shared by monsters
 	float monDmg9MM;
