@@ -58,22 +58,22 @@ cvar_t  mp_notify_player_status = {"mp_notify_player_status","7"};	// Notificati
 
 cvar_t	mp_welcomecam = { "mp_welcomecam", "1", FCVAR_SERVER };
 
-cvar_t	mp_dmg_crowbar = {"mp_dmg_crowbar" ,"25", FCVAR_SERVER };
-cvar_t	mp_dmg_glock = {"mp_dmg_glock" ,"12", FCVAR_SERVER };
-cvar_t	mp_dmg_357 = {"mp_dmg_357" ,"40", FCVAR_SERVER };
-cvar_t	mp_dmg_mp5 = {"mp_dmg_mp5" ,"12", FCVAR_SERVER };
-cvar_t	mp_dmg_shotgun = {"mp_dmg_shotgun" ,"20", FCVAR_SERVER };
-cvar_t	mp_dmg_xbow_scope = {"mp_dmg_xbow_scope" ,"120", FCVAR_SERVER };
-cvar_t	mp_dmg_xbow_noscope = {"mp_dmg_xbow_noscope" ,"40", FCVAR_SERVER };
-cvar_t	mp_dmg_rpg = {"mp_dmg_rpg" ,"120", FCVAR_SERVER };
-cvar_t	mp_dmg_gauss_primary = {"mp_dmg_gauss_primary" ,"20", FCVAR_SERVER };
-cvar_t	mp_dmg_gauss_secondary = { "mp_dmg_gauss_secondary" ,"200", FCVAR_SERVER };
-cvar_t	mp_dmg_egon = {"mp_dmg_egon" ,"20", FCVAR_SERVER };
-cvar_t	mp_dmg_hornet = {"mp_dmg_hornet" ,"10", FCVAR_SERVER };
-cvar_t	mp_dmg_hgrenade = {"mp_dmg_hgrenade" ,"100", FCVAR_SERVER };
-cvar_t	mp_dmg_satchel = {"mp_dmg_satchel" ,"120", FCVAR_SERVER };
-cvar_t	mp_dmg_tripmine = {"mp_dmg_tripmine" ,"150", FCVAR_SERVER };
-cvar_t	mp_dmg_m203 = {"mp_dmg_m203" ,"100", FCVAR_SERVER };
+cvar_t	mp_dmg_crowbar = { "mp_dmg_crowbar", "25", FCVAR_SERVER };
+cvar_t	mp_dmg_glock = { "mp_dmg_glock", "12", FCVAR_SERVER };
+cvar_t	mp_dmg_357 = { "mp_dmg_357", "40", FCVAR_SERVER };
+cvar_t	mp_dmg_mp5 = { "mp_dmg_mp5", "12", FCVAR_SERVER };
+cvar_t	mp_dmg_shotgun = { "mp_dmg_shotgun", "20", FCVAR_SERVER };
+cvar_t	mp_dmg_xbow_scope = { "mp_dmg_xbow_scope", "120", FCVAR_SERVER };
+cvar_t	mp_dmg_xbow_noscope = { "mp_dmg_xbow_noscope", "40", FCVAR_SERVER };
+cvar_t	mp_dmg_rpg = { "mp_dmg_rpg", "120", FCVAR_SERVER };
+cvar_t	mp_dmg_gauss_primary = { "mp_dmg_gauss_primary", "20", FCVAR_SERVER };
+cvar_t	mp_dmg_gauss_secondary = { "mp_dmg_gauss_secondary", "200", FCVAR_SERVER };
+cvar_t	mp_dmg_egon = { "mp_dmg_egon", "20", FCVAR_SERVER };
+cvar_t	mp_dmg_hornet = { "mp_dmg_hornet", "10", FCVAR_SERVER };
+cvar_t	mp_dmg_hgrenade = { "mp_dmg_hgrenade", "100", FCVAR_SERVER };
+cvar_t	mp_dmg_satchel = { "mp_dmg_satchel", "120", FCVAR_SERVER };
+cvar_t	mp_dmg_tripmine = { "mp_dmg_tripmine", "150", FCVAR_SERVER };
+cvar_t	mp_dmg_m203 = { "mp_dmg_m203", "100", FCVAR_SERVER };
 
 // Engine Cvars
 cvar_t 	*g_psv_gravity = NULL;
