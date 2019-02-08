@@ -206,6 +206,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClCompile Include="..\hud_scores.cpp" />
     <ClCompile Include="..\hud_servers.cpp" />
     <ClCompile Include="..\hud_spectator.cpp" />
+    <ClCompile Include="..\hud_speedometer.cpp" />
     <ClCompile Include="..\hud_timer.cpp" />
     <ClCompile Include="..\hud_update.cpp" />
     <ClCompile Include="..\input.cpp" />
@@ -293,6 +294,7 @@ CALL "$(ProjectDir)PreBuild.bat" "$(ProjectDir)..\" "$(ProjectDir)..\..\"
     <ClInclude Include="..\hud_servers.h" />
     <ClInclude Include="..\hud_servers_priv.h" />
     <ClInclude Include="..\hud_spectator.h" />
+    <ClInclude Include="..\hud_speedometer.h" />
     <ClInclude Include="..\in_defs.h" />
     <ClInclude Include="..\jpeg\jpge.h" />
     <ClInclude Include="..\kbutton.h" />

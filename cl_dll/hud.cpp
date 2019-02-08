@@ -427,6 +427,7 @@ void CHud :: Init( void )
 	m_Flash.Init();
 	m_Message.Init();
 	m_StatusBar.Init();
+	m_Speedometer.Init();
 	m_DeathNotice.Init();
 	m_AmmoSecondary.Init();
 	m_TextMessage.Init();
@@ -584,6 +585,7 @@ void CHud :: VidInit( void )
 	m_Flash.VidInit();
 	m_Message.VidInit();
 	m_StatusBar.VidInit();
+	m_Speedometer.VidInit();
 	m_DeathNotice.VidInit();
 	m_SayText.VidInit();
 	m_Menu.VidInit();

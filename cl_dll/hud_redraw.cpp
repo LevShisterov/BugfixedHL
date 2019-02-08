@@ -326,6 +326,13 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 	return x;
 }
 
+int CHud::DrawHudNumberCentered(int x, int y, int flags, int number, int r, int g, int b)
+{
+	auto digit_width = GetSpriteRect(m_HUD_number_0).right - GetSpriteRect(m_HUD_number_0).left;
+	auto digit_count = number > 9 ? (int)log10((double)number) + 1 : 1;
+
+	return DrawHudNumber(x - (digit_width * digit_count) / 2, y, flags, number, r, g, b);
+}
 
 int CHud::GetNumWidth( int iNumber, int iFlags )
 {
