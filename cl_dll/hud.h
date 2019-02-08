@@ -740,7 +740,8 @@ public:
 
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );
-	int DrawHudNumberCentered(int x, int y, int flags, int number, int r, int g, int b);
+	int DrawHudNumber(int x, int y, int number, int r, int g, int b);
+	int DrawHudNumberCentered(int x, int y, int number, int r, int g, int b);
 	int DrawHudString(int x, int y, const char *szString, int r, int g, int b );
 	int DrawHudStringReverse( int xpos, int ypos, const char *szString, int r, int g, int b );
 	int DrawHudNumberString( int xpos, int ypos, int iNumber, int r, int g, int b );

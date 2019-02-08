@@ -28,7 +28,7 @@ int CHudSpeedometer::Draw(float time)
 
 	int r, g, b;
 	gHUD.GetHudColor(0, 0, r, g, b);
-	gHUD.DrawHudNumberCentered(ScreenWidth / 2, ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight / 2, DHN_DRAWZERO, speed, r, g, b);
+	gHUD.DrawHudNumberCentered(ScreenWidth / 2, ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight / 2, speed, r, g, b);
 
 	return 0;
 }
