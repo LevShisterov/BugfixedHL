@@ -23,6 +23,9 @@ int CHudSpeedometer::VidInit()
 
 int CHudSpeedometer::Draw(float time)
 {
+	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) || gEngfuncs.IsSpectateOnly())
+		return 0;
+
 	if (hud_speedometer->value == 0.0f)
 		return 0;
 
