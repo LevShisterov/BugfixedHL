@@ -864,6 +864,37 @@ void CHud::GetHudColor( int hudPart, int value, int &r, int &g, int &b )
 	b = c->b;
 }
 
+void CHud::GetHudAmmoColor(int value, int maxvalue, int &r, int &g, int &b)
+{
+	RGBA *c;
+	if (maxvalue == -1) // if you are using custom weapons, then default colors are going to be used....
+	{
+		ParseColor(m_pCvarColor->string, m_hudColor); c = &m_hudColor;
+	}
+	else if ((value * 100) / maxvalue > 90)
+	{
+		ParseColor(m_pCvarColor1->string, m_hudColor1); c = &m_hudColor1;
+	}
+	else if ((value * 100) / maxvalue > 50)
+	{
+		ParseColor(m_pCvarColor2->string, m_hudColor2); c = &m_hudColor2;
+	}
+	else if ((value * 100) / maxvalue > 20)
+	{
+		ParseColor(m_pCvarColor3->string, m_hudColor3); c = &m_hudColor3;
+	}
+	else
+	{
+		r = 255;
+		g = 0;
+		b = 0;
+		return; 
+	}
+	r = c->r;
+	g = c->g;
+	b = c->b;
+}
+
 float CHud::GetHudTransparency()
 {
 	float hud_draw = m_pCvarDraw->value;

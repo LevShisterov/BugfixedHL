@@ -124,6 +124,7 @@ public:
 	int MsgFunc_ItemPickup( const char *pszName, int iSize, void *pbuf );
 	int MsgFunc_HideWeapon( const char *pszName, int iSize, void *pbuf );
 
+	int GetMaxClip(char* weaponname);
 	int GetMaxSlot(void) { return m_iMaxSlot; }
 	void SlotInput( int iSlot );
 	void _cdecl UserCmd_Slot1( void );
@@ -744,7 +745,8 @@ public:
 	int GetNumWidth(int iNumber, int iFlags);
 	int GetHudCharWidth(int c);
 	int CalculateCharWidth(int c);
-	void GetHudColor( int hudPart, int value, int &r, int &g, int &b );
+	void GetHudColor(int hudPart, int value, int &r, int &g, int &b);
+	void GetHudAmmoColor(int value, int maxvalue, int &r, int &g, int &b);
 	float GetHudTransparency();
 
 private:
