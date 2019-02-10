@@ -3,17 +3,15 @@
 
 class CHudSpeedometer : public CHudBase
 {
-	int speed;
-
-	cvar_t *hud_speedometer;
-
 public:
 	virtual int Init();
 	virtual int VidInit();
 	virtual int Draw(float time);
-
 	void UpdateSpeed(const float velocity[2]);
 
+private:
+	int m_iSpeed;
+	cvar_t *m_pCvarSpeedometer;
 };
 
 #endif // __HUD_SPEEDOMETER_H__
