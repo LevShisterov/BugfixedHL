@@ -948,7 +948,6 @@ int CHudAmmo::Draw(float flTime)
 			x += iBarWidth + AmmoWidth/2;;
 
 			// GL Seems to need this
-			ScaleColors(r, g, b, a );
 			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, gWR.CountAmmo(pw->iAmmoType), r, g, b);		
 
 
