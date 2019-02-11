@@ -506,6 +506,8 @@ int CHudAmmo::MsgFunc_AmmoX(const char *pszName, int iSize, void *pbuf)
 
 	gWR.SetAmmo( iIndex, abs(iCount) );
 
+	m_fFade = FADE_TIME;
+
 	return 1;
 }
 
