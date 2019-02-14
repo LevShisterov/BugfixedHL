@@ -22,7 +22,7 @@ int CHudSpeedometer::VidInit()
 
 int CHudSpeedometer::Draw(float time)
 {
-	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) || gEngfuncs.IsSpectateOnly())
+	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) || g_IsSpectator[gEngfuncs.GetLocalPlayer()->index])
 		return 0;
 
 	if (m_pCvarSpeedometer->value == 0.0f)
