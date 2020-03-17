@@ -1942,7 +1942,14 @@ void CBasePlayer::PreThink(void)
 	// Welcome cam buttons handling
 	if (m_bInWelcomeCam)
 	{
-		if (m_afButtonPressed & IN_ATTACK)
+		if (m_flNextAttack > 0)
+			return;
+
+		if (m_bIsBot) 
+		{
+			StopWelcomeCam();
+		} 
+		else if (m_afButtonPressed & IN_ATTACK )
 		{
 			StopWelcomeCam();
 		}
