@@ -735,6 +735,8 @@ public:
 	cvar_t	*m_pCvarShowSteamId;
 	cvar_t	*m_pCvarColorText;
 	cvar_t	*m_pCvarRDynamicEntLight;
+	cvar_t	*m_pCvarHideCorpses;
+	cvar_t	*m_pCvarFixStandingCorpses;
 
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );
