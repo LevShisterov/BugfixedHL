@@ -44,6 +44,7 @@ extern cvar_t	defaultteam;
 extern cvar_t	allowmonsters;
 extern cvar_t	mp_notify_player_status;
 extern cvar_t	mp_welcomecam;
+extern cvar_t	mp_respawn_fix;
 
 extern cvar_t	mp_dmg_crowbar;
 extern cvar_t	mp_dmg_glock;
