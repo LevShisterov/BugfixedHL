@@ -327,7 +327,8 @@ void CGauss::StartFire( void )
 #else
 		flDamage = gSkillData.plrDmgGaussSecondary * (( gpGlobals->time - m_pPlayer->m_flStartCharge) / GetFullChargeTime() );
 #endif
-
+	}
+	
 	if ( m_fPrimaryFire )
 	{
 		// fixed damage on primary attack
