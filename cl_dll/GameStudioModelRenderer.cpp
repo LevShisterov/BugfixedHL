@@ -282,7 +282,8 @@ model_t *CGameStudioModelRenderer::GetPlayerModel(int playerIndex)
 
 	// Return teammates override model or actual model for local player teammates if this is a teamplay
 	// We will not check for gHUD.m_Teamplay because customized sever dll send us "teamplay 1" to enable teams in scoreboard
-	if (AreTeammates(playerIndex + 1, m_iLocalPlayerIndex))
+	// note: if we are spectating someone, then use his team to show forcemodels.
+	if (AreTeammates(playerIndex + 1, g_IsSpectator[m_iLocalPlayerIndex] && g_iUser2 > 0 ? g_iUser2 : m_iLocalPlayerIndex))
 	{
 		if (m_pTeammatesModel)
 			return m_pTeammatesModel;
