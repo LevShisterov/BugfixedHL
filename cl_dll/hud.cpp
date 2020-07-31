@@ -250,7 +250,8 @@ void __CmdFunc_ToggleCvar(void)
 		sprintf(cmd, "%s %d", gEngfuncs.Cmd_Argv(1), cvar->value ? 0 : 1);
 		ClientCmd(cmd);
 		return;
-	} else
+	}
+	else
 	{
 		for (int i = 2; i < argc; i++)
 		{
