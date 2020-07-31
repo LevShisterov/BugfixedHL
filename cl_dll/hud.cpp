@@ -262,7 +262,8 @@ void __CmdFunc_ToggleCvar(void)
 					sprintf(cmd, "%s \"%s\"", gEngfuncs.Cmd_Argv(1), gEngfuncs.Cmd_Argv(i + 1));
 					ClientCmd(cmd);
 					return;
-				} else // if we have get to the top of _toggle values list, then start from the beginning
+				}
+				else // if we have get to the top of _toggle values list, then start from the beginning
 				{
 					sprintf(cmd, "%s \"%s\"", gEngfuncs.Cmd_Argv(1), gEngfuncs.Cmd_Argv(2));
 					ClientCmd(cmd);
