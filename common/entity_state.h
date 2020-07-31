@@ -17,6 +17,7 @@
 #ifdef _WIN32
 #pragma once
 #endif
+
 #include <inttypes.h>
 
 // For entityType below
