@@ -13,6 +13,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     
     - name: Download dependencies
       run: |
@@ -69,15 +71,11 @@ jobs:
     steps: 
     - name: Checkout repository
       uses: actions/checkout@v2
+      with: 
+        fetch-depth: 0
         
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1.0.2
-      
-    # Github Actions doesn't fetch tags by default https://github.com/actions/checkout/issues/206
-    # This will fix the auto-versioning script and the build will end correctly
-    - name: Fetch tags
-      run: |
-        git fetch --prune --unshallow --tags
         
     - name: Build release
       run: |
