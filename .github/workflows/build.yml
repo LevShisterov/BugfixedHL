@@ -1,0 +1,95 @@
+name: C/C++ CI
+
+on:
+  push:
+    #branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-16.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    
+    - name: Download dependencies
+      run: |
+        mkdir gcc-3.4
+        cd gcc-3.4
+
+        wget http://old-releases.ubuntu.com/ubuntu/pool/universe/g/gcc-3.4/cpp-3.4_3.4.6-6ubuntu5_amd64.deb  
+        wget http://old-releases.ubuntu.com/ubuntu/pool/universe/g/gcc-3.4/gcc-3.4-base_3.4.6-6ubuntu5_amd64.deb
+        wget http://old-releases.ubuntu.com/ubuntu/pool/universe/g/gcc-3.4/g++-3.4_3.4.6-6ubuntu5_amd64.deb  
+        wget http://old-releases.ubuntu.com/ubuntu/pool/universe/g/gcc-3.4/libstdc++6-dev_3.4.6-6ubuntu5_amd64.deb
+        wget http://old-releases.ubuntu.com/ubuntu/pool/universe/g/gcc-3.4/gcc-3.4_3.4.6-6ubuntu5_amd64.deb
+
+        cd $GITHUB_WORKSPACE
+
+    - name: Install dependencies
+      run: |
+        # Install 32 bits libraries
+        sudo apt-get install gcc-multilib g++-multilib
+
+        cd gcc-3.4
+
+        # Note: I had to force the install of libstdc because g++ depends on it and vice versa
+        sudo dpkg -i gcc-3.4-base_3.4.6-6ubuntu5_amd64.deb
+        sudo dpkg -i cpp-3.4_3.4.6-6ubuntu5_amd64.deb
+        sudo dpkg -i gcc-3.4_3.4.6-6ubuntu5_amd64.deb
+        sudo dpkg --force-all -i libstdc++6-dev_3.4.6-6ubuntu5_amd64.deb
+        sudo dpkg -i g++-3.4_3.4.6-6ubuntu5_amd64.deb
+
+        cd $GITHUB_WORKSPACE
+
+    - name: Build release
+      run: |
+        # Note: I set GCC 3.4 as the default compiler because newer versions don't work with some metamod versions
+        cd dlls
+        make CC=gcc-3.4
+        cd $GITHUB_WORKSPACE
+
+        mkdir bugfixedhl-linux
+        mkdir -p bugfixedhl-linux/dlls
+
+        cp -i dlls/hl_i386.so bugfixedhl-linux/dlls/hl.so
+        cp -i network/delta.lst bugfixedhl-linux
+        cp -i Readme.txt bugfixedhl-linux
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: bugfixedhl-linux
+        path: bugfixedhl-linux/
+
+  build-windows:
+    runs-on: windows-2019
+  
+    steps: 
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with: 
+        fetch-depth: 0
+        
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+        
+    - name: Build release
+      run: |
+        msbuild multiplayer.sln -target:hl
+
+        mkdir bugfixedhl-windows
+        mkdir bugfixedhl-windows\dlls
+
+        copy dlls\msvc\Debug\hl.dll bugfixedhl-windows\dlls\
+        copy network\delta.lst bugfixedhl-windows
+        copy Readme.txt bugfixedhl-windows
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: bugfixedhl-windows
+        path: bugfixedhl-windows
