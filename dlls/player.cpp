@@ -4759,9 +4759,11 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 
 	g_pGameRules->GetNextBestWeapon( this, pWeapon );
 
-	UTIL_MakeVectors ( pev->angles );
+	Vector angles = pev->angles;
+	angles.x = -angles.x;
+	UTIL_MakeVectors(angles);
 
-	CWeaponBox *pWeaponBox = (CWeaponBox *)CBaseEntity::Create( "weaponbox", pev->origin + gpGlobals->v_forward * 10, pev->angles, edict() );
+	CWeaponBox* pWeaponBox = (CWeaponBox*)CBaseEntity::Create("weaponbox", pev->origin + gpGlobals->v_forward * 10, angles, edict());
 	pWeaponBox->pev->angles.x = 0;
 	pWeaponBox->pev->angles.z = 0;
 	pWeaponBox->PackWeapon( pWeapon );
