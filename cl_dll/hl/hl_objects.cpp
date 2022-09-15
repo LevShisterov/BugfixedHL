@@ -48,7 +48,7 @@ void UpdateBeams ( void )
 
 	VectorCopy( origin, vecSrc );
 	
-	VectorMA( vecSrc, 2048, forward, vecEnd );
+	VectorMA( vecSrc, 768, forward, vecEnd );
 
 	gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );	
 						

@@ -244,7 +244,7 @@ void CEgon::PrimaryAttack( void )
 
 void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 {
-	Vector vecDest = vecOrigSrc + vecDir * 2048;
+	Vector vecDest = vecOrigSrc + vecDir * 768;
 	edict_t		*pentIgnore;
 	TraceResult tr;
 
@@ -324,18 +324,27 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 #ifndef CLIENT_DLL
 		if ( pev->dmgtime < gpGlobals->time )
 		{
+			// Limit length, linear degrade after half length
+			float damage = gSkillData.plrDmgEgonWide;
+			float len = (vecOrigSrc - tr.vecEndPos).Length();
+
+			if (len > 256)
+				damage = damage * ((768 - len) / 512);
+			if (damage < 0)
+				damage = 0;
+
 			// wide mode does damage to the ent, and radius damage
 			ClearMultiDamage();
 			if (pEntity->pev->takedamage)
 			{
-				pEntity->TraceAttack( m_pPlayer->pev, gSkillData.plrDmgEgonWide, vecDir, &tr, DMG_ENERGYBEAM | DMG_ALWAYSGIB);
+				pEntity->TraceAttack( m_pPlayer->pev, damage, vecDir, &tr, DMG_ENERGYBEAM | DMG_ALWAYSGIB);
 			}
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 			if ( g_pGameRules->IsMultiplayer() )
 			{
 				// radius damage a little more potent in multiplayer.
-				::RadiusDamage( tr.vecEndPos, pev, m_pPlayer->pev, gSkillData.plrDmgEgonWide/4, 128, CLASS_NONE, DMG_ENERGYBEAM | DMG_BLAST | DMG_ALWAYSGIB );
+				::RadiusDamage( tr.vecEndPos, pev, m_pPlayer->pev, damage / 4, 128, CLASS_NONE, DMG_ENERGYBEAM | DMG_BLAST | DMG_ALWAYSGIB );
 			}
 
 			if ( !m_pPlayer->IsAlive() )
