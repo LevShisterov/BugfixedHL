@@ -60,7 +60,11 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType )
 	// Pull out of the wall a bit
 	if ( pTrace->flFraction != 1.0 )
 	{
-		pev->origin = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 0.6);
+		// Half path to opposite wall if any
+		TraceResult tr;
+		Vector vecSpot = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 1.2);
+		UTIL_TraceLine(pev->origin, vecSpot, ignore_monsters, ENT(pev), &tr);
+		pev->origin = (tr.vecEndPos + pev->origin) / 2;
 	}
 
 	int iContents = UTIL_PointContents ( pev->origin );
@@ -172,10 +176,9 @@ void CGrenade::PreDetonate( void )
 void CGrenade::Detonate( void )
 {
 	TraceResult tr;
-	Vector		vecSpot;// trace starts here!
 
-	vecSpot = pev->origin + Vector ( 0 , 0 , 8 );
-	UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -40 ),  ignore_monsters, ENT(pev), & tr);
+	UTIL_TraceLine(pev->origin, pev->origin + Vector(0, 0, 8), ignore_monsters, ENT(pev), &tr);
+	UTIL_TraceLine(tr.vecEndPos, pev->origin + Vector(0, 0, -32), ignore_monsters, ENT(pev), &tr);
 
 	Explode( &tr, DMG_BLAST );
 }

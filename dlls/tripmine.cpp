@@ -345,8 +345,11 @@ void CTripmineGrenade::Killed( entvars_t *pevAttacker, int iGib )
 void CTripmineGrenade::DelayDeathThink( void )
 {
 	KillBeam();
+
 	TraceResult tr;
-	UTIL_TraceLine ( pev->origin + m_vecDir * 8, pev->origin - m_vecDir * 64,  dont_ignore_monsters, ENT(pev), & tr);
+
+	UTIL_TraceLine(pev->origin, pev->origin + m_vecDir * 8, dont_ignore_monsters, ENT(pev), &tr);
+	UTIL_TraceLine(tr.vecEndPos, pev->origin - m_vecDir * 64, dont_ignore_monsters, ENT(pev), &tr);
 
 	Explode( &tr, DMG_BLAST );
 }
