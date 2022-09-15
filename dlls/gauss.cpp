@@ -374,7 +374,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 
 	Vector vecSrc = vecOrigSrc;
 	Vector vecDest = vecSrc + vecDir * 8192;
-	edict_t		*pentIgnore;
+	edict_t		*pentIgnore, *pentAlwaysIgnore;
 	TraceResult tr, beam_tr;
 	float flMaxFrac = 1.0;
 	int	nTotal = 0;
@@ -382,7 +382,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 	int fFirstBeam = 1;
 	int	nMaxHits = 10;
 
-	pentIgnore = ENT( m_pPlayer->pev );
+	pentIgnore = pentAlwaysIgnore = ENT( m_pPlayer->pev );
 
 #ifdef CLIENT_DLL
 	if ( m_fPrimaryFire == false )
@@ -412,12 +412,22 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 		nMaxHits--;
 
 		// ALERT( at_console, "." );
+		CBaseEntity* pEntity;
+		while (true)
+		{
 		UTIL_TraceLine(vecSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr);
+			if (tr.pHit == pentAlwaysIgnore)
+			{
+				vecSrc = tr.vecEndPos + vecDir;
+				continue;
+			}
+			break;
+		}
 
 		if (tr.fAllSolid)
 			break;
 
-		CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
+		pEntity = CBaseEntity::Instance(tr.pHit);
 
 		if (pEntity == NULL)
 			break;
