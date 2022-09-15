@@ -93,7 +93,7 @@ void CRecharge::Spawn()
 	UTIL_SetSize(pev, pev->mins, pev->maxs);
 	SET_MODEL(ENT(pev), STRING(pev->model) );
 	m_iJuice = gSkillData.suitchargerCapacity;
-	pev->frame = 0;			
+	pev->frame = 0;
 }
 
 void CRecharge::Precache()
@@ -106,16 +106,16 @@ void CRecharge::Precache()
 
 void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 { 
+	// Make sure that we have a caller
+	if (!pActivator)
+		return;
+	// only recharge the player
+	if (!pActivator->IsPlayer())
+		return;
+
 	// if it's not a player, ignore
 	if (!FClassnameIs(pActivator->pev, "player"))
 		return;
-
-	// if there is no juice left, turn it off
-	if (m_iJuice <= 0)
-	{
-		pev->frame = 1;			
-		Off();
-	}
 
 	// if the player doesn't have the suit, or there is no juice left, make the deny noise
 	if ((m_iJuice <= 0) || (!(pActivator->pev->weapons & (1<<WEAPON_SUIT))))
@@ -128,25 +128,15 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		return;
 	}
 
+	m_hActivator = pActivator;
+
 	pev->nextthink = pev->ltime + 0.25;
 	SetThink(&CRecharge::Off);
 
 	// Time to recharge yet?
-
 	if (m_flNextCharge >= gpGlobals->time)
 		return;
 
-	// Make sure that we have a caller
-	if (!pActivator)
-		return;
-
-	m_hActivator = pActivator;
-
-	//only recharge the player
-
-	if (!m_hActivator->IsPlayer() )
-		return;
-	
 	// Play the on sound or the looping charging sound
 	if (!m_iOn)
 	{
@@ -160,7 +150,6 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, "items/suitcharge1.wav", 0.85, ATTN_NORM );
 	}
 
-
 	// charge the player
 	if (m_hActivator->pev->armorvalue < 100)
 	{
@@ -173,12 +162,20 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 	// govern the rate of charge
 	m_flNextCharge = gpGlobals->time + 0.1;
+
+	// if there is no juice left, turn it off
+	if (m_iJuice <= 0)
+	{
+		pev->frame = 1;
+		Off();
+	}
 }
 
 void CRecharge::Recharge(void)
 {
+	EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/suitchargeok1.wav", 1.0, ATTN_NORM);
 	m_iJuice = gSkillData.suitchargerCapacity;
-	pev->frame = 0;			
+	pev->frame = 0;
 	SetThink( &CRecharge::SUB_DoNothing );
 }
 
@@ -190,7 +187,7 @@ void CRecharge::Off(void)
 
 	m_iOn = 0;
 
-	if ((!m_iJuice) &&  ( ( m_iReactivate = g_pGameRules->FlHEVChargerRechargeTime() ) > 0) )
+	if ((m_iJuice < gSkillData.suitchargerCapacity) &&  ( ( m_iReactivate = g_pGameRules->FlHEVChargerRechargeTime() ) > 0) )
 	{
 		pev->nextthink = pev->ltime + m_iReactivate;
 		SetThink(&CRecharge::Recharge);

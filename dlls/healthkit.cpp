@@ -184,20 +184,13 @@ void CWallHealth::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 	if ( !pActivator->IsPlayer() )
 		return;
 
-	// if there is no juice left, turn it off
-	if (m_iJuice <= 0)
-	{
-		pev->frame = 1;			
-		Off();
-	}
-
 	// if the player doesn't have the suit, or there is no juice left, make the deny noise
-	if ((m_iJuice <= 0) || (!(pActivator->pev->weapons & (1<<WEAPON_SUIT))))
+	if ((m_iJuice <= 0) || (!(pActivator->pev->weapons & (1 << WEAPON_SUIT))))
 	{
 		if (m_flSoundTime <= gpGlobals->time)
 		{
 			m_flSoundTime = gpGlobals->time + 0.62;
-			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/medshotno1.wav", 1.0, ATTN_NORM );
+			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/medshotno1.wav", 1.0, ATTN_NORM);
 		}
 		return;
 	}
@@ -206,7 +199,6 @@ void CWallHealth::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 	SetThink(&CWallHealth::Off);
 
 	// Time to recharge yet?
-
 	if (m_flNextCharge >= gpGlobals->time)
 		return;
 
@@ -223,7 +215,6 @@ void CWallHealth::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, "items/medcharge4.wav", 1.0, ATTN_NORM );
 	}
 
-
 	// charge the player
 	if ( pActivator->TakeHealth( 1, DMG_GENERIC ) )
 	{
@@ -232,6 +223,13 @@ void CWallHealth::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 
 	// govern the rate of charge
 	m_flNextCharge = gpGlobals->time + 0.1;
+
+	// if there is no juice left, turn it off
+	if (m_iJuice <= 0)
+	{
+		pev->frame = 1;
+		Off();
+	}
 }
 
 void CWallHealth::Recharge(void)
@@ -250,7 +248,7 @@ void CWallHealth::Off(void)
 
 	m_iOn = 0;
 
-	if ((!m_iJuice) &&  ( ( m_iReactivate = g_pGameRules->FlHealthChargerRechargeTime() ) > 0) )
+	if ((m_iJuice < gSkillData.healthchargerCapacity) &&  ( ( m_iReactivate = g_pGameRules->FlHealthChargerRechargeTime() ) > 0) )
 	{
 		pev->nextthink = pev->ltime + m_iReactivate;
 		SetThink(&CWallHealth::Recharge);
