@@ -465,7 +465,12 @@ void CRpg::PrimaryAttack()
 	CRpgRocket *pRocket = CRpgRocket::CreateRpgRocket( vecSrc, m_pPlayer->pev->v_angle, m_pPlayer, this );
 
 	UTIL_MakeVectors( m_pPlayer->pev->v_angle );// RpgRocket::Create stomps on globals, so remake.
-	pRocket->pev->velocity = pRocket->pev->velocity + gpGlobals->v_forward * DotProduct( m_pPlayer->pev->velocity, gpGlobals->v_forward );
+
+	float flDot = DotProduct(pRocket->pev->velocity, m_pPlayer->pev->velocity);
+	if (flDot < 0)
+		pRocket->pev->velocity = pRocket->pev->velocity + 0.5 * gpGlobals->v_forward * DotProduct( m_pPlayer->pev->velocity, gpGlobals->v_forward ); // Only use 50% of the velocity when the player are moving backwards.
+	else
+		pRocket->pev->velocity = pRocket->pev->velocity + gpGlobals->v_forward * DotProduct( m_pPlayer->pev->velocity, gpGlobals->v_forward );
 #endif
 
 	// firing RPG no longer turns on the designator. ALT fire is a toggle switch for the LTD.
