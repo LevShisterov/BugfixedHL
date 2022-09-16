@@ -24,6 +24,7 @@
 #include "util.h"
 
 #include "cbase.h"
+#include <time.h>
 
 // Holds engine functionality callbacks
 enginefuncs_t g_engfuncs;
@@ -48,6 +49,7 @@ BOOL WINAPI DllMain(
 
 void DLLEXPORT GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
 {
+	srand(time(nullptr));
 	memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
 	gpGlobals = pGlobals;
 

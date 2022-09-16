@@ -2791,29 +2791,158 @@ pt_end:
 }
 
 
+enum SpawnPointValidity
+{
+	Valid = 0,
+	NonValid = 1,
+	HasPlayers = 2,
+};
+
+struct SpotInfo
+{
+	CBaseEntity* Spot;
+	float ItemsWeight;
+	SpawnPointValidity Validity;
+};
+
+const int HalfPlayerHeight = 36;
+const int HeightTolerance = 20;
+const float ItemSearchRadius = 512;
+
 // checks if the spot is clear of players
-BOOL IsSpawnPointValid( CBaseEntity *pPlayer, CBaseEntity *pSpot )
+SpawnPointValidity IsSpawnPointValid( CBaseEntity *pPlayer, CBaseEntity *pSpot )
 {
 	CBaseEntity *ent = NULL;
 
-	if ( !pSpot->IsTriggered( pPlayer ) )
+	if ( pSpot->pev->origin == Vector( 0, 0, 0 ) )
 	{
-		return FALSE;
+		return NonValid;
 	}
 
-	while ( (ent = UTIL_FindEntityInSphere( ent, pSpot->pev->origin, 128 )) != NULL )
+	if ( !pSpot->IsTriggered( pPlayer ) )
+	{
+		return NonValid;
+	}
+
+	while ( (ent = UTIL_FindEntityInSphere( ent, pSpot->pev->origin, HalfPlayerHeight * 4 )) != NULL )
 	{
 		// if ent is a client, don't spawn on 'em
 		if ( ent->IsPlayer() && ent != pPlayer )
-			return FALSE;
+			return HasPlayers;
 	}
 
-	return TRUE;
+	return Valid;
 }
 
 
 DLL_GLOBAL CBaseEntity	*g_pLastSpawn;
 inline int FNullEnt( CBaseEntity *ent ) { return (ent == NULL) || FNullEnt( ent->edict() ); }
+
+float GetItemWeight(CBasePlayerItem* item)
+{
+	ItemInfo p;
+	if (item->GetItemInfo(&p) && p.iWeight > 0)
+	{
+		return (float)p.iWeight / 10;
+	}
+
+	return 1.0f;
+}
+
+bool IsSameFloor(vec3_t spot, vec3_t item)
+{
+	return
+		(spot.z - HalfPlayerHeight - HeightTolerance <= item.z) &&
+		(spot.z + HalfPlayerHeight + HeightTolerance >= item.z);
+}
+
+float CountEntitesInSphere(vec3_t point)
+{
+	float weight = 0;
+	CBaseEntity* ent = NULL;
+	while ((ent = UTIL_FindEntityInSphere(ent, point, ItemSearchRadius)) != NULL)
+	{
+		CBasePlayerItem* item = dynamic_cast<CBasePlayerItem*> (ent);
+		if (item == NULL || (item->pev->effects & EF_NODRAW) == EF_NODRAW)
+			continue;
+		weight += GetItemWeight(item);
+		if (IsSameFloor(point, item->pev->origin))
+			weight += 2.0f;
+	}
+	return weight;
+}
+
+int SortSpots(SpotInfo spotInfos[], int spotsCount)
+{
+	int validSpotsCount = 0;
+	SpotInfo replacement;
+	for (int i = 0; i < spotsCount; i++)
+	{
+		// Search for max weight separately for valid and non valid spots
+		float maxWeightForValid = 0;
+		int maxWeightIndexForValid = -1;
+		float maxWeightForNonValid = 0;
+		int maxWeightIndexForNonValid = -1;
+		for (int j = i + 1; j < spotsCount; j++)
+		{
+			if (spotInfos[j].Validity == Valid)
+			{
+				if (spotInfos[j].ItemsWeight >= maxWeightForValid)
+				{
+					maxWeightForValid = spotInfos[j].ItemsWeight;
+					maxWeightIndexForValid = j;
+				}
+			}
+			else
+			{
+				if (spotInfos[j].ItemsWeight >= maxWeightForNonValid)
+				{
+					maxWeightForNonValid = spotInfos[j].ItemsWeight;
+					maxWeightIndexForNonValid = j;
+				}
+			}
+		}
+		if (maxWeightIndexForValid < 0 && maxWeightIndexForNonValid < 0)
+		{
+			if (spotInfos[i].Validity == Valid)
+				validSpotsCount++;
+			break;
+		}
+		// Select spot to exchange, valid ones first
+		int reaplceIndex = -1;
+		if (maxWeightIndexForValid > 0)
+		{
+			validSpotsCount = i + 1;
+			if (spotInfos[i].Validity != Valid ||
+				spotInfos[i].ItemsWeight < maxWeightForValid)
+				reaplceIndex = maxWeightIndexForValid;
+		}
+		else if (maxWeightIndexForNonValid > 0)
+		{
+			if (spotInfos[i].ItemsWeight < maxWeightForNonValid)
+				reaplceIndex = maxWeightIndexForNonValid;
+		}
+		// Exchange spots
+		if (reaplceIndex > 0)
+		{
+			replacement = spotInfos[i];
+			spotInfos[i] = spotInfos[reaplceIndex];
+			spotInfos[reaplceIndex] = replacement;
+		}
+	}
+	return validSpotsCount;
+}
+
+void ClearSpawn(CBaseEntity* pSpot, edict_t* player)
+{
+	CBaseEntity* ent = NULL;
+	while ((ent = UTIL_FindEntityInSphere(ent, pSpot->pev->origin, 128)) != NULL)
+	{
+		// if ent is a client, kill em (unless they are ourselves)
+		if (ent->IsPlayer() && !(ent->edict() == player))
+			ent->TakeDamage(VARS(INDEXENT(0)), VARS(INDEXENT(0)), 300, DMG_GENERIC);
+	}
+}
 
 /*
 ============
@@ -2826,8 +2955,10 @@ USES AND SETS GLOBAL g_pLastSpawn
 */
 edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 {
+	const int MaxSpots = 100;
 	CBaseEntity *pSpot;
 	edict_t		*player;
+	SpotInfo spotInfos[MaxSpots];
 
 	player = pPlayer->edict();
 
@@ -2843,12 +2974,39 @@ edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 	}
 	else if ( g_pGameRules->IsDeathmatch() )
 	{
+		// New way to find spawn spot: count items around
+		int spotsCount = 0;
+		pSpot = NULL;
+		while ((pSpot = UTIL_FindEntityByClassname(pSpot, "info_player_deathmatch")) != NULL)
+		{
+			spotInfos[spotsCount].Spot = pSpot;
+			spotInfos[spotsCount].ItemsWeight = CountEntitesInSphere(pSpot->pev->origin);
+			spotInfos[spotsCount].Validity = IsSpawnPointValid(pPlayer, pSpot);
+			spotsCount++;
+			if (spotsCount == MaxSpots)
+				break;
+		}
+		int validSpots = SortSpots(spotInfos, spotsCount);
+		int limit = validSpots;
+		if (limit == 0)
+			limit = spotsCount;
+		else if (limit > 10 && rand() % 3)
+			limit = 10;
+		int take = rand() % limit;
+		pSpot = spotInfos[take].Spot;
+		if (spotInfos[take].Validity == HasPlayers)
+			ClearSpawn(pSpot, player);
+
+		goto ReturnSpot;
+
+
+		// Old way to find spawn spot
 		pSpot = g_pLastSpawn;
 		// Randomize the start spot
 		for ( int i = RANDOM_LONG(1,5); i > 0; i-- )
 			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
-		if ( FNullEnt( pSpot ) )  // skip over the null point
-			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
+			if ( FNullEnt( pSpot ) )  // skip over the null point
+				pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
 
 		CBaseEntity *pFirstSpot = pSpot;
 
@@ -2876,13 +3034,7 @@ edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 		// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
 		if ( !FNullEnt( pSpot ) )
 		{
-			CBaseEntity *ent = NULL;
-			while ( (ent = UTIL_FindEntityInSphere( ent, pSpot->pev->origin, 128 )) != NULL )
-			{
-				// if ent is a client, kill em (unless they are ourselves)
-				if ( ent->IsPlayer() && !(ent->edict() == player) )
-					ent->TakeDamage( VARS(INDEXENT(0)), VARS(INDEXENT(0)), 300, DMG_GENERIC );
-			}
+			ClearSpawn(pSpot, player);
 			goto ReturnSpot;
 		}
 	}
