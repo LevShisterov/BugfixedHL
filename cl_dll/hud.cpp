@@ -226,6 +226,59 @@ void __CmdFunc_CustomTimer(void)
 	gHUD.m_Timer.CustomTimerCommand();
 }
 
+void __CmdFunc_ToggleCvar(void)
+{
+	int argc = gEngfuncs.Cmd_Argc();
+	if (argc <= 1 || argc == 3)
+	{
+		gEngfuncs.Con_Printf("usage: _toggle <cvar> or _toggle <cvar> <val1> <val2> [val3] ... [valN]\n");
+		return;
+	}
+
+	cvar_t *cvar = CVAR_GET_POINTER(gEngfuncs.Cmd_Argv(1));
+
+	if (!cvar)
+	{
+		gEngfuncs.Con_Printf("_toggle failed: cvar '%s' not found.\n", gEngfuncs.Cmd_Argv(1));
+		return;
+	}
+
+	char cmd[256];
+
+	if (argc == 2)
+	{
+		sprintf(cmd, "%s %d", gEngfuncs.Cmd_Argv(1), cvar->value ? 0 : 1);
+		ClientCmd(cmd);
+		return;
+	}
+	else
+	{
+		for (int i = 2; i < argc; i++)
+		{
+			if (!strcmp(cvar->string, gEngfuncs.Cmd_Argv(i)))
+			{
+				if (i + 1 < argc) // switch cvar value to the next one
+				{
+					sprintf(cmd, "%s \"%s\"", gEngfuncs.Cmd_Argv(1), gEngfuncs.Cmd_Argv(i + 1));
+					ClientCmd(cmd);
+					return;
+				}
+				else // if we have get to the top of _toggle values list, then start from the beginning
+				{
+					sprintf(cmd, "%s \"%s\"", gEngfuncs.Cmd_Argv(1), gEngfuncs.Cmd_Argv(2));
+					ClientCmd(cmd);
+					return;
+				}
+			}
+		}
+
+		// if cvar value isn't equal to any values from _toggle, then set it to the first value of _toggle...
+		sprintf(cmd, "%s \"%s\"", gEngfuncs.Cmd_Argv(1), gEngfuncs.Cmd_Argv(2));
+		ClientCmd(cmd);
+		return;
+	}
+}
+
 // TFFree Command Menu Message Handlers
 int __MsgFunc_ValClass(const char *pszName, int iSize, void *pbuf)
 {
@@ -347,6 +400,7 @@ void CHud :: Init( void )
 	HOOK_COMMAND( "forcemodel", ForceModel );
 	HOOK_COMMAND( "forcecolors", ForceColors );
 	HOOK_COMMAND( "customtimer", CustomTimer );
+	HOOK_COMMAND( "_toggle", ToggleCvar );
 
 	HOOK_MESSAGE( ValClass );
 	HOOK_MESSAGE( TeamNames );
