@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
+//========= Copyright Â© 1996-2002, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
@@ -64,6 +64,14 @@ int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *mode
 	default:
 		break;
 	}
+
+	if (gHUD.m_pCvarFixStandingCorpses->value > 0 
+		&& (ent->player || ent->curstate.renderfx == kRenderFxDeadPlayer) && ent->curstate.framerate == 0)
+		ent->curstate.frame = 255;
+
+	if (gHUD.m_pCvarHideCorpses->value > 0 && ent->curstate.renderfx == kRenderFxDeadPlayer)
+		return 0;	
+
 	// each frame every entity passes this function, so the overview hooks it to filter the overview entities
 	// in spectator mode:
 	// each frame every entity passes this function, so the overview hooks 
