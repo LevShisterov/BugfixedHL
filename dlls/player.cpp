@@ -2993,9 +2993,25 @@ edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 		else if (limit > 10 && rand() % 3)
 			limit = 10;
 		int take = rand() % limit;
-		pSpot = spotInfos[take].Spot;
+		for (int i = take; i >= 0; i--)
+		{
+			if (spotInfos[i].Validity != HasPlayers)
+			{
+				pSpot = spotInfos[i].Spot;
+				goto ReturnSpot;
+			}
+		}
+		for (int i = take + 1; i < spotsCount; i++)
+		{
+			if (spotInfos[i].Validity != HasPlayers)
+			{
+				pSpot = spotInfos[i].Spot;
+				goto ReturnSpot;
+			}
+		}
 		if (spotInfos[take].Validity == HasPlayers)
 			ClearSpawn(pSpot, player);
+		pSpot = spotInfos[take].Spot;
 
 		goto ReturnSpot;
 
