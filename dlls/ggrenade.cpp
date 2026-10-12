@@ -26,6 +26,7 @@
 #include "nodes.h"
 #include "soundent.h"
 #include "decals.h"
+#include "game.h"
 
 
 //===================grenade
@@ -60,11 +61,18 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType )
 	// Pull out of the wall a bit
 	if ( pTrace->flFraction != 1.0 )
 	{
-		// Half path to opposite wall if any
-		TraceResult tr;
-		Vector vecSpot = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 1.2);
-		UTIL_TraceLine(pev->origin, vecSpot, ignore_monsters, ENT(pev), &tr);
-		pev->origin = (tr.vecEndPos + pev->origin) / 2;
+		if (ghostmining.value != 0)
+		{
+			pev->origin = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 0.6);
+		}
+		else
+		{
+			// Half path to opposite wall if any
+			TraceResult tr;
+			Vector vecSpot = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 1.2);
+			UTIL_TraceLine(pev->origin, vecSpot, ignore_monsters, ENT(pev), &tr);
+			pev->origin = (tr.vecEndPos + pev->origin) / 2;
+		}
 	}
 
 	int iContents = UTIL_PointContents ( pev->origin );
@@ -177,8 +185,15 @@ void CGrenade::Detonate( void )
 {
 	TraceResult tr;
 
-	UTIL_TraceLine(pev->origin, pev->origin + Vector(0, 0, 8), ignore_monsters, ENT(pev), &tr);
-	UTIL_TraceLine(tr.vecEndPos, pev->origin + Vector(0, 0, -32), ignore_monsters, ENT(pev), &tr);
+	if (ghostmining.value != 0)
+	{
+		UTIL_TraceLine(pev->origin + Vector(0, 0, 8), pev->origin + Vector(0, 0, -32), ignore_monsters, ENT(pev), &tr);
+	}
+	else
+	{
+		UTIL_TraceLine(pev->origin, pev->origin + Vector(0, 0, 8), ignore_monsters, ENT(pev), &tr);
+		UTIL_TraceLine(tr.vecEndPos, pev->origin + Vector(0, 0, -32), ignore_monsters, ENT(pev), &tr);
+	}
 
 	Explode( &tr, DMG_BLAST );
 }

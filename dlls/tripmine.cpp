@@ -21,6 +21,7 @@
 #include "player.h"
 #include "effects.h"
 #include "gamerules.h"
+#include "game.h"
 
 #define	TRIPMINE_PRIMARY_VOLUME		450
 
@@ -348,8 +349,15 @@ void CTripmineGrenade::DelayDeathThink( void )
 
 	TraceResult tr;
 
-	UTIL_TraceLine(pev->origin, pev->origin + m_vecDir * 8, dont_ignore_monsters, ENT(pev), &tr);
-	UTIL_TraceLine(tr.vecEndPos, pev->origin - m_vecDir * 64, dont_ignore_monsters, ENT(pev), &tr);
+	if (ghostmining.value != 0)
+	{
+		UTIL_TraceLine(pev->origin + m_vecDir * 8, pev->origin - m_vecDir * 64, dont_ignore_monsters, ENT(pev), &tr);
+	}
+	else
+	{
+		UTIL_TraceLine(pev->origin, pev->origin + m_vecDir * 8, dont_ignore_monsters, ENT(pev), &tr);
+		UTIL_TraceLine(tr.vecEndPos, pev->origin - m_vecDir * 64, dont_ignore_monsters, ENT(pev), &tr);
+	}
 
 	Explode( &tr, DMG_BLAST );
 }
